@@ -73,8 +73,6 @@ matplotlib
 
 **genomes.txt**: Add one entry per genome to the format described in example/config/genomes.txt. 'name' corresponds to 'genome' column of cellTypeParameters.txt
 
-**HiC.listing.txt**: Add one entry per Hi-C dataset. 'cell\_type' should match hic\_cell\_type from cellTypeParameters.txt
-
 Define and make directories
 
 ```
@@ -113,7 +111,7 @@ python src/predict.py \
 --cellType K562 \
 --params_file example/config/cellTypeParameters.txt \
 --outdir $PREDDIR \
---HiC_directory_listing example/config/HiC.listing.txt \
+--HiCdir example/input_data/HiC/bedgraph/ \
 --nbhd_directory $NBHDDIR \
 --threshold .022
 ```
