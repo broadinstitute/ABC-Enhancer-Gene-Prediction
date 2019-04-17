@@ -128,6 +128,7 @@ python src/predict.py \
 
 The main output file is $PREDDIR/EnhancerPredictions.txt.
 It contains all element-gene connections with ABC.score greater than the threshold. The default threshold of 0.022 corresponds to 70% recall and 74% precision in the Fulco et al 2019 dataset.
+Columns are further defined in https://docs.google.com/spreadsheets/d/1UfoVXoCxUpMNPfGypvIum1-RvS07928grsieiaPX67I/edit?usp=sharing
 
 ## Defining Candidate Enhancers
 'Candidate elements' are the set of putative enhancers for which ABC scores will be computed. In computing the ABC score, the sum of DNase-seq (or ATAC-seq) and H3K27ac ChIP-seq reads will be counted in the candidate element. Thus the candidate elements should be regions of open (nucleasome depleted) chromatin of sufficient length to capture H3K27ac marks on flanking nucleosomes. In Fulco et al 2019, we defined candidate regions to be 500 bp (150bp of the DHS peak extended 175bp in each direction). 
