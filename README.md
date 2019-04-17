@@ -180,9 +180,6 @@ In the case where cell-type specific Hi-C data is available, we provide a pipeli
 * For each gene, generate an average bedgraph profile by averaging together the bedgraphs from all ten cell types
 
 
-### Description of Hi-C processing
-pseudocount, powerlaw normalization, kr norm entry, 
-
 ### Pipeline to Download and Format Hi-C data
 
 When predicting enhancers for a specific gene, the ABC model requires the row of the hic matrix corresponding to the TSS of the gene (given as a begraph). The below pipeline will download a Hi-C matrix from Juicebox (in .hic format) and generate tss-anchored bedgraphs.
@@ -231,10 +228,8 @@ In the absence of expression data, DNase-seq and H3K27ac ChIP-seq at the gene pr
 
 ## Tips and Suggestions
 
-* Accurate transcription start site annotations are critical
-* Candidate region size is important to consider
+* Accurate transcription start site annotations are critical.
 * We have found that ubiquitously expressed genes appear insensitive to the effects of distal enhancers. For completeness, this code calculates the ABC score for all genes and flags ubiquitously expressed genes.
-* Threshold vs sensitivity/specificity vs number/size of elements and signal-to-noise ratio of the epigenetic data
 
 ## Citation
 
