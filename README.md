@@ -69,9 +69,9 @@ matplotlib
 
 ### Step 1. Setting up configuration files and directories
 
-**cellTypeParameters.txt**: Add one entry per cell type to the format described in example/config/cellTypeParameters.txt. Replicate experiments should be inserted as comma-delimted entries [give example or more detail]. 
+**cellTypeParameters.txt**: Add one entry per cell type to the format described in example/config/cellTypeParameters.txt. Replicate epigenomic experiments should be inserted as comma-delimted entries [give example or more detail]. 
 
-**genomes.txt**: Add one entry per genome to the format described in example/config/genomes.txt. 'name' corresponds to 'genome' column of cellTypeParameters.txt
+**genomes.txt**: Add one entry per genome build to the format described in example/config/genomes.txt. 'name' corresponds to 'genome' column of cellTypeParameters.txt
 
 Define and make directories
 
@@ -90,7 +90,7 @@ mkdir -p $PREDDIR
 ### Step 2. Quantifying Enhancer Activity: 
 NOTE: This section assumes candidate enhancer elements have already been defined (See below section on defining candidate elements)
 
-```run.neighborhoods.py``` will count DHS (or ATAC) and H3K27ac reads in candidate enhancer regions. It also makes GeneList.txt ...
+```run.neighborhoods.py``` will count DHS (or ATAC) and H3K27ac reads in candidate enhancer regions. It will also process the gene bed file for use in making predictions.
 
 Sample Command:
 
@@ -100,7 +100,8 @@ python src/run.neighborhoods.py \
 --params_file example/config/cellTypeParameters.txt \
 --outdir $NBHDDIR \
 --genome example/config/genomes.txt \
---candidate_enhancer_regions example/input_data/Chromatin/wgEncodeUwDnaseK562.mergedPeaks.chr22.slop175.bed
+--candidate_enhancer_regions example/input_data/Chromatin/wgEncodeUwDnaseK562.mergedPeaks.chr22.slop175.bed \
+--genes example/config/RefSeqCurated.170308.chr22.small.bed
 ```
 ### Step 3. Making predictions
 
@@ -121,6 +122,8 @@ python src/predict.py \
 
 ### Defining candidate elements from a DHS or ATAC bam
 A typical way to define candidate elements is by calling peaks from a Dnase-seq or ATAC-seq bam file. Below we provide a convenience function for defining candidate regions using the MACS2 peak caller. 
+
+**Note:** This is a convenience function only. We acknowledge that MACS2 is originally designed as a ChIP-Seq peak caller. In practice we have also noticed that the number of peaks called by MACS2 (and their length) may be dependent on the signal to noise ratio of the input dataset. Defining candidate regions is an active area of research.
 
 ```curateFeatures.py``` is a wrapper around MACS2 which produces candidate regions from a Dnase-seq or ATAC-seq bam file. The script performs the following steps:
 
@@ -143,11 +146,10 @@ python src/curateFeatures.py \
 --nStrongestPeaks 175000 \
 --peakExtendFromSummit 250
 ```
+
 Given that the ABC score uses absolute counts of Dnase-seq reads in each region, ```curateFeatures.py``` attempts to select the strongest peaks as measured by absolute read counts (not read counts relative to some background rate). In order to do this, we first call peaks using a lenient significance threshold (.1 in the above example) and then count reads in each of called peaks. 
 
 Describe whitelisted and blacklisted regions
-
-Different peak calling algorithms will produce varying number of peaks of variable length. Empirically we have noticed that the number of peaks and their width depends on the signal to noise ratio of the Dnase-seq dataset. We note that defining candidate elements is an ongoing area of research...
 
 ### Defining candidate elements from an ENCODE (official name?) peak file
 ```
