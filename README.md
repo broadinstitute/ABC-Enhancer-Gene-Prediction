@@ -1,10 +1,10 @@
 # Activity by Contact Model of Enhancer-Gene Specificity
 
-The Activity-by-Contact (ABC) model is a model which predicts which enhancers regulate which genes on a cell type specific basis. The ABC model is motivated by the conceptual notion that the contribution of an enhancer to transcription of a gene is dependent on two quantities: the instrinsic strength of the enhancer ('Activity') and the Contact frequency between the enhancer and gene promoter. The ABC model uses Dnase-seq and H3K27ac ChIP-seq as measures of enhancer Activity, and Hi-C to measure enhancer-promoter Contact frequency (see Description of the ABC Model). The ABC model is also able to make accurate predictions in the absence of cell-type specific Hi-C data (see Hi-C section). Thus the minimal requirements needed in order to generate enhancer-gene predictions using the ABC model are a measure of chromatin accessibility (typically Dnase-seq or ATAC-seq) and a measure of enhancer strength (H3K27ac ChIP-seq) in the cell type of interest.
+The Activity-by-Contact (ABC) model predicts which enhancers regulate which genes on a cell type specific basis. The ABC model is motivated by the conceptual notion that the contribution of an enhancer to transcription of a gene is dependent on two quantities: the instrinsic strength of the enhancer ('Activity') and the Contact frequency between the enhancer and gene promoter. The ABC model uses DNase-seq and H3K27ac ChIP-seq as measures of enhancer Activity, and Hi-C as a measure enhancer-promoter Contact frequency (see Description of the ABC Model). The ABC model is also able to make accurate predictions in the absence of cell-type specific Hi-C data (see Hi-C section). Thus the minimal requirements needed in order to generate enhancer-gene predictions using the ABC model are a measure of chromatin accessibility (typically Dnase-seq or ATAC-seq) and a measure of enhancer strength (H3K27ac ChIP-seq) in the cell type of interest.
 
-As described in Fulco et al 2019 the ABC model is effectively able to predict the effects of enhancers on gene expression as measured by perturbational experiments. This repository implements the ABC model as described in Fulco et al (BioArxiv 2019). The code in this repository can be used to generate enhancer-gene predictions for any cell type with the required epigenetic data. 
+The ABC model is effectively able to predict the effects of enhancers on gene expression as measured by perturbational experiments. This repository implements the ABC model as described in Fulco et al (BioArxiv 2019). The code in this repository can be used to generate enhancer-gene predictions for any cell type with the required epigenetic data. 
 
-In this repository we provide the code needed to run the ABC model. We also provide small sample data files and example commands to run the model. We also provide some general tips and suggestions. 
+We provide the code needed to run the ABC model as well as small sample data files, example commands, and some general tips and suggestions. 
 
 For each cell-type, the inputs to the ABC model are:
 
@@ -33,8 +33,8 @@ The ABC model produces output in the following directory structure
 	  * GeneList.txt: (has a lot of unnecessary columns...)
   * Predictions
      * EnhancerPredictions.txt: Enhancer-Gene predictions for highly expressed genes with ABC scores above the provided threshold. This is the main ABC output file. (Should we remove promoters?)
-     * Predictions.bedpe: Enhancer-Gene predictions in bedpe format. Can be visualized in IGV
-     * genes/: Directory containing a separate file for all genes. Each file in this directory contains ABC scores for each candidate enhancer 5mb of the gene. These files contain predicted negatives as well as predicted positives
+     * Predictions.bedpe: Enhancer-Gene predictions in bedpe format, which can be visualized in IGV
+     * genes/: Directory containing a separate file for all genes. Each file in this directory contains ABC scores for each candidate enhancer 5mb of the gene. These files contain predicted negatives as well as predicted positives.
 
 ## Description of the ABC Model
 
@@ -90,7 +90,7 @@ mkdir -p $PREDDIR
 ### Step 2. Quantifying Enhancer Activity: 
 NOTE: This section assumes candidate enhancer elements have already been defined (See below section on defining candidate elements)
 
-```run.neighborhoods.py``` will count DHS (or ATAC) and H3K27ac reads in candidate enhancer regions. It will also process the gene bed file for use in making predictions.
+```run.neighborhoods.py``` will count DNase-seq (or ATAC-seq) and H3K27ac ChIP-seq reads in candidate enhancer regions. It will also process the gene bed file for use in 
 
 Sample Command:
 
@@ -121,7 +121,7 @@ python src/predict.py \
 'Candidate elements' are the set of putative enhancers for which ABC scores will be computed. In computing the ABC score, the sum of Dnase-seq (or ATAC-seq) and H3K27ac ChIP-seq reads will be counted in the candidate element. Thus the candidate elements should be regions of open (nucleasome depleted) chromatin of sufficient length to capture H3K27ac marks on flanking nucleosomes. In Fulco et al 2019, we defined candidate regions to be 500 bp (150bp of the DHS peak extended 175bp in each direction). 
 
 ### Defining candidate elements from a DHS or ATAC bam
-A typical way to define candidate elements is by calling peaks from a Dnase-seq or ATAC-seq bam file. Below we provide a convenience function for defining candidate regions using the MACS2 peak caller. 
+A typical way to define candidate elements is by calling peaks from a DNase-seq or ATAC-seq bam file. Below we provide a convenience function for defining candidate regions using the MACS2 peak caller. 
 
 **Note:** This is a convenience function only. We acknowledge that MACS2 is originally designed as a ChIP-Seq peak caller. In practice we have also noticed that the number of peaks called by MACS2 (and their length) may be dependent on the signal to noise ratio of the input dataset. Defining candidate regions is an active area of research.
 
@@ -159,7 +159,7 @@ bedtools slop -b 175 -i example/input_data/Chromatin/wgEncodeUwDnaseK562.mergedP
 ## Contact and Hi-C
 Given that cell-type specific Hi-C data is more difficult to generate than ATAC-seq or ChIP-seq, we have explored alternatives to using cell-type specific Hi-C data. It is known that Hi-C contact frequencies generally follow a powerlaw relationship (with respect to genomic distance) and that many TADs, loops and other structural features of the 3D genome are **not** cell-type specific. 
 
-As described in [], using an average Hi-C profile in the ABC model gives approximately equally good performance as using a cell-type specific profile. We suspect that average HiC can be effective for most genes... To facilitate making ABC predictions in a large panel of cell types, we have provided the average Hi-C profiles in this repository. 
+Using an average Hi-C profile in the ABC model gives approximately equally good performance as using a cell-type specific profile. To facilitate making ABC predictions in a large panel of cell types, including those without cell type-specific Hi-C data, we have provided an average Hi-C profile (averaged across 8 cell lines) in this repository. 
 
 In the case where cell-type specific Hi-C data is available, we provide a pipeline which takes as input a .hic file, and formats it as the ABC model code expects (see below)
 
@@ -174,7 +174,7 @@ pseudocount, powerlaw normalization, kr norm entry,
 
 ### Pipeline to Download and Format Hi-C data
 
-When predicting enhancers for a specific gene, the ABC model requires the row of the hic matrix corresponding to the TSS of the gene (given as a begraph). The below pipeline will download a Hi-C matrix (in .hic format) and generate tss-anchored bedgraphs.
+When predicting enhancers for a specific gene, the ABC model requires the row of the hic matrix corresponding to the TSS of the gene (given as a begraph). The below pipeline will download a Hi-C matrix from Juicebox (in .hic format) and generate tss-anchored bedgraphs.
 
 Three steps
 
@@ -214,13 +214,16 @@ python src/compute_powerlaw_fit_from_hic.py \
 ```
 
 ## Gene Expression in ABC
-The ABC model is designed to predict the effect of activating enhancers on expressed genes. If a gene is not expressed in a given cell type (or cell state) then we assume it does not have any activating enhancers (enhancer for which inhibition of the enhancer would lead to decrease in gene expression). Thus we typically only report enhancer-gene connections for expressed genes.
+The ABC model is designed to predict the effect of enhancers on expressed genes. If a gene is not expressed in a given cell type (or cell state) then we assume it does not have any activating enhancers (enhancers for which inhibition of the enhancer would lead to decrease in gene expression). Thus we typically only report enhancer-gene connections for expressed genes.
 
-In the absence of expression data, Dnase-seq and H3K27ac ChIP-seq at the gene promoter can be used as a proxy for expression. We suggest only considering enhancer-gene connections for genes with sufficiently active promoters (say in the top half of gene promoters in the cell type)
+In the absence of expression data, DNase-seq and H3K27ac ChIP-seq at the gene promoter can be used as a proxy for expression. We suggest only considering enhancer-gene connections for genes with sufficiently active promoters (for instance in the top half of gene promoters in the cell type)
 
 ## Tips and best practices
 
 * Accurate transcription start site annotations are critical
 * Candidate region size is important to consider
 * Ubiquitously expressed genes
-* Threshold vs sensitivity/specificity vs number/size of elements and s2n of the epigenetic data
+* Threshold vs sensitivity/specificity vs number/size of elements and signal-to-noise ratio of the epigenetic data
+
+## Citation
+Fulco CP, Nasser J, Jones TR, Munson G, Bergman D, Subramanian V, Grossman SR, Anyoha R, Patwardhan TA, Nguyen TH, Kane M, Doughty B, Perez E, Durand NC, Stamenova EK, Lieberman Aiden E, Lander ES, Engreitz JM. Activity-by-Contact model for enhancer specificity from thousands of CRISPR perturbations. bioRxiv. 2019 Jan 26.
