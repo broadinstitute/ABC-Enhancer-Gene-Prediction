@@ -78,11 +78,9 @@ matplotlib
 
 Example configuration files are provided in example/config/. 
 
-**cellTypeParameters.txt**: Add one entry per cell type to the format described in example/config/cellTypeParameters.txt. Replicate experiments should be inserted as comma-delimted entries [give example or more detail]. 
+**cellTypeParameters.txt**: Add one entry per cell type to the format described in example/config/cellTypeParameters.txt. Replicate experiments should be inserted as comma-delimted entries. 
 
 **genomes.txt**: Add one entry per genome to the format described in example/config/genomes.txt. 'name' corresponds to 'genome' column of cellTypeParameters.txt
-
-**HiC.listing.txt**: Add one entry per Hi-C dataset. 'cell\_type' should match hic\_cell\_type from cellTypeParameters.txt
 
 Define and make directories
 
@@ -111,7 +109,8 @@ python src/run.neighborhoods.py \
 --params_file example/config/cellTypeParameters.txt \
 --outdir $NBHDDIR \
 --genome example/config/genomes.txt \
---candidate_enhancer_regions example/input_data/Chromatin/wgEncodeUwDnaseK562.mergedPeaks.chr22.slop175.bed
+--candidate_enhancer_regions example/input_data/Chromatin/wgEncodeUwDnaseK562.mergedPeaks.chr22.slop175.bed \
+--genes example/config/RefSeqCurated.170308.chr22.small.bed
 ```
 ### Step 3. Making predictions
 
@@ -122,7 +121,7 @@ python src/predict.py \
 --cellType K562 \
 --params_file example/config/cellTypeParameters.txt \
 --outdir $PREDDIR \
---HiC_directory_listing example/config/HiC.listing.txt \
+--HiCdir example/input_data/HiC/bedgraph/ \
 --nbhd_directory $NBHDDIR \
 --threshold .022
 ```
