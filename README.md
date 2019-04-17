@@ -161,8 +161,6 @@ Given that cell-type specific Hi-C data is more difficult to generate than ATAC-
 
 As described in [], using an average Hi-C profile in the ABC model gives approximately equally good performance as using a cell-type specific profile. We suspect that average HiC can be effective for most genes... To facilitate making ABC predictions in a large panel of cell types, we have provided the average Hi-C profiles in this repository. 
 
-We also note that using the powerlaw relationship can lead to accurate predictions.
-
 In the case where cell-type specific Hi-C data is available, we provide a pipeline which takes as input a .hic file, and formats it as the ABC model code expects (see below)
 
 ### Description of Average Hi-C data provided
