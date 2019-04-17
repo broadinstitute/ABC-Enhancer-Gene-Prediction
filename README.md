@@ -47,6 +47,26 @@ Running the ABC model consists of the following steps:
  2. Quantifying the activity level of each candidate enhancer
  3. Making enhancer-gene predictions
 
+The ABC model has the below dependancies. Tested version provided in parentheses:
+
+```
+Python (3.4)
+samtools (0.1.19)
+bedtools (2.26.0)
+Tabix (0.2.5) - Partial dependancy
+MACS2 (2.1.1.20160309) - Partial dependancy
+Java (1.7) - Partial dependancy
+
+Python packages:
+numpy
+pandas
+intervaltree
+psyam
+pyBigWig
+matplotlib
+```
+
+
 ### Step 1. Setting up configuration files and directories
 
 **cellTypeParameters.txt**: Add one entry per cell type to the format described in example/config/cellTypeParameters.txt. Replicate experiments should be inserted as comma-delimted entries [give example or more detail]. 
