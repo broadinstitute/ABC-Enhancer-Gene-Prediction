@@ -203,6 +203,7 @@ mkdir -p $HICDIR/powerlaw/
 #Download hic matrix file from juicebox
 python src/juicebox_dump.py \
 --hic_file https://hicfiles.s3.amazonaws.com/hiseq/k562/in-situ/combined.hic \
+--juicebox "java -jar juicer_tools.jar" \
 --outdir $HICDIR/raw/ \
 --chromosomes 22
 ```
