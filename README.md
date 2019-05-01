@@ -2,7 +2,7 @@
 
 The Activity-by-Contact (ABC) model predicts which enhancers regulate which genes on a cell type specific basis. The ABC model is motivated by the conceptual notion that the contribution of an enhancer to transcription of a gene is dependent on two quantities: the instrinsic strength of the enhancer ('Activity') and the Contact frequency between the enhancer and gene promoter. The ABC model uses DNase-seq and H3K27ac ChIP-seq as measures of enhancer Activity, and Hi-C as a measure enhancer-promoter Contact frequency (see Description of the ABC Model). The ABC model is also able to make accurate predictions in the absence of cell-type specific Hi-C data (see Hi-C section). Thus the minimal requirements needed in order to generate enhancer-gene predictions using the ABC model are a measure of chromatin accessibility (typically Dnase-seq or ATAC-seq) and a measure of enhancer strength (H3K27ac ChIP-seq) in the cell type of interest.
 
-The ABC model is effectively able to predict the effects of enhancers on gene expression as measured by perturbational experiments. This repository implements the ABC model as described in Fulco et al (BioArxiv 2019). The code in this repository can be used to generate enhancer-gene predictions for any cell type with the required epigenetic data. 
+This repository implements the ABC model as described in Fulco et al (BioArxiv 2019). The code in this repository can be used to generate enhancer-gene predictions for any cell type with the required epigenetic data. 
 
 We provide the code needed to run the ABC model as well as small sample data files, example commands, and some general tips and suggestions. 
 
@@ -12,8 +12,6 @@ For each cell-type, the inputs to the ABC model are:
  	* bam file for Dnase-Seq or ATAC-Seq (indexed and sorted)
  	* bam file for H3K27ac ChIP-Seq (indexed and sorted)
  	* bed file containing candidate enhancer regions
- 	* bed file containing gene annotations
- 	* bed file containing chromosome annotations
  * Optional Inputs
  	* Hi-C data (see the Hi-C section below)
  	* A measure of gene expression (see gene expression section)
@@ -74,27 +72,11 @@ matplotlib
 ```
 
 
-### Step 1. Setting up configuration files and directories
+### Step 1. Setting up configuration files
 
 Example configuration files are provided in example/config/. 
 
 **cellTypeParameters.txt**: Add one entry per cell type to the format described in example/config/cellTypeParameters.txt. Replicate experiments should be inserted as comma-delimted entries. 
-
-**genomes.txt**: Add one entry per genome to the format described in example/config/genomes.txt. 'name' corresponds to 'genome' column of cellTypeParameters.txt
-
-Define and make directories
-
-```
-OUTDIR=example/ABC_output/
-PEAKDIR=$OUTDIR/Peaks/
-NBHDDIR=$OUTDIR/Neighborhoods/
-PREDDIR=$OUTDIR/Predictions/
-
-mkdir -p $PEAKDIR
-mkdir -p $NBHDDIR
-mkdir -p $PREDDIR
-
-```
 
 ### Step 2. Quantifying Enhancer Activity: 
 NOTE: This section assumes candidate enhancer elements have already been defined (See below section on defining candidate elements)
@@ -105,12 +87,14 @@ Sample Command:
 
 ```
 python src/run.neighborhoods.py \
---cellType K562 \
---params_file example/config/cellTypeParameters.txt \
---outdir $NBHDDIR \
---genome example/config/genomes.txt \
+--outdir example/ABC_output/Neighborhoods/ \
 --candidate_enhancer_regions example/input_data/Chromatin/wgEncodeUwDnaseK562.mergedPeaks.chr22.slop175.bed \
---genes example/config/RefSeqCurated.170308.chr22.small.bed
+--genes example/config/RefSeqCurated.170308.chr22.small.bed \
+--chrom_sizes example/config/chr22 \
+--ubiquitously_expressed_genes example/config/UbiquitouslyExpressedGenesHG19.txt \
+--H3K27ac example/input_data/Chromatin/wgEncodeBroadHistoneK562H3K27ac_ENCFF000BWZ.q30.chr22.bam \
+--DHS example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam \
+--expression_table example/input_data/Expression/K562.featureCounts.RPKM.txt
 ```
 ### Step 3. Making predictions
 
@@ -120,7 +104,7 @@ Sample Command:
 python src/predict.py \
 --cellType K562 \
 --params_file example/config/cellTypeParameters.txt \
---outdir $PREDDIR \
+--outdir example/ABC_output/Predictions/ \
 --HiCdir example/input_data/HiC/bedgraph/ \
 --nbhd_directory $NBHDDIR \
 --threshold .022
@@ -148,7 +132,7 @@ Sample command:
 ```
 python src/curateFeatures.py \
 --cellType K562 \
---outDir $PEAKDIR \
+--outDir example/ABC_output/Peaks/ \
 --params_file example/config/cellTypeParameters.txt \
 --genome example/config/genomes.txt \
 --regions_blacklist example/config/wgEncodeHg19ConsensusSignalArtifactRegions.bed \
