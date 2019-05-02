@@ -103,10 +103,9 @@ Sample Command:
 ```
 python src/predict.py \
 --cellType K562 \
---params_file example/config/cellTypeParameters.txt \
 --outdir example/ABC_output/Predictions/ \
 --HiCdir example/input_data/HiC/bedgraph/ \
---nbhd_directory $NBHDDIR \
+--nbhd_directory example/ABC_output/Neighborhoods/ \
 --threshold .022
 ```
 
