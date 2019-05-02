@@ -72,11 +72,10 @@ matplotlib
 ```
 
 
-### Step 1. Setting up configuration files
+### Step 1. Define candidate regions and collect gene annotations
 
-Example configuration files are provided in example/config/. 
 
-**cellTypeParameters.txt**: Add one entry per cell type to the format described in example/config/cellTypeParameters.txt. Replicate experiments should be inserted as comma-delimted entries. 
+
 
 ### Step 2. Quantifying Enhancer Activity: 
 NOTE: This section assumes candidate enhancer elements have already been defined (See below section on defining candidate elements)
@@ -87,14 +86,17 @@ Sample Command:
 
 ```
 python src/run.neighborhoods.py \
---outdir example/ABC_output/Neighborhoods/ \
 --candidate_enhancer_regions example/input_data/Chromatin/wgEncodeUwDnaseK562.mergedPeaks.chr22.slop175.bed \
+--H3K27ac example/input_data/Chromatin/wgEncodeBroadHistoneK562H3K27ac_ENCFF000BWZ.q30.chr22.bam \
+--DHS example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam \
+--expression_table example/input_data/Expression/K562.featureCounts.RPKM.txt \
 --genes example/config/RefSeqCurated.170308.chr22.small.bed \
 --chrom_sizes example/config/chr22 \
 --ubiquitously_expressed_genes example/config/UbiquitouslyExpressedGenesHG19.txt \
---H3K27ac example/input_data/Chromatin/wgEncodeBroadHistoneK562H3K27ac_ENCFF000BWZ.q30.chr22.bam \
---DHS example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam \
---expression_table example/input_data/Expression/K562.featureCounts.RPKM.txt
+--cellType K562 \
+--outdir example/ABC_output/Neighborhoods/ 
+
+
 ```
 ### Step 3. Making predictions
 
@@ -102,11 +104,11 @@ Sample Command:
 
 ```
 python src/predict.py \
---cellType K562 \
---outdir example/ABC_output/Predictions/ \
---HiCdir example/input_data/HiC/bedgraph/ \
 --nbhd_directory example/ABC_output/Neighborhoods/ \
---threshold .022
+--HiCdir example/input_data/HiC/bedgraph/ \
+--threshold .022 \
+--cellType K562 \
+--outdir example/ABC_output/Predictions/ 
 ```
 
 The main output file is $PREDDIR/EnhancerPredictions.txt.
