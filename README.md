@@ -28,7 +28,7 @@ The ABC model produces output in the following directory structure
 		* Candidate enhancer regions and files related to MACS2 peak calls. Note this output directory is only applicable if candidate regions are defined using ```curateFeatures.py```
 	* Neighborhoods
 	  * EnhancerList.txt: Candidate enhancer regions with Dnase-seq and H3K27ac ChIP-seq read counts
-	  * GeneList.txt: 
+	  * GeneList.txt: Dnase-seq and H3K27ac ChIP-seq read counts on gene bodies and gene promoter regions
   * Predictions
      * EnhancerPredictions.txt: Enhancer-Gene predictions for highly expressed genes with ABC scores above the provided threshold. This is the main ABC output file. 
      * Predictions.bedpe: Enhancer-Gene predictions in bedpe format, which can be visualized in IGV
@@ -48,7 +48,7 @@ Operationally, Activity (A) is defined as the geometric mean of the read counts 
 ## Running the ABC Model
 Running the ABC model consists of the following steps:
 
- 1. Set up cell type configuration files, setup directories
+ 1. Define candidate regions and collect gene annotations
  2. Quantifying the activity level of each candidate enhancer
  3. Making enhancer-gene predictions
 
@@ -66,9 +66,9 @@ Python packages:
 numpy
 pandas
 intervaltree
-psyam
-pyBigWig
-matplotlib
+psyam 
+matplotlib - Partial dependancy
+scipy - Partial dependancy
 ```
 
 
