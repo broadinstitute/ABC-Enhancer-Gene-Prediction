@@ -42,7 +42,7 @@ def main(args):
 	        out = subprocess.getoutput(command)
 	        
 	        ## Download KR norm file
-	        command = args.juicebox + " dump norm KR {0} {1} {1} BP {3} {2}/chr{1}_5kb.KRnorm".format(args.hic_file, chromosome, outdir, args.resolution)
+	        command = args.juicebox + " dump norm KR {0} {1} BP {3} {2}/chr{1}_5kb.KRnorm".format(args.hic_file, chromosome, outdir, args.resolution)
 	        out = subprocess.getoutput(command)
 	        print(out)
 
