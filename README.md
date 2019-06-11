@@ -1,6 +1,6 @@
 # Activity by Contact Model of Enhancer-Gene Specificity
 
-The Activity-by-Contact (ABC) model predicts which enhancers regulate which genes on a cell type specific basis. The ABC model is motivated by the conceptual notion that the contribution of an enhancer to transcription of a gene is dependent on two quantities: the instrinsic strength of the enhancer ('Activity') and the Contact frequency between the enhancer and gene promoter. The ABC model uses DNase-seq and H3K27ac ChIP-seq as measures of enhancer Activity, and Hi-C as a measure enhancer-promoter Contact frequency (see Description of the ABC Model). The ABC model is also able to make accurate predictions in the absence of cell-type specific Hi-C data (see Hi-C section). Thus the minimal requirements needed in order to generate enhancer-gene predictions using the ABC model are a measure of chromatin accessibility (typically Dnase-seq or ATAC-seq) and a measure of enhancer strength (H3K27ac ChIP-seq) in the cell type of interest.
+The Activity-by-Contact (ABC) model predicts which enhancers regulate which genes on a cell type specific basis. The ABC model is motivated by the conceptual notion that the contribution of an enhancer to transcription of a gene is dependent on two quantities: the instrinsic strength of the enhancer ('Activity') and the Contact frequency between the enhancer and gene promoter. The ABC model uses DNase-seq (or ATAC-seq) and H3K27ac ChIP-seq as measures of enhancer Activity, and Hi-C as a measure enhancer-promoter Contact frequency (see Description of the ABC Model). The ABC model is also able to make accurate predictions in the absence of cell-type specific Hi-C data (see Hi-C section). Thus the minimal requirements needed in order to generate enhancer-gene predictions using the ABC model are a measure of chromatin accessibility (typically Dnase-seq or ATAC-seq) and a measure of enhancer strength (H3K27ac ChIP-seq) in the cell type of interest.
 
 This repository implements the ABC model as described in Fulco et al (BioArxiv 2019). The code in this repository can be used to generate enhancer-gene predictions for any cell type with the required epigenetic data. 
 
@@ -25,7 +25,7 @@ The ABC model produces output in the following directory structure
 
  * ABC_output
     * Peaks
-		* Candidate enhancer regions and files related to MACS2 peak calls. Note this output directory is only applicable if candidate regions are defined using ```curateFeatures.py```
+		* Candidate enhancer regions and files related to MACS2 peak calls. Note this output directory is only applicable if candidate regions are defined using ```makeCandidateRegions.py```
 	* Neighborhoods
 	  * EnhancerList.txt: Candidate enhancer regions with Dnase-seq and H3K27ac ChIP-seq read counts
 	  * GeneList.txt: Dnase-seq and H3K27ac ChIP-seq read counts on gene bodies and gene promoter regions
@@ -48,8 +48,8 @@ Operationally, Activity (A) is defined as the geometric mean of the read counts 
 ## Running the ABC Model
 Running the ABC model consists of the following steps:
 
- 1. Define candidate regions and collect gene annotations
- 2. Quantifying the activity level of each candidate enhancer
+ 1. Define candidate enhancer regions and collect gene annotations
+ 2. Count Dnase-seq and H3K27ac ChIP-Seq reads in candidate enhancer regions
  3. Making enhancer-gene predictions
 
 The ABC model relies on the following dependancies (tested version provided in parentheses):
@@ -86,27 +86,27 @@ Sample Command:
 
 ```
 python src/run.neighborhoods.py \
---candidate_enhancer_regions example/input_data/Chromatin/wgEncodeUwDnaseK562.mergedPeaks.chr22.slop175.bed \
+--candidate_enhancer_regions example/input_data/Chromatin/wgEncodeUwDnaseK562.mergedPeaks.slop175.withTSS500bp.chr22.bed \
 --H3K27ac example/input_data/Chromatin/wgEncodeBroadHistoneK562H3K27ac_ENCFF000BWZ.q30.chr22.bam \
 --DHS example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam \
---expression_table example/input_data/Expression/K562.featureCounts.RPKM.txt \
---genes example/config/RefSeqCurated.170308.chr22.small.bed \
+--expression_table example/input_data/Expression/K562.ENCFF934YBO.TPM.txt \
+--genes example/config/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.bed \
 --chrom_sizes example/config/chr22 \
 --ubiquitously_expressed_genes example/config/UbiquitouslyExpressedGenesHG19.txt \
 --cellType K562 \
 --outdir example/ABC_output/Neighborhoods/ 
-
-
 ```
+
 ### Step 3. Making predictions
 
 Sample Command:
 
 ```
 python src/predict.py \
---nbhd_directory example/ABC_output/Neighborhoods/ \
+--enhancers example/ABC_output/Neighborhoods/EnhancerList.txt \
+--genes example/ABC_output/Neighborhoods/GeneList.txt \
 --HiCdir example/input_data/HiC/bedgraph/ \
---threshold .022 \
+--threshold .02 \
 --cellType K562 \
 --outdir example/ABC_output/Predictions/ 
 ```
@@ -116,12 +116,12 @@ It contains all element-gene connections with ABC.score greater than the thresho
 Columns are further defined in https://docs.google.com/spreadsheets/d/1UfoVXoCxUpMNPfGypvIum1-RvS07928grsieiaPX67I/edit?usp=sharing
 
 ## Defining Candidate Enhancers
-'Candidate elements' are the set of putative enhancers for which ABC scores will be computed. In computing the ABC score, the sum of DNase-seq (or ATAC-seq) and H3K27ac ChIP-seq reads will be counted in the candidate element. Thus the candidate elements should be regions of open (nucleasome depleted) chromatin of sufficient length to capture H3K27ac marks on flanking nucleosomes. In Fulco et al 2019, we defined candidate regions to be 500 bp (150bp of the DHS peak extended 175bp in each direction). 
+'Candidate elements' are the set of putative enhancers for which ABC scores will be computed. In computing the ABC score, the product of DNase-seq (or ATAC-seq) and H3K27ac ChIP-seq reads will be counted in the candidate element. Thus the candidate elements should be regions of open (nucleasome depleted) chromatin of sufficient length to capture H3K27ac marks on flanking nucleosomes. In Fulco et al 2019, we defined candidate regions to be 500 bp (150bp of the DHS peak extended 175bp in each direction). 
 
 ### Defining candidate elements from a DHS or ATAC bam
 A typical way to define candidate elements is by calling peaks from a DNase-seq or ATAC-seq bam file. Below we provide a convenience function for defining candidate regions using the MACS2 peak caller. 
 
-```curateFeatures.py``` is a wrapper around MACS2 which produces candidate regions from a Dnase-seq or ATAC-seq bam file. The script performs the following steps:
+```makeCandidateRegions.py``` is a wrapper around MACS2 which produces candidate regions from a Dnase-seq or ATAC-seq bam file. The script performs the following steps:
 
  1. Call peaks using MACS2
  2. Resize each peak to be a fixed number of base pairs centered on the peak summit
@@ -131,22 +131,22 @@ A typical way to define candidate elements is by calling peaks from a DNase-seq 
 Sample command:
 
 ```
-python src/curateFeatures.py \
---cellType K562 \
+python src/makeCandidateRegions.py \
+--bam example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam \
 --outDir example/ABC_output/Peaks/ \
---params_file example/config/cellTypeParameters.txt \
---genome example/config/genomes.txt \
+--chrom_sizes example/config/chr22 \
 --regions_blacklist example/config/wgEncodeHg19ConsensusSignalArtifactRegions.bed \
---regions_whitelist example/config/RefSeqCurated.170308.chr22.TSS1KB.bed \
+--regions_whitelist example/config/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.chr22.bed \
 --pval_cutoff .1 \
---nStrongestPeaks 175000 \
---peakExtendFromSummit 250
+--peakExtendFromSummit 250 \
+--nStrongestPeaks 3000 
 ```
+
+We recommend using --nStrongestPeaks 150000 when making genome-wide peak calls.
+
 Given that the ABC score uses absolute counts of Dnase-seq reads in each region, ```curateFeatures.py``` attempts to select the strongest peaks as measured by absolute read counts (not read counts relative to some background rate). In order to do this, we first call peaks using a lenient significance threshold (.1 in the above example) and then count reads in each of called peaks. 
 
 We recommend removing elements overlapping regions of the genome that have been observed to accumulate anomalous number of reads in epigenetic sequencing experiments (‘blacklisted regions’). For convenience, we provide the list of blackedlisted regions available from https://sites.google.com/site/anshulkundaje/projects/blacklists.
-
-Different peak calling algorithms will produce varying number of peaks of variable length. Empirically we have noticed that the number of peaks and their width depends on the signal to noise ratio of the DNase-seq dataset. We note that defining candidate elements is an ongoing area of research...
 
 ### Defining candidate elements from an ENCODE peak file
 ```
@@ -156,7 +156,7 @@ bedtools slop -b 175 -i example/input_data/Chromatin/wgEncodeUwDnaseK562.mergedP
 ## Contact and Hi-C
 Given that cell-type specific Hi-C data is more difficult to generate than ATAC-seq or ChIP-seq, we have explored alternatives to using cell-type specific Hi-C data. It is known that Hi-C contact frequencies generally follow a powerlaw relationship (with respect to genomic distance) and that many TADs, loops and other structural features of the 3D genome are **not** cell-type specific. 
 
-Using an average Hi-C profile in the ABC model gives approximately equally good performance as using a cell-type specific profile. To facilitate making ABC predictions in a large panel of cell types, including those without cell type-specific Hi-C data, we have provided an average Hi-C profile (averaged across 8 cell lines) in this repository. 
+Using an average Hi-C profile in the ABC model gives approximately equally good performance as using a cell-type specific profile. To facilitate making ABC predictions in a large panel of cell types, including those without cell type-specific Hi-C data, we have provided an average Hi-C profile (averaged across 10 cell lines) in this repository. 
 
 In the case where cell-type specific Hi-C data is available, we provide a pipeline which takes as input a .hic file, and formats it as the ABC model code expects (see below)
 
@@ -197,7 +197,7 @@ python src/juicebox_dump.py \
 #Make a virtual 4C bedgraph anchored at the TSS of each gene
 python src/make_bedgraph_from_HiC.py \
 --outdir $HICDIR/bedgraph/ \
---genes example/config/RefSeqCurated.170308.chr22.small.bed \
+--genes example/config/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.bed \
 --hic_dir $HICDIR/raw/5kb_resolution_intrachromosomal/
 ```
 
