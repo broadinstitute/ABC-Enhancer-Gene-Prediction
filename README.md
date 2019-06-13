@@ -155,10 +155,9 @@ We have found that, for most genes, using an average Hi-C profile in the ABC mod
 In the case where cell-type specific Hi-C data is available, we provide a pipeline which takes as input a .hic file, and formats it as the ABC model code expects (see below)
 
 ### Description of Average Hi-C data provided
-* Generate bedgraphs for ten cell types using pipeline described below
-* Powerlaw scale each cell type's bedgraphs to K562
-* For each gene, generate an average bedgraph profile by averaging together the bedgraphs from all ten cell types
+Average Hi-C data can be downloaded from: 
 
+Each bedgraph in this directory is Hi-C contact profile anchored at the gene TSS averaged over 10 human cell types. The Hi-C data is KR normalized and is provided at 5kb resolution. The ten cell types used for averaging are: GM12878, NHEK, HMEC, RPE1, THP1, IMR90, HUVEC, HCT116, K562, KBM7
 
 ### Pipeline to Download and Format Hi-C data
 
@@ -209,6 +208,7 @@ Empirically, we have found that applying quantile normalization makes ABC predic
 
 We recommend using quantile normalization if you are looking to compare ABC scores across cell types. Additionally, the threshold value on the ABC score of .02 (described in Fulco et al) is calculated based on the K562 epigenetic data. 
 
+Quantile normalization can be applied using ```--qnorm EnhancersQNormRef.K562.txt``` in ```run.neighborhoods.py```
 
 ## Tips and Comments
 
