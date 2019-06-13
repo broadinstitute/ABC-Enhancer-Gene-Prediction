@@ -1,11 +1,8 @@
 # Activity by Contact Model of Enhancer-Gene Specificity
 
-The Activity-by-Contact (ABC) model predicts which enhancers regulate which genes on a cell type specific basis. The ABC model is motivated by the conceptual notion that the contribution of an enhancer to transcription of a gene is dependent on two quantities: the instrinsic strength of the enhancer ('Activity') and the Contact frequency between the enhancer and gene promoter. The ABC model uses DNase-seq (or ATAC-seq) and H3K27ac ChIP-seq as measures of enhancer Activity, and Hi-C as a measure enhancer-promoter Contact frequency (see Description of the ABC Model). The ABC model is also able to make accurate predictions in the absence of cell-type specific Hi-C data (see Hi-C section). Thus the minimal requirements needed in order to generate enhancer-gene predictions using the ABC model are a measure of chromatin accessibility (typically Dnase-seq or ATAC-seq) and a measure of enhancer strength (H3K27ac ChIP-seq) in the cell type of interest.
+The Activity-by-Contact (ABC) model predicts which enhancers regulate which genes on a cell type specific basis. This repository includes the code needed to run the ABC model as well as small sample data files, example commands, and some general tips and suggestions. We provide a brief description of the model below, see Fulco et al (BioArxiv 2019) for a full description.
 
-This repository implements the ABC model as described in Fulco et al (BioArxiv 2019). The code in this repository can be used to generate enhancer-gene predictions for any cell type with the required epigenetic data. 
-
-We provide the code needed to run the ABC model as well as small sample data files, example commands, and some general tips and suggestions. 
-
+## Requirements
 For each cell-type, the inputs to the ABC model are:
 
  * Required Inputs
@@ -18,41 +15,13 @@ For each cell-type, the inputs to the ABC model are:
 
 In addition the following (non-cell-type specific) genome annotation files are required
 
- * bed file containing gene annotations
+ * bed file containing gene annotations (may change across cell types if using cell-type specific TSS's)
  * bed file containing chromosome annotations
 
-The ABC model produces output in the following directory structure
+### Dependencies
 
- * ABC_output
-    * Peaks
-		* Candidate enhancer regions and files related to MACS2 peak calls. Note this output directory is only applicable if candidate regions are defined using ```makeCandidateRegions.py```
-	* Neighborhoods
-	  * EnhancerList.txt: Candidate enhancer regions with Dnase-seq and H3K27ac ChIP-seq read counts
-	  * GeneList.txt: Dnase-seq and H3K27ac ChIP-seq read counts on gene bodies and gene promoter regions
-  * Predictions
-     * EnhancerPredictions.txt: Enhancer-Gene predictions for highly expressed genes with ABC scores above the provided threshold. This is the main ABC output file. 
-     * Predictions.bedpe: Enhancer-Gene predictions in bedpe format, which can be visualized in IGV
-     * genes/: Directory containing a separate file for all genes. Each file in this directory contains ABC scores for each candidate enhancer 5mb of the gene. These files contain predicted negatives as well as predicted positives.
-
-## Description of the ABC Model
-
-We designed the Activity by Contact (ABC) score to represent a mechanistic model in which enhancers contact target promoters to activate gene expression. In a simple conception of such a model, the quantitative effect of an enhancer depends on the frequency at which it contacts a promoter multiplied by the strength of the enhancer (i.e., the ability of the enhancer to activate transcription upon contacting a promoter). Moreover, the relative contribution of an element on a gene’s expression (for example as assayed by the proportional decrease in expression upon CRISPR-inhibition) should depend on the element’s effect divided by the total effect of all elements.
-
-To extend this conceptual framework to enable computing the quantitative effects of enhancers on the expression of any gene, we formulated the ABC score:
-
-ABC score for effect of element E on gene G = Activity of E × Contact frequency between E and G /  Sum of (Activity × Contact Frequency) over all candidate elements within 5 Mb.
-
-Operationally, Activity (A) is defined as the geometric mean of the read counts of DNase-seq and H3K27ac ChIP-seq at an element E, and Contact (C) as the KR normalized Hi-C contact frequency between E and the promoter of gene G, and elements are defined as ~500bp regions centered on DHS peaks. 
-
- 
-## Running the ABC Model
-Running the ABC model consists of the following steps:
-
- 1. Define candidate enhancer regions and collect gene annotations
- 2. Count Dnase-seq and H3K27ac ChIP-Seq reads in candidate enhancer regions
- 3. Making enhancer-gene predictions
-
-The ABC model relies on the following dependancies (tested version provided in parentheses):
+The codebase relies on the following dependancies (tested version provided in 
+parentheses):
 
 ```
 Python (3.4)
@@ -71,14 +40,33 @@ matplotlib - Partial dependancy
 scipy - Partial dependancy
 ```
 
+## Description of the ABC Model
 
-### Step 1. Define candidate regions and collect gene annotations
+The Activity by Contact (ABC) model is designed to represent a mechanistic model in which enhancers activate gene expression upon enhancer-promoter contact. In a simple conception of such a model, the quantitative effect of an enhancer depends on the frequency with which it contacts a promoter multiplied by the strength of the enhancer (i.e., the ability of the enhancer to activate transcription upon contacting a promoter). Moreover, the relative contribution of an element on a gene’s expression (for example as assayed by the proportional decrease in expression upon CRISPR-inhibition) should depend on the element’s effect divided by the total effect of all elements.
 
+To convert this conceptual framework into a practical score (which can be applied genome-wide), we formulated the ABC score:
 
+ABC score for effect of element E on gene G = Activity of E × Contact frequency between E and G /  Sum of (Activity × Contact Frequency) over all candidate elements within 5 Mb.
 
+Operationally, Activity (A) is defined as the geometric mean of the read counts of DNase-seq and H3K27ac ChIP-seq at an element E, and Contact (C) as the KR normalized Hi-C contact frequency between E and the promoter of gene G. Elements are defined as ~500bp regions centered on DHS peaks. 
+
+ 
+## Running the ABC Model
+Running the ABC model consists of the following steps:
+
+ 1. Define candidate enhancer regions, collect gene annotations and epigenetic data
+ 2. Quantifying enhancer activity
+ 3. Computing the ABC Score
+
+### Step 1. Define candidate regions, gather gene annotations and Hi-C data
+
+A typical way to define candidate elements is by calling peaks on a DNase-Seq or ATAC-Seq bam file (see Defining candidate elements from a DNase or ATAC bam). 
+
+Gene annotations should be provided in .bed format.
+
+We recommend either using cell-type specific Hi-C data or average Hi-C data (SEE PROVIDED). If neither of these are available, then the power-law relationship can be used as a proxy for Contact.
 
 ### Step 2. Quantifying Enhancer Activity: 
-NOTE: This section assumes candidate enhancer elements have already been defined (See below section on defining candidate elements)
 
 ```run.neighborhoods.py``` will count DNase-seq (or ATAC-seq) and H3K27ac ChIP-seq reads in candidate enhancer regions. It also makes GeneList.txt, which includes data about genes and their promoters.
 
@@ -97,7 +85,13 @@ python src/run.neighborhoods.py \
 --outdir example/ABC_output/Neighborhoods/ 
 ```
 
-### Step 3. Making predictions
+  * EnhancerList.txt: Candidate enhancer regions with Dnase-seq and H3K27ac ChIP-seq read counts
+  * GeneList.txt: Dnase-seq and H3K27ac ChIP-seq read counts on gene bodies and gene promoter regions
+
+
+### Step 3. Computing the ABC Score
+
+Compute ABC scores by combining Activity as calculated by ```run.neighborhoods.py``` and Hi-C.
 
 Sample Command:
 
@@ -111,8 +105,13 @@ python src/predict.py \
 --outdir example/ABC_output/Predictions/ 
 ```
 
-The main output file is $PREDDIR/EnhancerPredictions.txt.
-It contains all element-gene connections with ABC.score greater than the threshold. The default threshold of 0.022 corresponds to 70% recall and 63% precision in the Fulco et al 2019 dataset.
+The main output files are:
+
+* EnhancerPredictions.txt: all element-gene pairs with scores above the provided threshold. Only includes expressed genes
+* EnhancerPredictions.bedpe: Same as above in .bedpe format. Can be visualized in IGV.
+* EnhancerPredictionsAllPutative.txt.gz: ABC scores for all element-gene pairs. Includes non-expressed genes and pairs with scores below the threshold. (use ```--make_all_putative``` to generate this file)
+
+The default threshold of 0.02 corresponds to 70% recall and 63% precision in the Fulco et al 2019 dataset.
 Columns are further defined in https://docs.google.com/spreadsheets/d/1UfoVXoCxUpMNPfGypvIum1-RvS07928grsieiaPX67I/edit?usp=sharing
 
 ## Defining Candidate Enhancers
@@ -142,21 +141,16 @@ python src/makeCandidateRegions.py \
 --nStrongestPeaks 3000 
 ```
 
-We recommend using --nStrongestPeaks 150000 when making genome-wide peak calls.
+We recommend using ```--nStrongestPeaks 150000``` when making genome-wide peak calls. ```3000``` is just used for the small test run on chr22. 
 
 Given that the ABC score uses absolute counts of Dnase-seq reads in each region, ```curateFeatures.py``` attempts to select the strongest peaks as measured by absolute read counts (not read counts relative to some background rate). In order to do this, we first call peaks using a lenient significance threshold (.1 in the above example) and then count reads in each of called peaks. 
 
 We recommend removing elements overlapping regions of the genome that have been observed to accumulate anomalous number of reads in epigenetic sequencing experiments (‘blacklisted regions’). For convenience, we provide the list of blackedlisted regions available from https://sites.google.com/site/anshulkundaje/projects/blacklists.
 
-### Defining candidate elements from an ENCODE peak file
-```
-bedtools slop -b 175 -i example/input_data/Chromatin/wgEncodeUwDnaseK562.mergedPeaks.chr22.bed -g example/config/chr22.bed | bedtools merge -i stdin > example/input_data/Chromatin/wgEncodeUwDnaseK562.mergedPeaks.chr22.slop175.bed
-```
-
 ## Contact and Hi-C
 Given that cell-type specific Hi-C data is more difficult to generate than ATAC-seq or ChIP-seq, we have explored alternatives to using cell-type specific Hi-C data. It is known that Hi-C contact frequencies generally follow a powerlaw relationship (with respect to genomic distance) and that many TADs, loops and other structural features of the 3D genome are **not** cell-type specific. 
 
-Using an average Hi-C profile in the ABC model gives approximately equally good performance as using a cell-type specific profile. To facilitate making ABC predictions in a large panel of cell types, including those without cell type-specific Hi-C data, we have provided an average Hi-C profile (averaged across 10 cell lines) in this repository. 
+We have found that, for most genes, using an average Hi-C profile in the ABC model gives approximately equally good performance as using a cell-type specific Hi-C profile. To facilitate making ABC predictions in a large panel of cell types, including those without cell type-specific Hi-C data, we have provided an average Hi-C profile (averaged across 10 cell lines) in this repository. 
 
 In the case where cell-type specific Hi-C data is available, we provide a pipeline which takes as input a .hic file, and formats it as the ABC model code expects (see below)
 
@@ -168,21 +162,13 @@ In the case where cell-type specific Hi-C data is available, we provide a pipeli
 
 ### Pipeline to Download and Format Hi-C data
 
-When predicting enhancers for a specific gene, the ABC model requires the row of the hic matrix corresponding to the TSS of the gene (given as a begraph). The below pipeline will download a Hi-C matrix from Juicebox (in .hic format) and generate tss-anchored bedgraphs.
+The below pipeline will download a Hi-C matrix from Juicebox (in .hic format) and generate tss-anchored bedgraphs (the format the ABC model expects).
 
 Three steps
 
 1. Download raw data using Juicebox
 2. Make HiC Bedgraphs
 3. Get powerlaw parameters (Optional)
-
-```
-#Make directory structure
-HICDIR=example/input_data/HiC/
-mkdir -p $HICDIR/raw/
-mkdir -p $HICDIR/bedgraph/
-mkdir -p $HICDIR/powerlaw/
-```
 
 ```
 #Download hic matrix file from juicebox
@@ -213,10 +199,22 @@ The ABC model is designed to predict the effect of enhancers on expressed genes.
 
 In the absence of expression data, DNase-seq and H3K27ac ChIP-seq at the gene promoter can be used as a proxy for expression. We suggest only considering enhancer-gene connections for genes with sufficiently active promoters (for instance in the top half of gene promoters in the cell type)
 
-## Tips and Suggestions
+## Quantile Normalization
+
+The ABC Score uses the quantitative signal of Hi-C, ATAC-Seq and H3K27ac ChIP-Seq. As such it is sensitive to differences in these datasets due to experimental or technical procedures. For example, ABC scores computed on an epigenetic dataset with low signal to noise will be lower than ABC scores computed on an epigenetic dataset with high signal to noise. 
+
+In an effort to make ABC scores comparable across cell types, the ABC model code supports quantile normalizing the epigenetic signal in candidate enhancer regions to some reference. The reference we provide in this repository is computed on ~160,000 DHS peaks in K562. 
+
+Empirically, we have found that applying quantile normalization makes ABC predictions more comparable across cell types. However, it may not be applicable to all circumstances.
+
+We recommend using quantile normalization if you are looking to compare ABC scores across cell types. Additionally, the threshold value on the ABC score of .02 (described in Fulco et al) is calculated based on the K562 epigenetic data. 
+
+
+## Tips and Comments
 
 * Accurate transcription start site annotations are critical.
 * We have found that ubiquitously expressed genes appear insensitive to the effects of distal enhancers. For completeness, this code calculates the ABC score for all genes and flags ubiquitously expressed genes.
+* The size of candidate enhancer elements is important. For example, if two candidate regions are merged, then the ABC score of the merged region will be approximately the sum of the ABC scores for each individual region.
 
 ## Citation
 

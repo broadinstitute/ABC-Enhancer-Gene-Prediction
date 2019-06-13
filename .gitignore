@@ -6,6 +6,7 @@ src/makeQnormReference.py
 *~
 
 *.pyc
+src/*.pyc
 
 .DS_Store
 __pycache__/
