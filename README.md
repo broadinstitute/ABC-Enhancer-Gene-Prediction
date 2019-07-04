@@ -1,6 +1,6 @@
 # Activity by Contact Model of Enhancer-Gene Specificity
 
-The Activity-by-Contact (ABC) model predicts which enhancers regulate which genes on a cell type specific basis. This repository includes the code needed to run the ABC model as well as small sample data files, example commands, and some general tips and suggestions. We provide a brief description of the model below, see Fulco et al (BioArxiv 2019) for a full description.
+The Activity-by-Contact (ABC) model predicts which enhancers regulate which genes on a cell type specific basis. This repository contains the code needed to run the ABC model as well as small sample data files, example commands, and some general tips and suggestions. We provide a brief description of the model below, see Fulco et al (BioArxiv 2019) for a full description.
 
 ## Requirements
 For each cell-type, the inputs to the ABC model are:
@@ -30,19 +30,21 @@ bedtools (2.26.0)
 Tabix (0.2.5) - Partial dependancy
 MACS2 (2.1.1.20160309) - Partial dependancy
 Java (1.7) - Partial dependancy
+juicebox
 
 Python packages:
-numpy
-pandas
+numpy (1.15.2)
+pandas (0.23.4)
+scipy
 intervaltree
-psyam 
+pysam 
+pyBigWig
 matplotlib - Partial dependancy
-scipy - Partial dependancy
 ```
 
 ## Description of the ABC Model
 
-The Activity by Contact (ABC) model is designed to represent a mechanistic model in which enhancers activate gene expression upon enhancer-promoter contact. In a simple conception of such a model, the quantitative effect of an enhancer depends on the frequency with which it contacts a promoter multiplied by the strength of the enhancer (i.e., the ability of the enhancer to activate transcription upon contacting a promoter). Moreover, the relative contribution of an element on a gene’s expression (for example as assayed by the proportional decrease in expression upon CRISPR-inhibition) should depend on the element’s effect divided by the total effect of all elements.
+The Activity by Contact (ABC) model is designed to represent a mechanistic model in which enhancers activate gene transcription upon enhancer-promoter contact. In a simple conception of such a model, the quantitative effect of an enhancer depends on the frequency with which it contacts a promoter multiplied by the strength of the enhancer (i.e., the ability of the enhancer to activate transcription upon contacting a promoter). Moreover, the contribution of a specific enhancer to a gene’s expression should depend on the surrounding context (ie, the strength and contact frequency of other enhancers for the gene).
 
 To convert this conceptual framework into a practical score (which can be applied genome-wide), we formulated the ABC score:
 
@@ -75,15 +77,17 @@ Sample Command:
 ```
 python src/run.neighborhoods.py \
 --candidate_enhancer_regions example/input_data/Chromatin/wgEncodeUwDnaseK562.mergedPeaks.slop175.withTSS500bp.chr22.bed \
---H3K27ac example/input_data/Chromatin/wgEncodeBroadHistoneK562H3K27ac_ENCFF000BWZ.q30.chr22.bam \
---DHS example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam \
---expression_table example/input_data/Expression/K562.ENCFF934YBO.TPM.txt \
 --genes example/config/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.bed \
+--H3K27ac example/input_data/Chromatin/ENCFF384ZZM.chr22.bam \
+--DHS example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam,example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep2.chr22.bam \
+--expression_table example/input_data/Expression/K562.ENCFF934YBO.TPM.txt \
 --chrom_sizes example/config/chr22 \
 --ubiquitously_expressed_genes example/config/UbiquitouslyExpressedGenesHG19.txt \
 --cellType K562 \
 --outdir example/ABC_output/Neighborhoods/ 
 ```
+
+Main output files:
 
   * EnhancerList.txt: Candidate enhancer regions with Dnase-seq and H3K27ac ChIP-seq read counts
   * GeneList.txt: Dnase-seq and H3K27ac ChIP-seq read counts on gene bodies and gene promoter regions
@@ -100,7 +104,8 @@ python src/predict.py \
 --enhancers example/ABC_output/Neighborhoods/EnhancerList.txt \
 --genes example/ABC_output/Neighborhoods/GeneList.txt \
 --HiCdir example/input_data/HiC/bedgraph/ \
---threshold .02 \
+--scale_hic_using_powerlaw \
+--threshold .022 \
 --cellType K562 \
 --outdir example/ABC_output/Predictions/ 
 ```
@@ -115,7 +120,7 @@ The default threshold of 0.02 corresponds to 70% recall and 63% precision in the
 Columns are further defined in https://docs.google.com/spreadsheets/d/1UfoVXoCxUpMNPfGypvIum1-RvS07928grsieiaPX67I/edit?usp=sharing
 
 ## Defining Candidate Enhancers
-'Candidate elements' are the set of putative enhancers for which ABC scores will be computed. In computing the ABC score, the product of DNase-seq (or ATAC-seq) and H3K27ac ChIP-seq reads will be counted in the candidate element. Thus the candidate elements should be regions of open (nucleasome depleted) chromatin of sufficient length to capture H3K27ac marks on flanking nucleosomes. In Fulco et al 2019, we defined candidate regions to be 500 bp (150bp of the DHS peak extended 175bp in each direction). 
+'Candidate elements' are the set of putative enhancers for which ABC scores will be computed. In computing the ABC score, the product of DNase-seq (or ATAC-seq) and H3K27ac ChIP-seq reads will be counted in the candidate element. Thus the candidate elements should be regions of open (nucleasome depleted) chromatin of sufficient length to capture H3K27ac marks on flanking nucleosomes. In Fulco et al 2019, we defined candidate regions to be 500bp (150bp of the DHS peak extended 175bp in each direction). 
 
 ### Defining candidate elements from a DHS or ATAC bam
 A typical way to define candidate elements is by calling peaks from a DNase-seq or ATAC-seq bam file. Below we provide a convenience function for defining candidate regions using the MACS2 peak caller. 
@@ -141,14 +146,16 @@ python src/makeCandidateRegions.py \
 --nStrongestPeaks 3000 
 ```
 
-We recommend using ```--nStrongestPeaks 150000``` when making genome-wide peak calls. ```3000``` is just used for the small test run on chr22. 
+We recommend using ```--nStrongestPeaks 150000``` when making genome-wide peak calls. ```3000``` is just used for the small example on chr22. 
 
-Given that the ABC score uses absolute counts of Dnase-seq reads in each region, ```curateFeatures.py``` attempts to select the strongest peaks as measured by absolute read counts (not read counts relative to some background rate). In order to do this, we first call peaks using a lenient significance threshold (.1 in the above example) and then count reads in each of called peaks. 
+Given that the ABC score uses absolute counts of Dnase-seq reads in each region, ```curateFeatures.py``` attempts to select the strongest peaks as measured by absolute read counts (not read counts relative to some background rate). In order to do this, we first call peaks using a lenient significance threshold (.1 in the above example) and then consider the peaks with the most read counts. This procedure implicitly assumes that the active karyotype of the cell type is constant.
 
 We recommend removing elements overlapping regions of the genome that have been observed to accumulate anomalous number of reads in epigenetic sequencing experiments (‘blacklisted regions’). For convenience, we provide the list of blackedlisted regions available from https://sites.google.com/site/anshulkundaje/projects/blacklists.
 
+We have found that on some systems are incompatible with MACS2 and python3. As a workaround, we have allowed ```makeCandidateRegions.py``` to read from the environment variable MACS_COMMAND. If you are experiencing this incompatability, this environment variable could be set to the relevant macs install on your system, eg ```export MACS_COMMAND="use MACS2; macs2"```
+
 ## Contact and Hi-C
-Given that cell-type specific Hi-C data is more difficult to generate than ATAC-seq or ChIP-seq, we have explored alternatives to using cell-type specific Hi-C data. It is known that Hi-C contact frequencies generally follow a powerlaw relationship (with respect to genomic distance) and that many TADs, loops and other structural features of the 3D genome are **not** cell-type specific. 
+Given that cell-type specific Hi-C data is more difficult to generate than ATAC-seq or ChIP-seq, we have explored alternatives to using cell-type specific Hi-C data. It is known that Hi-C contact frequencies generally follow a powerlaw relationship (with respect to genomic distance) and that many TADs, loops and other structural features of the 3D genome are **not** cell-type specific [Ref Rao] [Ref Sanborn]. 
 
 We have found that, for most genes, using an average Hi-C profile in the ABC model gives approximately equally good performance as using a cell-type specific Hi-C profile. To facilitate making ABC predictions in a large panel of cell types, including those without cell type-specific Hi-C data, we have provided an average Hi-C profile (averaged across 10 cell lines) in this repository. 
 
@@ -174,29 +181,29 @@ Three steps
 python src/juicebox_dump.py \
 --hic_file https://hicfiles.s3.amazonaws.com/hiseq/k562/in-situ/combined.hic \
 --juicebox "java -jar juicer_tools.jar" \
---outdir $HICDIR/raw/ \
+--outdir example/input_data/HiC/raw/ \
 --chromosomes 22
 ```
 
 ```
 #Make a virtual 4C bedgraph anchored at the TSS of each gene
 python src/make_bedgraph_from_HiC.py \
---outdir $HICDIR/bedgraph/ \
+--outdir example/input_data/HiC/bedgraph/ \
 --genes example/config/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.bed \
---hic_dir $HICDIR/raw/5kb_resolution_intrachromosomal/
+--hic_dir example/input_data/HiC//raw/5kb_resolution_intrachromosomal/
 ```
 
 ```
 #Fit HiC data to powerlaw model and extract parameters
 python src/compute_powerlaw_fit_from_hic.py \
---bedDir $HICDIR/bedgraph/ \
---outDir $HICDIR/powerlaw/
+--bedDir example/input_data/HiC/bedgraph/ \
+--outDir example/input_data/HiC/powerlaw/
 ```
 
 ## Gene Expression in ABC
 The ABC model is designed to predict the effect of enhancers on expressed genes. If a gene is not expressed in a given cell type (or cell state) then we assume it does not have any activating enhancers (enhancers for which inhibition of the enhancer would lead to decrease in gene expression). Thus we typically only report enhancer-gene connections for expressed genes.
 
-In the absence of expression data, DNase-seq and H3K27ac ChIP-seq at the gene promoter can be used as a proxy for expression. We suggest only considering enhancer-gene connections for genes with sufficiently active promoters (for instance in the top half of gene promoters in the cell type)
+In the absence of expression data, DNase-seq and H3K27ac ChIP-seq at the gene promoter can be used as a proxy for expression. We suggest only considering enhancer-gene connections for genes with sufficiently active promoters (for instance in the top 60% of gene promoters in the cell type)
 
 ## Quantile Normalization
 
@@ -204,17 +211,18 @@ The ABC Score uses the quantitative signal of Hi-C, ATAC-Seq and H3K27ac ChIP-Se
 
 In an effort to make ABC scores comparable across cell types, the ABC model code supports quantile normalizing the epigenetic signal in candidate enhancer regions to some reference. The reference we provide in this repository is computed on ~160,000 DHS peaks in K562. 
 
-Empirically, we have found that applying quantile normalization makes ABC predictions more comparable across cell types. However, it may not be applicable to all circumstances.
+Empirically, we have found that applying quantile normalization makes ABC predictions more comparable across cell types (particularly there is substantial variability in the signal to noise ratio of the epigenetic datasets across cell types). However, care should be taken as quantile normalization may not be applicable to all circumstances.
 
-We recommend using quantile normalization if you are looking to compare ABC scores across cell types. Additionally, the threshold value on the ABC score of .02 (described in Fulco et al) is calculated based on the K562 epigenetic data. 
+Additionally, the threshold value on the ABC score of .02 (described in Fulco et al) is calculated based on the K562 epigenetic data. 
 
 Quantile normalization can be applied using ```--qnorm EnhancersQNormRef.K562.txt``` in ```run.neighborhoods.py```
 
 ## Tips and Comments
 
-* Accurate transcription start site annotations are critical.
+* Accurate transcription start site annotations are critical. The ABC model uses the TSS of the gene in order to assign enhancer-promoter contact frequency. If the TSS annotation is inaccurate (off by >5kb) it will lead to inaccurate predictions.
 * We have found that ubiquitously expressed genes appear insensitive to the effects of distal enhancers. For completeness, this code calculates the ABC score for all genes and flags ubiquitously expressed genes.
 * The size of candidate enhancer elements is important. For example, if two candidate regions are merged, then the ABC score of the merged region will be approximately the sum of the ABC scores for each individual region.
+* In our testing the ABC model typically predicts on average ~3 distal enhancers per expressed gene. If you run the model on a cell type and find a large deviation from this number (say <2 or > ~4.5) this may mean the ABC model is not well calibrated in the cell type. Typical remedies are to use quantile normalization, scale Hi-C or to lower/raise the cutoff on the ABC score.
 
 ## Citation
 
