@@ -30,7 +30,7 @@ bedtools (2.26.0)
 Tabix (0.2.5) - Partial dependancy
 MACS2 (2.1.1.20160309) - Partial dependancy
 Java (1.7) - Partial dependancy
-juicebox
+juicebox - Partial dependancy
 
 Python packages:
 numpy (1.15.2)
@@ -66,7 +66,7 @@ A typical way to define candidate elements is by calling peaks on a DNase-Seq or
 
 Gene annotations should be provided in .bed format.
 
-We recommend either using cell-type specific Hi-C data or average Hi-C data (SEE PROVIDED). If neither of these are available, then the power-law relationship can be used as a proxy for Contact.
+We recommend either using cell-type specific Hi-C data or average Hi-C data (see below). If neither of these are available, then the power-law relationship can be used as a proxy for Contact.
 
 ### Step 2. Quantifying Enhancer Activity: 
 
@@ -162,7 +162,7 @@ We have found that, for most genes, using an average Hi-C profile in the ABC mod
 In the case where cell-type specific Hi-C data is available, we provide a pipeline which takes as input a .hic file, and formats it as the ABC model code expects (see below)
 
 ### Description of Average Hi-C data provided
-Average Hi-C data can be downloaded from: 
+Average Hi-C data can be downloaded from: ftp://ftp.broadinstitute.org/outgoing/lincRNA/average_hic/
 
 Each bedgraph in this directory is Hi-C contact profile anchored at the gene TSS averaged over 10 human cell types. The Hi-C data is KR normalized and is provided at 5kb resolution. The ten cell types used for averaging are: GM12878, NHEK, HMEC, RPE1, THP1, IMR90, HUVEC, HCT116, K562, KBM7
 
