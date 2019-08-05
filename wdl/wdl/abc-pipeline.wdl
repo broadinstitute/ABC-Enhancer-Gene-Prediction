@@ -74,7 +74,7 @@ workflow ABCpipeline {
 
             mkdir outputs
 
-            python /usr/src/app/src/makeCandidateRegions.py \
+            python3 /usr/src/app/src/makeCandidateRegions.py \
                 --bam ~{bam} \
                 --outDir outputs \
                 --chrom_sizes ~{chrom_sizes} \
@@ -117,7 +117,7 @@ task runNeighborhoods {
     command {
         set -euo pipefail
  
-        python /usr/src/app/src/run.neighborhoods.py \
+        python3 /usr/src/app/src/run.neighborhoods.py \
             --candidate_enhancer_regions ~{candidate_enhancer_regions} \
             --genes ~{genes_bed} \
             --H3K27ac ~{h3k27ac_bam} \
@@ -157,7 +157,7 @@ task makePrediction {
     command {
         set -euo pipefail
         tar -xf HiCdirTar
-        python /usr/src/app/src/predict.py \
+        python3 /usr/src/app/src/predict.py \
             --enhancers ~{enhancerList} \
             --genes ~{geneList} \
             --HiCdir "HiCdir" \
