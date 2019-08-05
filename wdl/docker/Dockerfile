@@ -16,9 +16,6 @@ RUN apt-get install -y liblzma-dev
 RUN pip2 install --no-cache-dir -r requirements2.txt
 RUN pip3 install --no-cache-dir -r requirements3.txt
 
-# Copy the required scripts
-COPY src/ src/
-
 # Setup samtools
 RUN apt-get install -y wget
 RUN apt-get install -y libncurses5-dev
@@ -30,9 +27,6 @@ ENV PATH=/usr/src/app/samtools-0.1.19/:${PATH}
 WORKDIR /usr/src/app/
 
 # Setup bedtools
-
-
-
 RUN wget -O bedtools-2.26.0.tar.gz https://github.com/arq5x/bedtools2/releases/download/v2.26.0/bedtools-2.26.0.tar.gz
 RUN tar xzf bedtools-2.26.0.tar.gz
 WORKDIR /usr/src/app/bedtools2/
@@ -43,3 +37,7 @@ WORKDIR /usr/src/app/
 # Install MACS2
 RUN pip install MACS2 
 #RUN git clone https://github.com/taoliu/MACS.git && git checkout macs2python3
+
+
+# Copy the required scripts
+COPY src/ src/
