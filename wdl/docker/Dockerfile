@@ -41,3 +41,6 @@ RUN pip install MACS2
 
 # Copy the required scripts
 COPY src/ src/
+
+RUN pip2 install progressbar
+RUN pip3 install progressbar
