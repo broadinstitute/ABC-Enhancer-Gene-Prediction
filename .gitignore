@@ -11,3 +11,5 @@ src/*.pyc
 .DS_Store
 *__pycache__/*
 
+# cromwell exec
+cromwell-executions
