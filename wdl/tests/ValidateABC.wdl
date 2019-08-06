@@ -37,7 +37,7 @@ task ValidateABCcheck {
 
         fail=false
 
-        if [ "$candidateRegions_hash" == "~{candidateRegions_targetMD5}" ]; then
+        if [ "$candidateRegions_hash" != "~{candidateRegions_targetMD5}" ]; then
             >&2 echo "candidateRegions hash ($candidateRegions_hash) did not match the expected hash (~{candidateRegions_targetMD5})"
             fail="true"
         fi
