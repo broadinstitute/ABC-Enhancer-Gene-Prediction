@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from weakref import WeakValueDictionary
 
 import numpy as np
