@@ -29,7 +29,22 @@ workflow ABCpipeline {
         enhancer_class_override: "Annotation file to override enhancer class assignment"
         supplementary_features: "Additional features to count over regions"
         cellType: "Name of cell type"
-        HiCdirTar: "tarball of the bedgraph directory"
+        window: "Make predictions for all candidate elements within this distance of the gene's TSS"
+        threshold:"Threshold on ABC Score to call a predicted positive"
+        HiCdirTar: "tarball of the bedgraph directory with hic bedgraphs"
+        tss_hic_contribution: "Weighting of diagonal bin of hic matrix as a percentage of its neighbors"
+        hic_pseudocount_distance: "A pseudocount is added equal to the powerlaw fit at this distance"
+        scale_hic_using_powerlaw: "Scale Hi-C values using powerlaw relationship"
+        hic_gamma: "powerlaw exponent of hic data. Must be positive"
+        hic_gamma_reference: "powerlaw exponent to scale to. Must be positive"
+        #run_all_genes: "Do not check for gene expression, make predictions for all genes"
+        expression_cutoff: "Make predictions for genes with expression higher than this value"
+        promoter_activity_quantile_cutoff: "Quantile cutoff on promoter activity. Used to consider a gene 'expressed' in the absence of expression data"
+        #skip_gene_files: "Do not make individual gene files"
+        #skinny_gene_files: "Use subset of columns for genes files"
+        #make_all_putative: "Make big file with concatenation of all genes file"
+        tss_slop: "Distance from tss to search for self-promoters"
+        #include_chrY: "Include Y chromosome"
     }
 
     input {
@@ -39,6 +54,9 @@ workflow ABCpipeline {
         #Boolean? is_paired_end TODO add a optional for this?
         File? regions_blacklist
         File? regions_whitelist
+        Float? pval_cutoff
+        Int? nStrongestPeaks
+        Int? peakExtendFromSummit
         File genes_bed
         File? genes_for_class_assignment
         File? ubiq_genes
@@ -54,10 +72,22 @@ workflow ABCpipeline {
         File? enhancer_class_override
         File? supplementary_features
         String cellType = "defCellType"
+        Int? window
+        Float threshold
         File HiCdirTar
-        Float? pval_cutoff
-        Int? nStrongestPeaks
-        Int? peakExtendFromSummit
+        Float? tss_hic_contribution
+        Int? hic_pseudocount_distance
+        #Boolean? scale_hic_using_powerlaw
+        Float? hic_gamma
+        Float? hic_gamma_reference
+        #Boolean? run_all_genes
+        Float? expression_cutoff
+        Float? promoter_activity_quantile_cutoff
+        #Boolean? skip_gene_files
+        #Boolean? skinny_gene_files
+        #Boolean? make_all_putative
+        Int? tss_slop
+        #Boolean? include_chrY
     }
 
     call makeCandidateRegions {
@@ -100,8 +130,23 @@ workflow ABCpipeline {
         input:
             enhancerList = runNeighborhoods.enhancerList,
             geneList = runNeighborhoods.geneList,
+            window = window,
+            threshold = threshold,
+            cellType = cellType,
             HiCdirTar = HiCdirTar,
-            cellType = cellType
+            tss_hic_contribution = tss_hic_contribution,
+            hic_pseudocount_distance = hic_pseudocount_distance,
+            #scale_hic_using_powerlaw = scale_hic_using_powerlaw,
+            #hic_gamma = hic_gamma,
+            #hic_gamma_reference = hic_gamma_reference,
+            #run_all_genes = run_all_genes,
+            expression_cutoff = expression_cutoff,
+            promoter_activity_quantile_cutoff = promoter_activity_quantile_cutoff,
+            #skip_gene_files = skip_gene_files,
+            #skinny_gene_files = skinny_gene_files,
+            #make_all_putative = make_all_putative,
+            tss_slop = tss_slop,
+            #include_chrY = include_chrY,
     }
 
     output {
@@ -184,26 +229,27 @@ task runNeighborhoods {
         Int num_threads = 1
         String mem_size = "1 GB"
 
+       ## TODO THIS IS WRONG, what about --ATAC flag
     command {
         set -euo pipefail
 
         python3 /usr/src/app/src/run.neighborhoods.py \
             --candidate_enhancer_regions ~{candidate_enhancer_regions} \
             --genes ~{genes_bed} \
-            --outdir outputs/ \
             ${"--genes_for_class_assignment=" + genes_for_class_assignment} \
             ${"--ubiquitously_expressed_genes=" + ubiquitously_expressed_genes} \
             ${"--gene_name_annotations=" + gene_name_annotations} \
             ${"--primary_gene_identifier=" + primary_gene_identifier} \
             --H3K27ac ~{h3k27ac_bam} \
-            --DHS ~{dnase_bam} \ ## TODO THIS IS WRONG, what about --ATAC flag
+            --DHS ~{dnase_bam} \
             ${"--expression_table=" + expression_table} \
             ${"--qnorm=" + qnorm} \
             ${"--tss_slop_for_class_assignment=" + tss_slop_for_class_assignment} \
             --chrom_sizes ~{chromosome_sizes} \
             ${"--enhancer_class_override=" + enhancer_class_override} \
             ${"--supplementary_features=" + supplementary_features} \
-            --cellType ~{cellType}
+            --cellType ~{cellType} \
+            --outdir outputs/
     }
     output {
         # TODO: add remain outputs
@@ -222,25 +268,47 @@ task makePrediction {
     input {
         File enhancerList
         File geneList
-        File HiCdirTar
-        Float threshold = "0.022"
+        Int? window
+        Float threshold
         String cellType
+        File HiCdirTar
+        Float? tss_hic_contribution
+        Int? hic_pseudocount_distance
+        #Boolean? scale_hic_using_powerlaw
+        Float? hic_gamma
+        Float? hic_gamma_reference
+        #Boolean? run_all_genes
+        Float? expression_cutoff
+        Float? promoter_activity_quantile_cutoff
+        #Boolean? skip_gene_files
+        #Boolean? skinny_gene_files
+        #Boolean? make_all_putative
+        Int? tss_slop
+        #Boolean? include_chrY
     }
 
     String docker_image = "quay.io/nbarkas/abc-general-container:latest"
     Int num_threads = 1
     String mem_size = "1 GB"
 
+    ## TODO this is wrong-- need to deal with Booleans
     command {
         set -euo pipefail
         tar -xf ~{HiCdirTar}
         python3 /usr/src/app/src/predict.py \
             --enhancers ~{enhancerList} \
             --genes ~{geneList} \
-            --HiCdir "bedgraph" \
-            --scale_hic_using_powerlaw \
+            ${"--window=" + window} \
             --threshold ~{threshold} \
             --cellType ~{cellType} \
+            --HiCdir "bedgraph" \
+            ${"--tss_hic_contribution=" + tss_hic_contribution} \
+            ${"--hic_gamma=" + hic_gamma} \
+            ${"--hic_gamma_reference=" + hic_gamma_reference} \
+            ${"--expression_cutoff=" + expression_cutoff} \
+            ${"--promoter_activity_quantile_cutoff=" + promoter_activity_quantile_cutoff} \
+            ${"--tss_slop=" + tss_slop} \
+            --scale_hic_using_powerlaw \
             --outdir outputs/
     }
     output {
