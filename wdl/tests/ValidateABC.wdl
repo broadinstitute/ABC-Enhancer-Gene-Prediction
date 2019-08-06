@@ -6,11 +6,14 @@ workflow ValidateABC {
     }
 
     input {
-        File candidateRegions 
+        File candidateRegions
+        String candidateRegions_targetMD5
     }
 
     call ValidateABCcheck {
-
+        input:
+            candidateRegions = candidateRegions,
+            candidateRegions_targetMD5 = candidateRegions_targetMD5
     }
 }
 
