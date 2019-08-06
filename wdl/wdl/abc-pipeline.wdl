@@ -4,7 +4,11 @@ workflow ABCpipeline {
     meta {
         description: "WDL version of the ABC pipeline"
     }
- 
+
+    parameter_meta {
+        HiCdirTar: "tar file of the bedgraph directory"
+    }
+
     input {
         File dnaseqbam
         File dnaseqbam_index
@@ -29,7 +33,7 @@ workflow ABCpipeline {
            regions_whitelist = regions_whitelist
     }
 
-    call runNeighborhoods { 
+    call runNeighborhoods {
        input:
            candidate_enhancer_regions = makeCandidateRegions.candidateRegions,
            genes_bed = genes_bed,
@@ -73,7 +77,7 @@ workflow ABCpipeline {
         String docker_image = "quay.io/nbarkas/abc-general-container:latest"
         Int num_threads = 1
         String mem_size = "1 GB"
-        
+
 
         command {
             set -euo pipefail
@@ -92,7 +96,9 @@ workflow ABCpipeline {
         }
         output {
             # TODO: Add all the outputs
-            File candidateRegions = "outputs/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.candidateRegions.bed"
+            String bamName = basename(bam, ".bam")
+            File candidateRegions = "outputs/" + bamName + ".macs2_peaks.narrowPeak.candidateRegions.bed"
+
         }
         runtime {
             docker: docker_image
@@ -106,9 +112,9 @@ workflow ABCpipeline {
 
 task runNeighborhoods {
     input {
-       File candidate_enhancer_regions 
+       File candidate_enhancer_regions
        File genes_bed
-       File h3k27ac_bam 
+       File h3k27ac_bam
        File h3k27ac_bam_index
        File dnase_bam
        File dnase_bam_index
@@ -124,7 +130,7 @@ task runNeighborhoods {
 
     command {
         set -euo pipefail
- 
+
         python3 /usr/src/app/src/run.neighborhoods.py \
             --candidate_enhancer_regions ~{candidate_enhancer_regions} \
             --genes ~{genes_bed} \
@@ -155,7 +161,7 @@ task makePrediction {
         File geneList
         File HiCdirTar
         Float threshold = "0.022"
-        String cellType 
+        String cellType
     }
 
     String docker_image = "quay.io/nbarkas/abc-general-container:latest"
