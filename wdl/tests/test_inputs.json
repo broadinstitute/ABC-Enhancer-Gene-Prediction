@@ -1,15 +1,15 @@
 {
   "TestAbcPR.dnaseqbam": "gs://abc-pipeline-data/test-data/set1/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam",
   "TestAbcPR.dnaseqbam_index": "gs://abc-pipeline-data/test-data/set1/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam.bai",
-  "TestAbcPR.chrom_sizes": "gs://abc-pipeline-data/test-data/set1/config/chr22"
-  "TestAbc.regions_blacklist": "gs://abc-pipeline-data/test-data/set1/config/wgEncodeHg19ConsensusSignalArtifactRegions.bed",
-  "TestAbc.regions_whitelist": "gs://abc-pipeline-data/test-data/set1/config/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.chr22.bed",
-  "TestAbc.genes_bed": "gs://abc-pipeline-data/test-data/set1/config/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.bed",
-  "TestAbc.h3k27ac_bam": "gs://abc-pipeline-data/test-data/set1/input_data/Chromatin/ENCFF384ZZM.chr22.bam",
-  "TestAbc.h3k27ac_bam_index": "gs://abc-pipeline-data/test-data/set1/input_data/Chromatin/ENCFF384ZZM.chr22.bam.bai",
-  "TestAbc.expression_table": "gs://abc-pipeline-data/test-data/set1/input_data/Expression/K562.ENCFF934YBO.TPM.txt",
-  "TestAbc.ubiq_genes": "gs://abc-pipeline-data/test-data/set1/config/UbiquitouslyExpressedGenesHG19.txt",
-  "TestAbc.HiCdirTar": "gs://abc-pipeline-data/test-data/set1/input_data/HiC/bedgraph.tar.gz",
-  "TestAbc.cellType": "K562"
-  "TestAbc.candidateRegions_targetMD5": "achecksum"
+  "TestAbcPR.chrom_sizes": "gs://abc-pipeline-data/test-data/set1/config/chr22",
+  "TestAbcPR.regions_blacklist": "gs://abc-pipeline-data/test-data/set1/config/wgEncodeHg19ConsensusSignalArtifactRegions.bed",
+  "TestAbcPR.regions_whitelist": "gs://abc-pipeline-data/test-data/set1/config/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.chr22.bed",
+  "TestAbcPR.genes_bed": "gs://abc-pipeline-data/test-data/set1/config/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.bed",
+  "TestAbcPR.h3k27ac_bam": "gs://abc-pipeline-data/test-data/set1/input_data/Chromatin/ENCFF384ZZM.chr22.bam",
+  "TestAbcPR.h3k27ac_bam_index": "gs://abc-pipeline-data/test-data/set1/input_data/Chromatin/ENCFF384ZZM.chr22.bam.bai",
+  "TestAbcPR.expression_table": "gs://abc-pipeline-data/test-data/set1/input_data/Expression/K562.ENCFF934YBO.TPM.txt",
+  "TestAbcPR.ubiq_genes": "gs://abc-pipeline-data/test-data/set1/config/UbiquitouslyExpressedGenesHG19.txt",
+  "TestAbcPR.HiCdirTar": "gs://abc-pipeline-data/test-data/set1/input_data/HiC/bedgraph.tar.gz",
+  "TestAbcPR.cellType": "K562",
+  "TestAbcPR.candidateRegions_targetMD5": "achecksum"
 }
