@@ -98,7 +98,7 @@ workflow ABCpipeline {
             docker: docker_image
             cpu: num_threads
             memory: mem_size
-            disks: "local-disk" + ceil((size(bam, "GiB")) * 1.2)
+            disks: "local-disk " + ceil((size(bam, "GiB")) * 1.2) + " HDD"
         }
     }
 
@@ -145,7 +145,7 @@ task runNeighborhoods {
         docker: docker_image
         cpu: num_threads
         memory: mem_size
-        disks: "local-disk" + ceil((size(dnase_bam, "GiB") + size(h3k27ac_bam, "GiB")) * 1.2)
+        disks: "local-disk " + ceil((size(dnase_bam, "GiB") + size(h3k27ac_bam, "GiB")) * 1.2) + " HDD"
     }
 }
 
@@ -181,6 +181,6 @@ task makePrediction {
         docker: docker_image
         cpu: num_threads
         memory: mem_size
-        disks: "local-disk" + ceil(size(HiCdirTar, "GiB")) * 3
+        disks: "local-disk " + ceil(size(HiCdirTar, "GiB")) * 3 + " HDD"
     }
 }
