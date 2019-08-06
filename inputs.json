@@ -1,19 +1,18 @@
 {
-  "ABCpipeline.HiCdirTar": "/Users/myessail/broad/ABC-Enhancer-Gene-Prediction/example/input_data/HiC/bedgraph.tar.gz",
+  "ABCpipeline.HiCdirTar": "ABC-Enhancer-Gene-Prediction/example/input_data/HiC/bedgraph.tar.gz",
   "ABCpipeline.makeCandidateRegions.pval_cutoff": 0.1,
-  "ABCpipeline.genes_bed": "/Users/myessail/broad/ABC-Enhancer-Gene-Prediction/example/config/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.bed",
-  "ABCpipeline.regions_whitelist": "/Users/myessail/broad/ABC-Enhancer-Gene-Prediction/example/config/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.chr22.bed",
-  "ABCpipeline.h3k27ac_bam": "/Users/myessail/broad/ABC-Enhancer-Gene-Prediction/example/input_data/Chromatin/ENCFF384ZZM.chr22.bam",
-  "ABCpipeline.h3k27ac_bam_index": "/Users/myessail/broad/ABC-Enhancer-Gene-Prediction/example/input_data/Chromatin/ENCFF384ZZM.chr22.bam.bai",
-  "ABCpipeline.regions_blacklist": "/Users/myessail/broad/ABC-Enhancer-Gene-Prediction/example/config/wgEncodeHg19ConsensusSignalArtifactRegions.bed",
+  "ABCpipeline.genes_bed": "ABC-Enhancer-Gene-Prediction/example/config/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.bed",
+  "ABCpipeline.regions_whitelist": "ABC-Enhancer-Gene-Prediction/example/config/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.chr22.bed",
+  "ABCpipeline.h3k27ac_bam": "ABC-Enhancer-Gene-Prediction/example/input_data/Chromatin/ENCFF384ZZM.chr22.bam",
+  "ABCpipeline.h3k27ac_bam_index": "ABC-Enhancer-Gene-Prediction/example/input_data/Chromatin/ENCFF384ZZM.chr22.bam.bai",
+  "ABCpipeline.regions_blacklist": "ABC-Enhancer-Gene-Prediction/example/config/wgEncodeHg19ConsensusSignalArtifactRegions.bed",
   "ABCpipeline.makeCandidateRegions.nStrongestPeaks": 3000,
-  "ABCpipeline.ubiq_genes": "/Users/myessail/broad/ABC-Enhancer-Gene-Prediction/example/config/UbiquitouslyExpressedGenesHG19.txt",
-  "ABCpipeline.expression_table": "/Users/myessail/broad/ABC-Enhancer-Gene-Prediction/example/input_data/Expression/K562.ENCFF934YBO.TPM.txt",
+  "ABCpipeline.ubiq_genes": "ABC-Enhancer-Gene-Prediction/example/config/UbiquitouslyExpressedGenesHG19.txt",
+  "ABCpipeline.expression_table": "ABC-Enhancer-Gene-Prediction/example/input_data/Expression/K562.ENCFF934YBO.TPM.txt",
   "ABCpipeline.cellType": "K562",
-  "ABCpipeline.dnaseqbam": "/Users/myessail/broad/ABC-Enhancer-Gene-Prediction/example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam",
-  "ABCpipeline.dnaseqbam_index": "/Users/myessail/broad/ABC-Enhancer-Gene-Prediction/example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam.bai",
+  "ABCpipeline.dnaseqbam": "ABC-Enhancer-Gene-Prediction/example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam",
+  "ABCpipeline.dnaseqbam_index": "ABC-Enhancer-Gene-Prediction/example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam.bai",
   "ABCpipeline.makeCandidateRegions.peakExtendFromSummit": 250,
   "ABCpipeline.makePrediction.threshold": 0.022,
-  "ABCpipeline.chrom_sizes": "/Users/myessail/broad/ABC-Enhancer-Gene-Prediction/example/config/chr22"
+  "ABCpipeline.chrom_sizes": "ABC-Enhancer-Gene-Prediction/example/config/chr22"
 }
-
