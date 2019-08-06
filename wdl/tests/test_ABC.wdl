@@ -17,29 +17,28 @@ workflow TestAbcPR {
         File ubiq_genes
         File HiCdirTar
         String cellType = "defCellType"
-
         String candidateRegions_targetMD5
    }
 
-   call target.ABCpipeline {
+   call target.ABCpipeline as target {
      input:
          dnaseqbam = dnaseqbam,
-         dnaseqbam_index = dnaseqbam_index
-         chrom_sizes = chrom_sizes
-         regions_blacklist = regions_blacklist
-         regions_whitelist = regions_whitelist
-         genes_bed = genes_bed
-         h3k27ac_bam = h3k27ac_bam
-         h3k27ac_bam_index = h3k27ac_bam_index
-         expression_table = expression_table
-         ubiq_genes = ubiq_genes
-         HiCdirTar = HiCdirTar
+         dnaseqbam_index = dnaseqbam_index,
+         chrom_sizes = chrom_sizes,
+         regions_blacklist = regions_blacklist,
+         regions_whitelist = regions_whitelist,
+         genes_bed = genes_bed,
+         h3k27ac_bam = h3k27ac_bam,
+         h3k27ac_bam_index = h3k27ac_bam_index,
+         expression_table = expression_table,
+         ubiq_genes = ubiq_genes,
+         HiCdirTar = HiCdirTar,
          cellType = cellType
    }
 
-   call checker.ValidateABC {
+   call checker.ValidateABC as checker {
       input:
-         candidateRegions_targetMD5 = candidateRegions_targetMD5
+         candidateRegions_targetMD5 = candidateRegions_targetMD5,
          candidateRegions = target.candidateRegions
    }
 }

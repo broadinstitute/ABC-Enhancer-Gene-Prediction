@@ -15,6 +15,10 @@ workflow ValidateABC {
             candidateRegions = candidateRegions,
             candidateRegions_targetMD5 = candidateRegions_targetMD5
     }
+
+    output {
+        
+    }
 }
 
 task ValidateABCcheck {
@@ -27,9 +31,9 @@ task ValidateABCcheck {
     Int num_threads = 1
     String mem_size = "1 GB"
 
-    command {
+    command <<<
         set -euo pipefail
-        candidateRegions_hash=$(cat ~{candidateRegions} | md5sum | awk '{print $1}')
+        candidateRegions_hash=$( cat ~{candidateRegions} | md5sum | awk '{print $1}' )
 
         fail=false
 
@@ -39,16 +43,12 @@ task ValidateABCcheck {
         fi
 
         if [ $fail == "true" ]; then exit 1; fi
-    }
-
-    output {
-        File checksum = "checksum.txt"
-    }
+    >>>
 
     runtime {
         docker: docker_image
         cpu: num_threads
         memory: mem_size
-        disks: "local-disk " + ceil((size(bam, "GiB")) * 1.2) + " HDD"
+        disks: "local-disk " + ceil((size(candidateRegions, "GiB")) * 1.2 + 1) + " HDD"
     }
 }

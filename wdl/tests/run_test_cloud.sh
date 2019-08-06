@@ -6,4 +6,4 @@
 
 CROMWELL_JAR_PATH=/Users/nbarkas/jars/cromwell-44.jar
 
-java -Dconfig.file=google.conf -jar $CROMWELL_JAR_PATH run ../wdl/abc-pipeline.wdl -i test_inputs.json
+java -Dconfig.file=google.conf -jar $CROMWELL_JAR_PATH run test_ABC.wdl -i test_inputs.json
