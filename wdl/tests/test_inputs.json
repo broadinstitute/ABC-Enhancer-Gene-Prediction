@@ -1,19 +1,14 @@
 {
-  "ABCpipeline.HiCdirTar": "gs://abc-pipeline-data/test-data/set1/input_data/HiC/bedgraph.tar.gz",
-  "ABCpipeline.makeCandidateRegions.pval_cutoff": 0.1,
-  "ABCpipeline.genes_bed": "gs://abc-pipeline-data/test-data/set1/config/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.bed",
-  "ABCpipeline.regions_whitelist": "gs://abc-pipeline-data/test-data/set1/config/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.chr22.bed",
-  "ABCpipeline.h3k27ac_bam": "gs://abc-pipeline-data/test-data/set1/input_data/Chromatin/ENCFF384ZZM.chr22.bam",
-  "ABCpipeline.h3k27ac_bam_index": "gs://abc-pipeline-data/test-data/set1/input_data/Chromatin/ENCFF384ZZM.chr22.bam.bai",
-  "ABCpipeline.regions_blacklist": "gs://abc-pipeline-data/test-data/set1/config/wgEncodeHg19ConsensusSignalArtifactRegions.bed",
-  "ABCpipeline.makeCandidateRegions.nStrongestPeaks": 3000,
-  "ABCpipeline.ubiq_genes": "gs://abc-pipeline-data/test-data/set1/config/UbiquitouslyExpressedGenesHG19.txt",
-  "ABCpipeline.expression_table": "gs://abc-pipeline-data/test-data/set1/input_data/Expression/K562.ENCFF934YBO.TPM.txt",
-  "ABCpipeline.cellType": "K562",
-  "ABCpipeline.dnaseqbam": "gs://abc-pipeline-data/test-data/set1/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam",
-  "ABCpipeline.dnaseqbam_index": "gs://abc-pipeline-data/test-data/set1/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam.bai",
-  "ABCpipeline.makeCandidateRegions.peakExtendFromSummit": 250,
-  "ABCpipeline.makePrediction.threshold": 0.022,
-  "ABCpipeline.chrom_sizes": "gs://abc-pipeline-data/test-data/set1/config/chr22"
+  "TestAbcPR.dnaseqbam": "gs://abc-pipeline-data/test-data/set1/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam",
+  "TestAbcPR.dnaseqbam_index": "gs://abc-pipeline-data/test-data/set1/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam.bai",
+  "TestAbcPR.chrom_sizes": "gs://abc-pipeline-data/test-data/set1/config/chr22"
+  "TestAbc.regions_blacklist": "gs://abc-pipeline-data/test-data/set1/config/wgEncodeHg19ConsensusSignalArtifactRegions.bed",
+  "TestAbc.regions_whitelist": "gs://abc-pipeline-data/test-data/set1/config/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.chr22.bed",
+  "TestAbc.genes_bed": "gs://abc-pipeline-data/test-data/set1/config/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.bed",
+  "TestAbc.h3k27ac_bam": "gs://abc-pipeline-data/test-data/set1/input_data/Chromatin/ENCFF384ZZM.chr22.bam",
+  "TestAbc.h3k27ac_bam_index": "gs://abc-pipeline-data/test-data/set1/input_data/Chromatin/ENCFF384ZZM.chr22.bam.bai",
+  "TestAbc.expression_table": "gs://abc-pipeline-data/test-data/set1/input_data/Expression/K562.ENCFF934YBO.TPM.txt",
+  "TestAbc.ubiq_genes": "gs://abc-pipeline-data/test-data/set1/config/UbiquitouslyExpressedGenesHG19.txt",
+  "TestAbc.HiCdirTar": "gs://abc-pipeline-data/test-data/set1/input_data/HiC/bedgraph.tar.gz",
+  "TestAbc.cellType": "K562"
 }
-

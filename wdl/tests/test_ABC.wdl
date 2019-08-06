@@ -17,6 +17,8 @@ workflow TestAbcPR {
         File ubiq_genes
         File HiCdirTar
         String cellType = "defCellType"
+
+        String candidateRegions_targetMD5
    }
 
    call target.ABCpipeline {
@@ -37,6 +39,7 @@ workflow TestAbcPR {
 
    call checker.ValidateABC {
       input:
+         candidateRegions_targetMD5 = candidateRegions_targetMD5
          candidateRegions = target.candidateRegions
    }
 }

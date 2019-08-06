@@ -17,6 +17,7 @@ workflow ValidateABC {
 task ValidateABCcheck {
     input {
         File candidateRegions
+        String candidateRegions_targetMD5
     }
 
     String docker_image = "ubuntu:18.04"
@@ -25,7 +26,16 @@ task ValidateABCcheck {
 
     command {
         set -euo pipefail
-        cat ~{candidateRegions} | md5sum | cut -f 2 > checksum.txt
+        candidateRegions_hash=$(cat ~{candidateRegions} | md5sum | awk '{print $1}')
+
+        fail=false
+
+        if [ "$candidateRegions_hash" == "~{candidateRegions_targetMD5}" ]; then
+            >&2 echo "candidateRegions hash ($candidateRegions_hash) did not match the expected hash (~{candidateRegions_targetMD5})"
+            fail=true
+        fi
+
+        if [ $fail == "true" ]; then exit 1; fi
     }
 
     output {
