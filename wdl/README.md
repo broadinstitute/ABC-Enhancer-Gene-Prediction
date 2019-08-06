@@ -25,7 +25,8 @@
         "ABCpipeline.chrom_sizes": "/Users/myessail/broad/ABC-Enhancer-Gene-Prediction/example/config/chr22"
     }
     ```
-3. Download and install docker, we use [Docker Desktop](https://www.docker.com/products/docker-desktop)
+3. Create the `bedgraph.tar.gz` file used in `ABCpipeline.HiCdirTar` by tarring the `/example/input_data/HiC/bedgraph` directory
+4. Download and install docker, we use [Docker Desktop](https://www.docker.com/products/docker-desktop)
 
 ## Running the Pipeline
 1. Start cromwell by running `java -jar ~/jars/cromwell.jar server` from the command line
