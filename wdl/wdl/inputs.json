@@ -16,5 +16,6 @@
   "ABCpipeline.threshold": 0.022,
   "ABCpipeline.chrom_sizes": "ABC-Enhancer-Gene-Prediction/example/config/chr22",
   "ABCpipeline.dhs_bam": "ABC-Enhancer-Gene-Prediction/example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam",
-  "ABCpipeline.dhs_bam_index": "ABC-Enhancer-Gene-Prediction/example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam.bai"
+  "ABCpipeline.dhs_bam_index": "ABC-Enhancer-Gene-Prediction/example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam.bai",
+  "ABCpipeline.scale_hic_using_powerlaw": true
 }
