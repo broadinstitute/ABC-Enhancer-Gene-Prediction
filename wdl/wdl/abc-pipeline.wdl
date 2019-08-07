@@ -69,7 +69,7 @@ workflow ABCpipeline {
         File? dhs_bam_index
         File? atac_bam
         File? atac_bam_index
-        String? default_accessibility_feature
+        String? default_accessibility_feature = "DHS"
         File? expression_table
         File? qnorm
         Int? tss_slop_for_class_assignment
