@@ -37,21 +37,21 @@ workflow ABCpipeline {
         scale_hic_using_powerlaw: "Scale Hi-C values using powerlaw relationship"
         hic_gamma: "powerlaw exponent of hic data. Must be positive"
         hic_gamma_reference: "powerlaw exponent to scale to. Must be positive"
-        #run_all_genes: "Do not check for gene expression, make predictions for all genes"
+        run_all_genes: "Do not check for gene expression, make predictions for all genes"
         expression_cutoff: "Make predictions for genes with expression higher than this value"
         promoter_activity_quantile_cutoff: "Quantile cutoff on promoter activity. Used to consider a gene 'expressed' in the absence of expression data"
-        #skip_gene_files: "Do not make individual gene files"
-        #skinny_gene_files: "Use subset of columns for genes files"
-        #make_all_putative: "Make big file with concatenation of all genes file"
+        skip_gene_files: "Do not make individual gene files"
+        skinny_gene_files: "Use subset of columns for genes files"
+        make_all_putative: "Make big file with concatenation of all genes file"
         tss_slop: "Distance from tss to search for self-promoters"
-        #include_chrY: "Include Y chromosome"
+        include_chrY: "Include Y chromosome"
     }
 
     input {
         File dnaseqbam
         File dnaseqbam_index
         File chrom_sizes
-        #Boolean? is_paired_end TODO add a optional for this?
+        Boolean? is_paired_end
         File? regions_blacklist
         File? regions_whitelist
         Float? pval_cutoff = 0.1
@@ -73,8 +73,8 @@ workflow ABCpipeline {
         File? expression_table
         File? qnorm
         Int? tss_slop_for_class_assignment
-        #Boolean? skip_rpkm_quantile
-        #Boolean? use_secondary_counting_method
+        Boolean? skip_rpkm_quantile
+        Boolean? use_secondary_counting_method
         File? enhancer_class_override
         File? supplementary_features
         String cellType = "defCellType"
@@ -84,17 +84,17 @@ workflow ABCpipeline {
         File HiCdirTar
         Float? tss_hic_contribution
         Int? hic_pseudocount_distance
-        #Boolean? scale_hic_using_powerlaw
+        Boolean? scale_hic_using_powerlaw
         Float? hic_gamma
         Float? hic_gamma_reference
-        #Boolean? run_all_genes
+        Boolean? run_all_genes
         Float? expression_cutoff
         Float? promoter_activity_quantile_cutoff
-        #Boolean? skip_gene_files
-        #Boolean? skinny_gene_files
-        #Boolean? make_all_putative
+        Boolean? skip_gene_files
+        Boolean? skinny_gene_files
+        Boolean? make_all_putative
         Int? tss_slop
-        #Boolean? include_chrY
+        Boolean? include_chrY
     }
 
     call makeCandidateRegions {
@@ -102,7 +102,7 @@ workflow ABCpipeline {
            bam = dnaseqbam,
            bam_index = dnaseqbam_index,
            chrom_sizes = chrom_sizes,
-           #is_paired_end = is_paired_end,
+           is_paired_end = is_paired_end,
            pval_cutoff = pval_cutoff,
            nStrongestPeaks = nStrongestPeaks,
            peakExtendFromSummit = peakExtendFromSummit,
@@ -128,8 +128,8 @@ workflow ABCpipeline {
            expression_table = expression_table,
            qnorm = qnorm,
            tss_slop_for_class_assignment = tss_slop_for_class_assignment,
-           #skip_rpkm_quantile = skip_rpkm_quantile,
-           #use_secondary_counting_method = use_secondary_counting_method,
+           skip_rpkm_quantile = skip_rpkm_quantile,
+           use_secondary_counting_method = use_secondary_counting_method,
            chromosome_sizes = chrom_sizes,
            enhancer_class_override = enhancer_class_override,
            supplementary_features = supplementary_features,
@@ -146,17 +146,17 @@ workflow ABCpipeline {
             HiCdirTar = HiCdirTar,
             tss_hic_contribution = tss_hic_contribution,
             hic_pseudocount_distance = hic_pseudocount_distance,
-            #scale_hic_using_powerlaw = scale_hic_using_powerlaw,
-            #hic_gamma = hic_gamma,
-            #hic_gamma_reference = hic_gamma_reference,
-            #run_all_genes = run_all_genes,
+            scale_hic_using_powerlaw = scale_hic_using_powerlaw,
+            hic_gamma = hic_gamma,
+            hic_gamma_reference = hic_gamma_reference,
+            run_all_genes = run_all_genes,
             expression_cutoff = expression_cutoff,
             promoter_activity_quantile_cutoff = promoter_activity_quantile_cutoff,
-            #skip_gene_files = skip_gene_files,
-            #skinny_gene_files = skinny_gene_files,
-            #make_all_putative = make_all_putative,
+            skip_gene_files = skip_gene_files,
+            skinny_gene_files = skinny_gene_files,
+            make_all_putative = make_all_putative,
             tss_slop = tss_slop,
-            #include_chrY = include_chrY,
+            include_chrY = include_chrY,
     }
 
     output {
@@ -170,7 +170,7 @@ workflow ABCpipeline {
             File bam
             File bam_index
             File chrom_sizes
-            #Boolean? is_paired_end
+            Boolean? is_paired_end
             File? regions_blacklist
             File? regions_whitelist
             Float? pval_cutoff
@@ -192,6 +192,7 @@ workflow ABCpipeline {
                 --bam ~{bam} \
                 --outDir outputs \
                 --chrom_sizes ~{chrom_sizes} \
+                ${true='--is_paired_end'  false='' is_paired_end} \
                 ${"--regions_blacklist=" + regions_blacklist} \
                 ${"--regions_whitelist=" + regions_whitelist} \
                 ${"--pval_cutoff=" + pval_cutoff} \
@@ -230,8 +231,8 @@ task runNeighborhoods {
        File? expression_table
        File? qnorm
        Int? tss_slop_for_class_assignment
-       #Boolean? skip_rpkm_quantile
-       #Boolean? use_secondary_counting_method
+       Boolean? skip_rpkm_quantile
+       Boolean? use_secondary_counting_method
        File chromosome_sizes
        File? enhancer_class_override
        File? supplementary_features
@@ -242,7 +243,7 @@ task runNeighborhoods {
         Int num_threads = 1
         String mem_size = "1 GB"
 
-       ## TODO THIS IS WRONG, what about --ATAC flag
+       ## TODO: check about --ATAC flag
     command {
         set -euo pipefail
 
@@ -260,6 +261,8 @@ task runNeighborhoods {
             ${"--expression_table=" + expression_table} \
             ${"--qnorm=" + qnorm} \
             ${"--tss_slop_for_class_assignment=" + tss_slop_for_class_assignment} \
+            ${true='--skip_rpkm_quantile' false='' skip_rpkm_quantile} \
+            ${true='--use_secondary_counting_method' false='' use_secondary_counting_method} \
             --chrom_sizes ~{chromosome_sizes} \
             ${"--enhancer_class_override=" + enhancer_class_override} \
             ${"--supplementary_features=" + supplementary_features} \
@@ -289,24 +292,23 @@ task makePrediction {
         File HiCdirTar
         Float? tss_hic_contribution
         Int? hic_pseudocount_distance
-        #Boolean? scale_hic_using_powerlaw
+        Boolean? scale_hic_using_powerlaw
         Float? hic_gamma
         Float? hic_gamma_reference
-        #Boolean? run_all_genes
+        Boolean? run_all_genes
         Float? expression_cutoff
         Float? promoter_activity_quantile_cutoff
-        #Boolean? skip_gene_files
-        #Boolean? skinny_gene_files
-        #Boolean? make_all_putative
+        Boolean? skip_gene_files
+        Boolean? skinny_gene_files
+        Boolean? make_all_putative
         Int? tss_slop
-        #Boolean? include_chrY
+        Boolean? include_chrY
     }
 
     String docker_image = "quay.io/nbarkas/abc-general-container:latest"
     Int num_threads = 1
     String mem_size = "1 GB"
 
-    ## TODO this is wrong-- need to deal with Booleans
     command {
         set -euo pipefail
         tar -xf ~{HiCdirTar}
@@ -323,7 +325,12 @@ task makePrediction {
             ${"--expression_cutoff=" + expression_cutoff} \
             ${"--promoter_activity_quantile_cutoff=" + promoter_activity_quantile_cutoff} \
             ${"--tss_slop=" + tss_slop} \
-            --scale_hic_using_powerlaw \
+            ${true='--scale_hic_using_powerlaw' false='' scale_hic_using_powerlaw} \
+            ${true='--run_all_genes' false='' run_all_genes} \
+            ${true='--skip_gene_files' false='' skip_gene_files} \
+            ${true='--skinny_gene_files' false='' skinny_gene_files} \
+            ${true='--make_all_putative' false='' make_all_putative} \
+            ${true='--include_chrY' false='' include_chrY} \
             --outdir outputs/
     }
     output {
