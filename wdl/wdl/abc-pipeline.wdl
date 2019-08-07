@@ -16,9 +16,9 @@ workflow ABCpipeline {
         ubiq_genes: "File listing ubiquitously expressed genes. These will be flagged by the model, but this annotation does not affect model predictions"
         gene_name_annotations: "Comma delimited string of names corresponding to the gene identifiers present in the name field of the gene annotation bed file"
         primary_gene_identifier: "Primary identifier used to identify genes. Must be present in gene_name_annotations. The primary identifier must be unique"
-        # DHS: "Comma delimited string of DHS .bam files. Either ATAC or DHS must be provided" is this a duplicate?
-        # ATAC: "Comma delimited string of ATAC .bam files. Either ATAC or DHS must be provided"
-        # default_accessibility_feature: "If both ATAC and DHS are provided, this flag must be set to either 'DHS' or 'ATAC' signifying which datatype to use in computing activity"
+        dhs_bam: "Comma delimited string of DHS .bam files. Either ATAC or DHS must be provided"
+        atac_bam: "Comma delimited string of ATAC .bam files. Either ATAC or DHS must be provided"
+        default_accessibility_feature: "If both ATAC and DHS are provided, this flag must be set to either 'DHS' or 'ATAC' signifying which datatype to use in computing activity"
         # will want conditional here ^
         expression_table: "Comma delimited string of gene expression files"
         qnorm:"Quantile normalization reference file"
@@ -65,6 +65,11 @@ workflow ABCpipeline {
         String? primary_gene_identifier
         File h3k27ac_bam
         File h3k27ac_bam_index
+        File? dhs_bam
+        File? dhs_bam_index
+        File? atac_bam
+        File? atac_bam_index
+        String? default_accessibility_feature
         File? expression_table
         File? qnorm
         Int? tss_slop_for_class_assignment
@@ -115,8 +120,11 @@ workflow ABCpipeline {
            primary_gene_identifier = primary_gene_identifier,
            h3k27ac_bam = h3k27ac_bam,
            h3k27ac_bam_index = h3k27ac_bam_index,
-           dnase_bam = dnaseqbam,
-           dnase_bam_index = dnaseqbam_index,
+           dhs_bam = dhs_bam,
+           dhs_bam_index = dhs_bam_index,
+           atac_bam = atac_bam,
+           atac_bam_index = atac_bam_index,
+           default_accessibility_feature = default_accessibility_feature,
            expression_table = expression_table,
            qnorm = qnorm,
            tss_slop_for_class_assignment = tss_slop_for_class_assignment,
@@ -214,8 +222,11 @@ task runNeighborhoods {
        String? primary_gene_identifier
        File h3k27ac_bam
        File h3k27ac_bam_index
-       File dnase_bam # TODO this might not be required if -- ATAC flag is used
-       File dnase_bam_index
+       File? dhs_bam
+       File? dhs_bam_index
+       File? atac_bam
+       File? atac_bam_index
+       String? default_accessibility_feature
        File? expression_table
        File? qnorm
        Int? tss_slop_for_class_assignment
@@ -243,7 +254,9 @@ task runNeighborhoods {
             ${"--gene_name_annotations=" + gene_name_annotations} \
             ${"--primary_gene_identifier=" + primary_gene_identifier} \
             --H3K27ac ~{h3k27ac_bam} \
-            --DHS ~{dnase_bam} \
+            ${"--DHS=" + dhs_bam} \
+            ${"--ATAC=" + atac_bam} \
+            ${"--default_accessibility_feature=" + default_accessibility_feature} \
             ${"--expression_table=" + expression_table} \
             ${"--qnorm=" + qnorm} \
             ${"--tss_slop_for_class_assignment=" + tss_slop_for_class_assignment} \
@@ -262,7 +275,7 @@ task runNeighborhoods {
         docker: docker_image
         cpu: num_threads
         memory: mem_size
-        disks: "local-disk " + ceil((size(dnase_bam, "GiB") + size(h3k27ac_bam, "GiB")) * 1.2) + " HDD"
+        disks: "local-disk " + ceil((size(dhs_bam, "GiB") + size(h3k27ac_bam, "GiB")) * 1.2) + " HDD"
     }
 }
 
