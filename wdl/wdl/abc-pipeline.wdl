@@ -50,7 +50,7 @@ workflow ABCpipeline {
     input {
         # If this is defined makeCandidateRegions is not run
         File? candidateRegions
-        
+
         # Inputs to makeCandidateRegions
         File? dnaseqbam
         File? dnaseqbam_index
@@ -118,7 +118,7 @@ workflow ABCpipeline {
                regions_blacklist = regions_blacklist,
                regions_whitelist = regions_whitelist,
         }
-    }    
+    }
 
     call runNeighborhoods {
        input:
