@@ -6,4 +6,4 @@
 
 CROMWELL_JAR_PATH=/Users/nbarkas/jars/cromwell-44.jar
 
-java -Dconfig.file=google.conf -jar $CROMWELL_JAR_PATH run test_ABC.wdl -i test_inputs.json
+java -jar $CROMWELL_JAR_PATH run test_ABC.wdl -i test_inputs_local.json
