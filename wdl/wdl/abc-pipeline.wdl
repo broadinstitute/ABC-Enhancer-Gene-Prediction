@@ -54,9 +54,10 @@ workflow ABCpipeline {
         #Boolean? is_paired_end TODO add a optional for this?
         File? regions_blacklist
         File? regions_whitelist
-        Float? pval_cutoff
-        Int? nStrongestPeaks
-        Int? peakExtendFromSummit
+        Float? pval_cutoff = 0.1
+        Int? nStrongestPeaks = 3000
+        Int? peakExtendFromSummit = 250
+
         File genes_bed
         File? genes_for_class_assignment
         File? ubiq_genes
@@ -72,8 +73,9 @@ workflow ABCpipeline {
         File? enhancer_class_override
         File? supplementary_features
         String cellType = "defCellType"
+
         Int? window
-        Float threshold
+        Float threshold = 0.022
         File HiCdirTar
         Float? tss_hic_contribution
         Int? hic_pseudocount_distance
