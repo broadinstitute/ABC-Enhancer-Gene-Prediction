@@ -11,5 +11,5 @@
   "TestAbcPR.ubiq_genes": "/Users/nbarkas/Desktop/ABC-Enhancer-Gene-Prediction/example/config/UbiquitouslyExpressedGenesHG19.txt",
   "TestAbcPR.HiCdirTar": "/Users/nbarkas/Desktop/ABC-Enhancer-Gene-Prediction/example/input_data/HiC/bedgraph.tar.gz",
   "TestAbcPR.cellType": "K562",
-  "TestAbcPR.candidateRegions_targetMD5": "ee67f06b34f911f3d3c61b77e0eefe2e"
+  "TestAbcPR.candidateRegions_targetMD5": "1adea555618686bcaa0e559328f071c5"
 }
