@@ -12,14 +12,13 @@ workflow ABCpipeline {
         regions_blacklist: "Bed file of regions to forcibly exclude from candidate enhancers"
         regions_whitelist: "Bed file of regions to forcibly include in candidate enhancers. Overrides regions_blacklist"
         genes_bed: "bed file with gene annotations. Must be in bed-6 format. Will be used to assign TSS to genes."
-        #genes_for_class_assignment: "bed gene annotations for assigning elements to promoter/genic/intergenic classes. Will not be used for TSS definition"
+        genes_for_class_assignment: "bed gene annotations for assigning elements to promoter/genic/intergenic classes. Will not be used for TSS definition"
         ubiq_genes: "File listing ubiquitously expressed genes. These will be flagged by the model, but this annotation does not affect model predictions"
         gene_name_annotations: "Comma delimited string of names corresponding to the gene identifiers present in the name field of the gene annotation bed file"
         primary_gene_identifier: "Primary identifier used to identify genes. Must be present in gene_name_annotations. The primary identifier must be unique"
         dhs_bam: "Comma delimited string of DHS .bam files. Either ATAC or DHS must be provided"
         atac_bam: "Comma delimited string of ATAC .bam files. Either ATAC or DHS must be provided"
         default_accessibility_feature: "If both ATAC and DHS are provided, this flag must be set to either 'DHS' or 'ATAC' signifying which datatype to use in computing activity"
-        # will want conditional here ^
         expression_table: "Comma delimited string of gene expression files"
         qnorm:"Quantile normalization reference file"
         tss_slop_for_class_assignment: "Consider an element a promoter if it is within this many bp of a tss"
@@ -71,10 +70,10 @@ workflow ABCpipeline {
         String? primary_gene_identifier
         File h3k27ac_bam
         File h3k27ac_bam_index
-        File? dhs_bam
-        File? dhs_bam_index
-        File? atac_bam
-        File? atac_bam_index
+        Array[File]? dhs_bam
+        Array[File]? dhs_bam_index
+        Array[File]? atac_bam
+        Array[File]? atac_bam_index
         String? default_accessibility_feature = "DHS"
         File? expression_table
         File? qnorm
@@ -234,10 +233,10 @@ task runNeighborhoods {
        String? primary_gene_identifier
        File h3k27ac_bam
        File h3k27ac_bam_index
-       File? dhs_bam
-       File? dhs_bam_index
-       File? atac_bam
-       File? atac_bam_index
+       Array[File]? dhs_bam
+       Array[File]? dhs_bam_index
+       Array[File]? atac_bam
+       Array[File]? atac_bam_index
        String? default_accessibility_feature
        File? expression_table
        File? qnorm
@@ -253,10 +252,23 @@ task runNeighborhoods {
         String docker_image = "quay.io/nbarkas/abc-general-container:latest"
         Int num_threads = 1
         String mem_size = "1 GB"
+        Boolean dhs_bool = defined(dhs_bam)
+        Boolean atac_bool = defined(atac_bam)
 
-       ## TODO: check about --ATAC flag
     command {
         set -euo pipefail
+
+        if [ ~{dhs_bool} ]; then
+          dhs_string="--DHS=${sep=',' dhs_bam}"
+        else
+          dhs_string=" "
+        fi
+
+        if [ ~{atac_bool} ]; then
+          atac_string="--ATAC=${sep=',' atac_bam}"
+        else
+          atac_string=" "
+        fi
 
         python3 /usr/src/app/src/run.neighborhoods.py \
             --candidate_enhancer_regions ~{candidate_enhancer_regions} \
@@ -266,8 +278,8 @@ task runNeighborhoods {
             ${"--gene_name_annotations=" + gene_name_annotations} \
             ${"--primary_gene_identifier=" + primary_gene_identifier} \
             --H3K27ac ~{h3k27ac_bam} \
-            ${"--DHS=" + dhs_bam} \
-            ${"--ATAC=" + atac_bam} \
+            $dhs_string \
+            $atac_string \
             ${"--default_accessibility_feature=" + default_accessibility_feature} \
             ${"--expression_table=" + expression_table} \
             ${"--qnorm=" + qnorm} \
@@ -289,7 +301,7 @@ task runNeighborhoods {
         docker: docker_image
         cpu: num_threads
         memory: mem_size
-        disks: "local-disk " + ceil((size(dhs_bam, "GiB") + size(h3k27ac_bam, "GiB")) * 1.2) + " HDD"
+        disks: "local-disk " + size(h3k27ac_bam, "GiB") * 1.2 + " HDD"
     }
 }
 
