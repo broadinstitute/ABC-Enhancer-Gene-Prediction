@@ -48,15 +48,21 @@ workflow ABCpipeline {
     }
 
     input {
-        File dnaseqbam
-        File dnaseqbam_index
-        File chrom_sizes
+        # If this is defined makeCandidateRegions is not run
+        File? candidateRegions
+        
+        # Inputs to makeCandidateRegions
+        File? dnaseqbam
+        File? dnaseqbam_index
         Boolean? is_paired_end
         File? regions_blacklist
         File? regions_whitelist
         Float? pval_cutoff = 0.1
         Int? nStrongestPeaks = 3000
         Int? peakExtendFromSummit = 250
+
+        # Used in makeCandidateRegions and runNeighborhoods
+        File chrom_sizes
 
         File genes_bed
         File? genes_for_class_assignment
@@ -97,22 +103,26 @@ workflow ABCpipeline {
         Boolean? include_chrY
     }
 
-    call makeCandidateRegions {
-       input:
-           bam = dnaseqbam,
-           bam_index = dnaseqbam_index,
-           chrom_sizes = chrom_sizes,
-           is_paired_end = is_paired_end,
-           pval_cutoff = pval_cutoff,
-           nStrongestPeaks = nStrongestPeaks,
-           peakExtendFromSummit = peakExtendFromSummit,
-           regions_blacklist = regions_blacklist,
-           regions_whitelist = regions_whitelist,
-    }
+    # If candidate regions are not defined run makeCandidateRegions
+    # to generate them
+    if ( !defined(candidateRegions) ) {
+        call makeCandidateRegions {
+           input:
+               bam = select_first([dnaseqbam]),
+               bam_index = select_first([dnaseqbam_index]),
+               chrom_sizes = chrom_sizes,
+               is_paired_end = is_paired_end,
+               pval_cutoff = pval_cutoff,
+               nStrongestPeaks = nStrongestPeaks,
+               peakExtendFromSummit = peakExtendFromSummit,
+               regions_blacklist = regions_blacklist,
+               regions_whitelist = regions_whitelist,
+        }
+    }    
 
     call runNeighborhoods {
        input:
-           candidate_enhancer_regions = makeCandidateRegions.candidateRegions,
+           candidate_enhancer_regions = select_first([candidateRegions, makeCandidateRegions.candidateRegions]),
            genes_bed = genes_bed,
            genes_for_class_assignment = genes_for_class_assignment,
            ubiquitously_expressed_genes = ubiq_genes,
@@ -160,7 +170,8 @@ workflow ABCpipeline {
     }
 
     output {
-       File candidateRegions = makeCandidateRegions.candidateRegions
+       ## TODO: What do we actually want to output here?
+       File candidateRegions = select_first([makeCandidateRegions.candidateRegions, candidateRegions])
     }
 }
 
@@ -169,7 +180,7 @@ workflow ABCpipeline {
         input {
             File bam
             File bam_index
-            File chrom_sizes
+            File? chrom_sizes
             Boolean? is_paired_end
             File? regions_blacklist
             File? regions_whitelist
