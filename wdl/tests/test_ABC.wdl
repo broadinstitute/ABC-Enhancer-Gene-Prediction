@@ -13,6 +13,8 @@ workflow TestAbcPR {
         File genes_bed
         File h3k27ac_bam
         File h3k27ac_bam_index
+        Array[File]? dhs_bam
+        Array[File]? dhs_bam_index
         File? expression_table
         File? ubiq_genes
         File HiCdirTar
@@ -25,8 +27,8 @@ workflow TestAbcPR {
      input:
          dnaseqbam = dnaseqbam,
          dnaseqbam_index = dnaseqbam_index,
-         dhs_bam = dnaseqbam,
-         dhs_bam_index = dnaseqbam_index,
+         dhs_bam = dhs_bam,
+         dhs_bam_index = dhs_bam_index,
          chrom_sizes = chrom_sizes,
          regions_blacklist = regions_blacklist,
          regions_whitelist = regions_whitelist,
