@@ -170,8 +170,21 @@ workflow ABCpipeline {
     }
 
     output {
-       ## TODO: What do we actually want to output here?
+       #Candidate Regions
        File candidateRegions = select_first([makeCandidateRegions.candidateRegions, candidateRegions])
+       File? narrowPeak = makeCandidateRegions.narrowPeak
+       
+       #Neighborhoods
+       File enhancerList = runNeighborhoods.enhancerList
+       File geneList = runNeighborhoods.geneList
+       
+       #Predictions
+       File enhancerPredictions = makePrediction.enhancerPredictions
+       File params = makePrediction.params
+       File bedpe = makePrediction.bedpe
+       File geneStats = makePrediction.geneStats
+       File failedGenes = makePrediction.failedGenes
+       File? allPutative = makePrediction.allPutative
     }
 }
 
@@ -197,11 +210,11 @@ workflow ABCpipeline {
         command {
             set -euo pipefail
 
-            mkdir outputs
+            mkdir Peaks/
 
             python3 /usr/src/app/src/makeCandidateRegions.py \
                 --bam ~{bam} \
-                --outDir outputs \
+                --outDir Peaks/ \
                 --chrom_sizes ~{chrom_sizes} \
                 ${true='--is_paired_end'  false='' is_paired_end} \
                 ${"--regions_blacklist=" + regions_blacklist} \
@@ -212,7 +225,8 @@ workflow ABCpipeline {
         }
         output {
             # TODO: Add all the outputs
-            File candidateRegions = "outputs/" + basename(bam, ".bam") + ".macs2_peaks.narrowPeak.candidateRegions.bed"
+            File candidateRegions = "Peaks/" + basename(bam, ".bam") + ".macs2_peaks.narrowPeak.candidateRegions.bed"
+            File? narrowPeak = "Peaks/" + basename(bam, ".bam") + ".macs2_peaks.narrowPeak"
         }
         runtime {
             docker: docker_image
@@ -258,6 +272,8 @@ task runNeighborhoods {
     command {
         set -euo pipefail
 
+        mkdir Neighborhoods/
+
         python3 /usr/src/app/src/run.neighborhoods.py \
             --candidate_enhancer_regions ~{candidate_enhancer_regions} \
             --genes ~{genes_bed} \
@@ -278,12 +294,12 @@ task runNeighborhoods {
             ${"--enhancer_class_override=" + enhancer_class_override} \
             ${"--supplementary_features=" + supplementary_features} \
             --cellType ~{cellType} \
-            --outdir outputs/
+            --outdir Neighborhoods/
     }
     output {
         # TODO: add remain outputs
-        File enhancerList = "outputs/EnhancerList.txt"
-        File geneList = "outputs/GeneList.txt"
+        File enhancerList = "Neighborhoods/EnhancerList.txt"
+        File geneList = "Neighborhoods/GeneList.txt"
     }
     runtime {
         docker: docker_image
@@ -323,6 +339,7 @@ task makePrediction {
     command {
         set -euo pipefail
         tar -xf ~{HiCdirTar}
+        mkdir Predictions/
         python3 /usr/src/app/src/predict.py \
             --enhancers ~{enhancerList} \
             --genes ~{geneList} \
@@ -342,9 +359,15 @@ task makePrediction {
             ${true='--skinny_gene_files' false='' skinny_gene_files} \
             ${true='--make_all_putative' false='' make_all_putative} \
             ${true='--include_chrY' false='' include_chrY} \
-            --outdir outputs/
+            --outdir Predictions/
     }
     output {
+        File enhancerPredictions = "Predictions/EnhancerPredictions.txt"
+        File params = "Predictions/parameters.predict.txt"
+        File bedpe = "Predictions/EnhancerPredictions.bedpe"
+        File geneStats = "Predictions/GenePredictionStats.txt"
+        File failedGenes = "Predictions/FailedGenes.txt"
+        File? allPutative = "Predictions/EnhancerPredictionsAllPutative.txt.gz"
 
     }
     runtime {
