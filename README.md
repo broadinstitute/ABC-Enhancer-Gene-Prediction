@@ -159,7 +159,9 @@ Given that cell-type specific Hi-C data is more difficult to generate than ATAC-
 
 We have found that, for most genes, using an average Hi-C profile in the ABC model gives approximately equally good performance as using a cell-type specific Hi-C profile. To facilitate making ABC predictions in a large panel of cell types, including those without cell type-specific Hi-C data, we have provided an average Hi-C profile (averaged across 10 cell lines) in this repository. 
 
-In the case where cell-type specific Hi-C data is available, we provide a pipeline which takes as input a .hic file, and formats it as the ABC model code expects (see below)
+In the case where cell-type specific Hi-C data is available, we provide a pipeline which takes as input a .hic file, and formats it as the ABC model code expects (see below).
+
+[PL Scaling of Hi-C]
 
 ### Description of Average Hi-C data provided
 Average Hi-C data can be downloaded from: ftp://ftp.broadinstitute.org/outgoing/lincRNA/average_hic/
