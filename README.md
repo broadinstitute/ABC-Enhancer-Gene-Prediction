@@ -35,11 +35,9 @@ juicebox - Partial dependancy
 Python packages:
 numpy (1.15.2)
 pandas (0.23.4)
-scipy
-intervaltree
-pysam 
-pyBigWig
-matplotlib - Partial dependancy
+scipy (0.18.1)
+intervaltree (2.1.0)
+pyBigWig (0.3.2) - Partial dependancy
 ```
 
 ## Description of the ABC Model
@@ -56,17 +54,50 @@ Operationally, Activity (A) is defined as the geometric mean of the read counts 
 ## Running the ABC Model
 Running the ABC model consists of the following steps:
 
- 1. Define candidate enhancer regions, collect gene annotations and epigenetic data
+ 1. Define candidate enhancer regions
  2. Quantifying enhancer activity
  3. Computing the ABC Score
 
-### Step 1. Define candidate regions, gather gene annotations and Hi-C data
+### Step 1. Define candidate elemets
 
-A typical way to define candidate elements is by calling peaks on a DNase-Seq or ATAC-Seq bam file (see Defining candidate elements from a DNase or ATAC bam). 
+'Candidate elements' are the set of putative enhancer elements for which ABC Scores will be computed. A typical way to define candidate elements is by calling peaks on a DNase-Seq or ATAC-Seq bam file (see Defining candidate elements from a DNase or ATAC bam). In this implementation we first call peaks using MACS2 and then process these peaks using ```makeCandidateRegions.py```. 
 
-Gene annotations should be provided in .bed format.
+```makeCandidateRegions.py``` will take as input the narrowPeak file produced by MACS2 and then perform the following processing steps:
 
-We recommend either using cell-type specific Hi-C data or average Hi-C data (see below). If neither of these are available, then the power-law relationship can be used as a proxy for Contact.
+ 1. Count DNase-seq reads in each peak and retain the top N peaks with the most read counts
+ 2. Resize each of these N peaks to be a fixed number of base pairs centered on the peak summit
+ 3. Remove any blacklisted regions and include any whitelisted regions
+ 4. Merge any overlapping regions
+
+See 'Defining Candidate Enhancers' section below for more details.
+
+Sample commands:
+
+```
+macs2 callpeak \
+-t example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam \
+-n wgEncodeUwDnaseK562AlnRep1.chr22.macs2 \
+-f BAM \
+-g hs \
+-p .1 \
+--call-summits \
+--outdir example/ABC_output/Peaks/ 
+
+python src/makeCandidateRegions.py \
+--narrowPeak example/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak \
+--bam example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam \
+--outDir example/ABC_output/Peaks/ \
+--chrom_sizes example/config/chr22 \
+--regions_blacklist example/config/wgEncodeHg19ConsensusSignalArtifactRegions.bed \
+--regions_whitelist example/config/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.chr22.bed \
+--peakExtendFromSummit 250 \
+--nStrongestPeaks 3000 
+```
+
+We recommend using ```--nStrongestPeaks 150000``` when making genome-wide peak calls. ```3000``` is just used for the small example on chr22. 
+
+We have found that on some systems, MACS2 and Python3 are incompatible. It may be necessary to change virtual environments, or installed packages/dotkits after running MACS2. 
+
 
 ### Step 2. Quantifying Enhancer Activity: 
 
@@ -76,7 +107,7 @@ Sample Command:
 
 ```
 python src/run.neighborhoods.py \
---candidate_enhancer_regions example/input_data/Chromatin/wgEncodeUwDnaseK562.mergedPeaks.slop175.withTSS500bp.chr22.bed \
+--candidate_enhancer_regions example/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.candidateRegions.bed \
 --genes example/config/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.bed \
 --H3K27ac example/input_data/Chromatin/ENCFF384ZZM.chr22.bam \
 --DHS example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam,example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep2.chr22.bam \
@@ -122,37 +153,9 @@ Columns are further defined in https://docs.google.com/spreadsheets/d/1UfoVXoCxU
 ## Defining Candidate Enhancers
 'Candidate elements' are the set of putative enhancers for which ABC scores will be computed. In computing the ABC score, the product of DNase-seq (or ATAC-seq) and H3K27ac ChIP-seq reads will be counted in the candidate element. Thus the candidate elements should be regions of open (nucleasome depleted) chromatin of sufficient length to capture H3K27ac marks on flanking nucleosomes. In Fulco et al 2019, we defined candidate regions to be 500bp (150bp of the DHS peak extended 175bp in each direction). 
 
-### Defining candidate elements from a DHS or ATAC bam
-A typical way to define candidate elements is by calling peaks from a DNase-seq or ATAC-seq bam file. Below we provide a convenience function for defining candidate regions using the MACS2 peak caller. 
-
-```makeCandidateRegions.py``` is a wrapper around MACS2 which produces candidate regions from a Dnase-seq or ATAC-seq bam file. The script performs the following steps:
-
- 1. Call peaks using MACS2
- 2. Resize each peak to be a fixed number of base pairs centered on the peak summit
- 3. Count DNase-seq reads in each peak and retain the top N peaks with the most read counts
- 4. Remove any blacklisted regions and include any whitelisted regions
-
-Sample command:
-
-```
-python src/makeCandidateRegions.py \
---bam example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam \
---outDir example/ABC_output/Peaks/ \
---chrom_sizes example/config/chr22 \
---regions_blacklist example/config/wgEncodeHg19ConsensusSignalArtifactRegions.bed \
---regions_whitelist example/config/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.chr22.bed \
---pval_cutoff .1 \
---peakExtendFromSummit 250 \
---nStrongestPeaks 3000 
-```
-
-We recommend using ```--nStrongestPeaks 150000``` when making genome-wide peak calls. ```3000``` is just used for the small example on chr22. 
-
-Given that the ABC score uses absolute counts of Dnase-seq reads in each region, ```curateFeatures.py``` attempts to select the strongest peaks as measured by absolute read counts (not read counts relative to some background rate). In order to do this, we first call peaks using a lenient significance threshold (.1 in the above example) and then consider the peaks with the most read counts. This procedure implicitly assumes that the active karyotype of the cell type is constant.
+Given that the ABC score uses absolute counts of Dnase-seq reads in each region, ```makeCandidateRegions.py ``` selects the strongest peaks as measured by absolute read counts (not by pvalue). In order to do this, we first call peaks using a lenient significance threshold (.1 in the above example) and then consider the peaks with the most read counts. This procedure implicitly assumes that the active karyotype of the cell type is constant.
 
 We recommend removing elements overlapping regions of the genome that have been observed to accumulate anomalous number of reads in epigenetic sequencing experiments (‘blacklisted regions’). For convenience, we provide the list of blackedlisted regions available from https://sites.google.com/site/anshulkundaje/projects/blacklists.
-
-We have found that on some systems are incompatible with MACS2 and python3. As a workaround, we have allowed ```makeCandidateRegions.py``` to read from the environment variable MACS_COMMAND. If you are experiencing this incompatability, this environment variable could be set to the relevant macs install on your system, eg ```export MACS_COMMAND="use MACS2; macs2"```
 
 ## Contact and Hi-C
 Given that cell-type specific Hi-C data is more difficult to generate than ATAC-seq or ChIP-seq, we have explored alternatives to using cell-type specific Hi-C data. It is known that Hi-C contact frequencies generally follow a powerlaw relationship (with respect to genomic distance) and that many TADs, loops and other structural features of the 3D genome are **not** cell-type specific [Ref Rao] [Ref Sanborn]. 
@@ -164,7 +167,7 @@ In the case where cell-type specific Hi-C data is available, we provide a pipeli
 [PL Scaling of Hi-C]
 
 ### Description of Average Hi-C data provided
-Average Hi-C data can be downloaded from: ftp://ftp.broadinstitute.org/outgoing/lincRNA/average_hic/
+Average Hi-C data can be downloaded from: <ftp://ftp.broadinstitute.org/outgoing/lincRNA/average_hic/>
 
 Each bedgraph in this directory is Hi-C contact profile anchored at the gene TSS averaged over 10 human cell types. The Hi-C data is KR normalized and is provided at 5kb resolution. The ten cell types used for averaging are: GM12878, NHEK, HMEC, RPE1, THP1, IMR90, HUVEC, HCT116, K562, KBM7
 
