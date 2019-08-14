@@ -8,7 +8,6 @@ For each cell-type, the inputs to the ABC model are:
  * Required Inputs
  	* bam file for Dnase-Seq or ATAC-Seq (indexed and sorted)
  	* bam file for H3K27ac ChIP-Seq (indexed and sorted)
- 	* bed file containing candidate enhancer regions
  * Optional Inputs
  	* Hi-C data (see the Hi-C section below)
  	* A measure of gene expression (see gene expression section)
@@ -55,12 +54,12 @@ Operationally, Activity (A) is defined as the geometric mean of the read counts 
 Running the ABC model consists of the following steps:
 
  1. Define candidate enhancer regions
- 2. Quantifying enhancer activity
- 3. Computing the ABC Score
+ 2. Quantify enhancer activity
+ 3. Compute ABC Scores
 
 ### Step 1. Define candidate elemets
 
-'Candidate elements' are the set of putative enhancer elements for which ABC Scores will be computed. A typical way to define candidate elements is by calling peaks on a DNase-Seq or ATAC-Seq bam file (see Defining candidate elements from a DNase or ATAC bam). In this implementation we first call peaks using MACS2 and then process these peaks using ```makeCandidateRegions.py```. 
+'Candidate elements' are the set of putative enhancer elements for which ABC Scores will be computed. A typical way to define candidate elements is by calling peaks on a DNase-Seq or ATAC-Seq bam file. In this implementation we first call peaks using MACS2 and then process these peaks using ```makeCandidateRegions.py```. 
 
 ```makeCandidateRegions.py``` will take as input the narrowPeak file produced by MACS2 and then perform the following processing steps:
 
@@ -98,6 +97,11 @@ We recommend using ```--nStrongestPeaks 150000``` when making genome-wide peak c
 
 We have found that on some systems, MACS2 and Python3 are incompatible. It may be necessary to change virtual environments, or installed packages/dotkits after running MACS2. 
 
+Main output file:
+
+* ***macs2_peaks.narrowPeak**: MACS2 narrowPeak file
+* ***macs2_peaks.narrowPeak.candidateRegions.bed**: filtered, extended and merged peak calls from MACS2. These are the candidate regions used in downstream scripts.
+
 
 ### Step 2. Quantifying Enhancer Activity: 
 
@@ -120,13 +124,13 @@ python src/run.neighborhoods.py \
 
 Main output files:
 
-  * EnhancerList.txt: Candidate enhancer regions with Dnase-seq and H3K27ac ChIP-seq read counts
-  * GeneList.txt: Dnase-seq and H3K27ac ChIP-seq read counts on gene bodies and gene promoter regions
+  * **EnhancerList.txt**: Candidate enhancer regions with Dnase-seq and H3K27ac ChIP-seq read counts
+  * **GeneList.txt**: Dnase-seq and H3K27ac ChIP-seq read counts on gene bodies and gene promoter regions
 
 
 ### Step 3. Computing the ABC Score
 
-Compute ABC scores by combining Activity as calculated by ```run.neighborhoods.py``` and Hi-C.
+Compute ABC scores by combining Activity (as calculated by ```run.neighborhoods.py```) and Hi-C.
 
 Sample Command:
 
@@ -143,12 +147,13 @@ python src/predict.py \
 
 The main output files are:
 
-* EnhancerPredictions.txt: all element-gene pairs with scores above the provided threshold. Only includes expressed genes
-* EnhancerPredictions.bedpe: Same as above in .bedpe format. Can be visualized in IGV.
-* EnhancerPredictionsAllPutative.txt.gz: ABC scores for all element-gene pairs. Includes non-expressed genes and pairs with scores below the threshold. (use ```--make_all_putative``` to generate this file)
+* **EnhancerPredictions.txt**: all element-gene pairs with scores above the provided threshold. Only includes expressed genes. 
+* **EnhancerPredictionsFull.txt**: same as above but includes more columns. See <https://docs.google.com/spreadsheets/d/1UfoVXoCxUpMNPfGypvIum1-RvS07928grsieiaPX67I/edit?usp=sharing> for column definitions
+* **EnhancerPredictions.bedpe**: Same as above in .bedpe format. Can be visualized in IGV.
+* **genes/*.prediction.txt.gz**: ABC scores for all candidate elements for a specific gene. Includes non-expressed genes and pairs with scores below the threshold (use ```--skip_gene_files``` to skip generating these files)
+* **EnhancerPredictionsAllPutative.txt.gz**: ABC scores for all element-gene pairs. Includes non-expressed genes and pairs with scores below the threshold. (use ```--make_all_putative``` to generate this file). This file is a concatenation of all the genes/*.prediction.txt.gz files.
 
 The default threshold of 0.02 corresponds to 70% recall and 63% precision in the Fulco et al 2019 dataset.
-Columns are further defined in https://docs.google.com/spreadsheets/d/1UfoVXoCxUpMNPfGypvIum1-RvS07928grsieiaPX67I/edit?usp=sharing
 
 ## Defining Candidate Enhancers
 'Candidate elements' are the set of putative enhancers for which ABC scores will be computed. In computing the ABC score, the product of DNase-seq (or ATAC-seq) and H3K27ac ChIP-seq reads will be counted in the candidate element. Thus the candidate elements should be regions of open (nucleasome depleted) chromatin of sufficient length to capture H3K27ac marks on flanking nucleosomes. In Fulco et al 2019, we defined candidate regions to be 500bp (150bp of the DHS peak extended 175bp in each direction). 
@@ -158,9 +163,9 @@ Given that the ABC score uses absolute counts of Dnase-seq reads in each region,
 We recommend removing elements overlapping regions of the genome that have been observed to accumulate anomalous number of reads in epigenetic sequencing experiments (‘blacklisted regions’). For convenience, we provide the list of blackedlisted regions available from https://sites.google.com/site/anshulkundaje/projects/blacklists.
 
 ## Contact and Hi-C
-Given that cell-type specific Hi-C data is more difficult to generate than ATAC-seq or ChIP-seq, we have explored alternatives to using cell-type specific Hi-C data. It is known that Hi-C contact frequencies generally follow a powerlaw relationship (with respect to genomic distance) and that many TADs, loops and other structural features of the 3D genome are **not** cell-type specific [Ref Rao] [Ref Sanborn]. 
+Given that cell-type specific Hi-C data is more difficult to generate than ATAC-seq or ChIP-seq, we have explored alternatives to using cell-type specific Hi-C data. It has been shown that Hi-C contact frequencies generally follow a powerlaw relationship (with respect to genomic distance) and that many TADs, loops and other structural features of the 3D genome are **not** cell-type specific [Ref Rao] [Ref Sanborn]. 
 
-We have found that, for most genes, using an average Hi-C profile in the ABC model gives approximately equally good performance as using a cell-type specific Hi-C profile. To facilitate making ABC predictions in a large panel of cell types, including those without cell type-specific Hi-C data, we have provided an average Hi-C profile (averaged across 10 cell lines) in this repository. 
+We have found that, for most genes, using an average Hi-C profile in the ABC model gives approximately equally good performance as using a cell-type specific Hi-C profile. To facilitate making ABC predictions in a large panel of cell types, including those without cell type-specific Hi-C data, we have provided an average Hi-C profile (averaged across 10 cell lines). 
 
 In the case where cell-type specific Hi-C data is available, we provide a pipeline which takes as input a .hic file, and formats it as the ABC model code expects (see below).
 
@@ -218,7 +223,7 @@ In an effort to make ABC scores comparable across cell types, the ABC model code
 
 Empirically, we have found that applying quantile normalization makes ABC predictions more comparable across cell types (particularly there is substantial variability in the signal to noise ratio of the epigenetic datasets across cell types). However, care should be taken as quantile normalization may not be applicable to all circumstances.
 
-Additionally, the threshold value on the ABC score of .02 (described in Fulco et al) is calculated based on the K562 epigenetic data. 
+Additionally, the threshold value on the ABC score of .022 (described in Fulco et al) is calculated based on the K562 epigenetic data. 
 
 Quantile normalization can be applied using ```--qnorm EnhancersQNormRef.K562.txt``` in ```run.neighborhoods.py```
 
