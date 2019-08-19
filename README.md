@@ -1,13 +1,13 @@
 # Activity by Contact Model of Enhancer-Gene Specificity
 
-The Activity-by-Contact (ABC) model predicts which enhancers regulate which genes on a cell type specific basis. This repository contains the code needed to run the ABC model as well as small sample data files, example commands, and some general tips and suggestions. We provide a brief description of the model below, see Fulco et al (BioArxiv 2019) for a full description.
+The Activity-by-Contact (ABC) model predicts which enhancers regulate which genes on a cell type specific basis. This repository contains the code needed to run the ABC model as well as small sample data files, example commands, and some general tips and suggestions. We provide a brief description of the model below - see Fulco et al (bioRxiv 2019) for a full description.
 
 ## Requirements
 For each cell-type, the inputs to the ABC model are:
 
  * Required Inputs
- 	* bam file for Dnase-Seq or ATAC-Seq (indexed and sorted)
- 	* bam file for H3K27ac ChIP-Seq (indexed and sorted)
+ 	* bam file for DNase-Seq or ATAC-Seq (sorted, indexed, duplicates removed)
+ 	* bam file for H3K27ac ChIP-Seq (sorted, indexed, duplicates removed)
  * Optional Inputs
  	* Hi-C data (see the Hi-C section below)
  	* A measure of gene expression (see gene expression section)
