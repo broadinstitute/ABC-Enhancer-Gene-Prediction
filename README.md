@@ -82,6 +82,10 @@ macs2 callpeak \
 --call-summits \
 --outdir example/ABC_output/Peaks/ 
 
+#Sort narrowPeak file
+
+#May need to change virtual environments
+
 python src/makeCandidateRegions.py \
 --narrowPeak example/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak \
 --bam example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam \
