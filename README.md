@@ -83,11 +83,12 @@ macs2 callpeak \
 --outdir example/ABC_output/Peaks/ 
 
 #Sort narrowPeak file
+bedtools sort -faidx example/config/chr22 -i example/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak > example/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.sorted
 
 #May need to change virtual environments
 
 python src/makeCandidateRegions.py \
---narrowPeak example/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak \
+--narrowPeak example/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.sorted \
 --bam example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam \
 --outDir example/ABC_output/Peaks/ \
 --chrom_sizes example/config/chr22 \
@@ -115,7 +116,7 @@ Sample Command:
 
 ```
 python src/run.neighborhoods.py \
---candidate_enhancer_regions example/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.candidateRegions.bed \
+--candidate_enhancer_regions example/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.sorted.candidateRegions.bed \
 --genes example/config/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.bed \
 --H3K27ac example/input_data/Chromatin/ENCFF384ZZM.chr22.bam \
 --DHS example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam,example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep2.chr22.bam \
