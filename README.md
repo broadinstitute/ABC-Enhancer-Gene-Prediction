@@ -1,13 +1,13 @@
 # Activity by Contact Model of Enhancer-Gene Specificity
 
-The Activity-by-Contact (ABC) model predicts which enhancers regulate which genes on a cell type specific basis. This repository contains the code needed to run the ABC model as well as small sample data files, example commands, and some general tips and suggestions. We provide a brief description of the model below - see Fulco et al (bioRxiv 2019) for a full description.
+The Activity-by-Contact (ABC) model predicts which enhancers regulate which genes on a cell type specific basis. This repository contains the code needed to run the ABC model as well as small sample data files, example commands, and some general tips and suggestions. We provide a brief description of the model below, see Fulco et al (BioArxiv 2019) for a full description.
 
 ## Requirements
 For each cell-type, the inputs to the ABC model are:
 
  * Required Inputs
- 	* bam file for DNase-Seq or ATAC-Seq (sorted, indexed, duplicates removed)
- 	* bam file for H3K27ac ChIP-Seq (sorted, indexed, duplicates removed)
+ 	* bam file for Dnase-Seq or ATAC-Seq (indexed and sorted)
+ 	* bam file for H3K27ac ChIP-Seq (indexed and sorted)
  * Optional Inputs
  	* Hi-C data (see the Hi-C section below)
  	* A measure of gene expression (see gene expression section)
@@ -74,26 +74,26 @@ Sample commands:
 
 ```
 macs2 callpeak \
--t example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam \
+-t example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam \
 -n wgEncodeUwDnaseK562AlnRep1.chr22.macs2 \
 -f BAM \
 -g hs \
 -p .1 \
 --call-summits \
---outdir example/ABC_output/Peaks/ 
+--outdir example_chr22/ABC_output/Peaks/ 
 
 #Sort narrowPeak file
-bedtools sort -faidx example/config/chr22 -i example/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak > example/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.sorted
+bedtools sort -faidx example_chr22/reference/chr22 -i example_chr22/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak > example_chr22/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.sorted
 
 #May need to change virtual environments
 
 python src/makeCandidateRegions.py \
---narrowPeak example/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.sorted \
---bam example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam \
---outDir example/ABC_output/Peaks/ \
---chrom_sizes example/config/chr22 \
---regions_blacklist example/config/wgEncodeHg19ConsensusSignalArtifactRegions.bed \
---regions_whitelist example/config/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.chr22.bed \
+--narrowPeak example_chr22/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.sorted \
+--bam example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam \
+--outdir example_chr22/ABC_output/Peaks/ \
+--chrom_sizes example_chr22/reference/chr22 \
+--regions_blacklist reference/wgEncodeHg19ConsensusSignalArtifactRegions.bed \
+--regions_whitelist example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.chr22.bed \
 --peakExtendFromSummit 250 \
 --nStrongestPeaks 3000 
 ```
@@ -116,15 +116,15 @@ Sample Command:
 
 ```
 python src/run.neighborhoods.py \
---candidate_enhancer_regions example/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.sorted.candidateRegions.bed \
---genes example/config/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.bed \
---H3K27ac example/input_data/Chromatin/ENCFF384ZZM.chr22.bam \
---DHS example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam,example/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep2.chr22.bam \
---expression_table example/input_data/Expression/K562.ENCFF934YBO.TPM.txt \
---chrom_sizes example/config/chr22 \
---ubiquitously_expressed_genes example/config/UbiquitouslyExpressedGenesHG19.txt \
+--candidate_enhancer_regions example_chr22/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.sorted.candidateRegions.bed \
+--genes example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.bed \
+--H3K27ac example_chr22/input_data/Chromatin/ENCFF384ZZM.chr22.bam \
+--DHS example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam,example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep2.chr22.bam \
+--expression_table example_chr22/input_data/Expression/K562.ENCFF934YBO.TPM.txt \
+--chrom_sizes example_chr22/reference/chr22 \
+--ubiquitously_expressed_genes reference/UbiquitouslyExpressedGenesHG19.txt \
 --cellType K562 \
---outdir example/ABC_output/Neighborhoods/ 
+--outdir example_chr22/ABC_output/Neighborhoods/ 
 ```
 
 Main output files:
@@ -141,13 +141,15 @@ Sample Command:
 
 ```
 python src/predict.py \
---enhancers example/ABC_output/Neighborhoods/EnhancerList.txt \
---genes example/ABC_output/Neighborhoods/GeneList.txt \
---HiCdir example/input_data/HiC/bedgraph/ \
+--enhancers example_chr22/ABC_output/Neighborhoods/EnhancerList.txt \
+--genes example_chr22/ABC_output/Neighborhoods/GeneList.txt \
+--HiCdir example_chr22/input_data/HiC/bedgraph/ \
 --scale_hic_using_powerlaw \
 --threshold .022 \
 --cellType K562 \
---outdir example/ABC_output/Predictions/ 
+--outdir example_chr22/ABC_output/Predictions/ \
+--make_all_putative \
+--skip_gene_files
 ```
 
 The main output files are:
@@ -155,8 +157,7 @@ The main output files are:
 * **EnhancerPredictions.txt**: all element-gene pairs with scores above the provided threshold. Only includes expressed genes. 
 * **EnhancerPredictionsFull.txt**: same as above but includes more columns. See <https://docs.google.com/spreadsheets/d/1UfoVXoCxUpMNPfGypvIum1-RvS07928grsieiaPX67I/edit?usp=sharing> for column definitions
 * **EnhancerPredictions.bedpe**: Same as above in .bedpe format. Can be visualized in IGV.
-* **genes/*.prediction.txt.gz**: ABC scores for all candidate elements for a specific gene. Includes non-expressed genes and pairs with scores below the threshold (use ```--skip_gene_files``` to skip generating these files)
-* **EnhancerPredictionsAllPutative.txt.gz**: ABC scores for all element-gene pairs. Includes non-expressed genes and pairs with scores below the threshold. (use ```--make_all_putative``` to generate this file). This file is a concatenation of all the genes/*.prediction.txt.gz files.
+* **EnhancerPredictionsAllPutative.txt.gz**: ABC scores for all element-gene pairs. Includes non-expressed genes, promoter elements and pairs with scores below the threshold.
 
 The default threshold of 0.02 corresponds to 70% recall and 63% precision in the Fulco et al 2019 dataset.
 
@@ -165,10 +166,10 @@ The default threshold of 0.02 corresponds to 70% recall and 63% precision in the
 
 Given that the ABC score uses absolute counts of Dnase-seq reads in each region, ```makeCandidateRegions.py ``` selects the strongest peaks as measured by absolute read counts (not by pvalue). In order to do this, we first call peaks using a lenient significance threshold (.1 in the above example) and then consider the peaks with the most read counts. This procedure implicitly assumes that the active karyotype of the cell type is constant.
 
-We recommend removing elements overlapping regions of the genome that have been observed to accumulate anomalous number of reads in epigenetic sequencing experiments (‘blacklisted regions’). For convenience, we provide the list of blackedlisted regions available from https://sites.google.com/site/anshulkundaje/projects/blacklists.
+We recommend removing elements overlapping regions of the genome that have been observed to accumulate anomalous number of reads in epigenetic sequencing experiments (‘blacklisted regions’). For convenience, we provide the list of blackedlisted regions available from <https://sites.google.com/site/anshulkundaje/projects/blacklists>.
 
 ## Contact and Hi-C
-Given that cell-type specific Hi-C data is more difficult to generate than ATAC-seq or ChIP-seq, we have explored alternatives to using cell-type specific Hi-C data. It has been shown that Hi-C contact frequencies generally follow a powerlaw relationship (with respect to genomic distance) and that many TADs, loops and other structural features of the 3D genome are **not** cell-type specific [Ref Rao] [Ref Sanborn]. 
+Given that cell-type specific Hi-C data is more difficult to generate than ATAC-seq or ChIP-seq, we have explored alternatives to using cell-type specific Hi-C data. It has been shown that Hi-C contact frequencies generally follow a powerlaw relationship (with respect to genomic distance) and that many TADs, loops and other structural features of the 3D genome are **not** cell-type specific (Rao et al Cell 2014, Sanborn et al PNAS 2015). 
 
 We have found that, for most genes, using an average Hi-C profile in the ABC model gives approximately equally good performance as using a cell-type specific Hi-C profile. To facilitate making ABC predictions in a large panel of cell types, including those without cell type-specific Hi-C data, we have provided an average Hi-C profile (averaged across 10 cell lines). 
 
@@ -238,6 +239,9 @@ Quantile normalization can be applied using ```--qnorm EnhancersQNormRef.K562.tx
 * We have found that ubiquitously expressed genes appear insensitive to the effects of distal enhancers. For completeness, this code calculates the ABC score for all genes and flags ubiquitously expressed genes.
 * The size of candidate enhancer elements is important. For example, if two candidate regions are merged, then the ABC score of the merged region will be approximately the sum of the ABC scores for each individual region.
 * In our testing the ABC model typically predicts on average ~3 distal enhancers per expressed gene. If you run the model on a cell type and find a large deviation from this number (say <2 or > ~4.5) this may mean the ABC model is not well calibrated in the cell type. Typical remedies are to use quantile normalization, scale Hi-C or to lower/raise the cutoff on the ABC score.
+
+## Contact
+Please submit a github issue if you experience and issues/bugs. Or you may contact Joseph Nasser at jnasser@broadinstitute.org directly.
 
 ## Citation
 
