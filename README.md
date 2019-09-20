@@ -23,7 +23,7 @@ The codebase relies on the following dependancies (tested version provided in
 parentheses):
 
 ```
-Python (3.4)
+Python (3.6.4)
 samtools (0.1.19)
 bedtools (2.26.0)
 Tabix (0.2.5) - Partial dependancy
@@ -32,6 +32,7 @@ Java (1.7) - Partial dependancy
 juicebox - Partial dependancy
 
 Python packages:
+pyranges (0.0.55)
 numpy (1.15.2)
 pandas (0.23.4)
 scipy (0.18.1)
