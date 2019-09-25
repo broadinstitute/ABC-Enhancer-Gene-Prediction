@@ -50,6 +50,8 @@ ABC score for effect of element E on gene G = Activity of E × Contact frequency
 
 Operationally, Activity (A) is defined as the geometric mean of the read counts of DNase-seq and H3K27ac ChIP-seq at an element E, and Contact (C) as the KR normalized Hi-C contact frequency between E and the promoter of gene G. Elements are defined as ~500bp regions centered on DHS peaks. 
 
+Note that the ABC model only considers candidate elements and genes on the same chromosome. It does not make interchromosomal predictions.
+
  
 ## Running the ABC Model
 Running the ABC model consists of the following steps:
@@ -197,18 +199,10 @@ Three steps
 ```
 #Download hic matrix file from juicebox
 python src/juicebox_dump.py \
---hic_file https://hicfiles.s3.amazonaws.com/hiseq/k562/in-situ/combined.hic \
+--hic_file https://hicfiles.s3.amazonaws.com/hiseq/k562/in-situ/combined_30.hic \
 --juicebox "java -jar juicer_tools.jar" \
 --outdir example/input_data/HiC/raw/ \
 --chromosomes 22
-```
-
-```
-#Make a virtual 4C bedgraph anchored at the TSS of each gene
-python src/make_bedgraph_from_HiC.py \
---outdir example/input_data/HiC/bedgraph/ \
---genes example/config/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.bed \
---hic_dir example/input_data/HiC//raw/5kb_resolution_intrachromosomal/
 ```
 
 ```
