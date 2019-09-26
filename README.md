@@ -28,7 +28,7 @@ samtools (0.1.19)
 bedtools (2.26.0)
 Tabix (0.2.5) - Partial dependancy
 MACS2 (2.1.1.20160309) - Partial dependancy
-Java (1.7) - Partial dependancy
+Java (1.8) - Partial dependancy
 juicebox - Partial dependancy
 
 Python packages:
@@ -184,6 +184,7 @@ In the case where cell-type specific Hi-C data is available, we provide a pipeli
 ### Description of Average Hi-C data provided
 Average Hi-C data can be downloaded from: <ftp://ftp.broadinstitute.org/outgoing/lincRNA/average_hic/>
 
+[TO DO:]
 Each bedgraph in this directory is Hi-C contact profile anchored at the gene TSS averaged over 10 human cell types. The Hi-C data is KR normalized and is provided at 5kb resolution. The ten cell types used for averaging are: GM12878, NHEK, HMEC, RPE1, THP1, IMR90, HUVEC, HCT116, K562, KBM7
 
 ### Pipeline to Download and Format Hi-C data
@@ -201,15 +202,18 @@ Three steps
 python src/juicebox_dump.py \
 --hic_file https://hicfiles.s3.amazonaws.com/hiseq/k562/in-situ/combined_30.hic \
 --juicebox "java -jar juicer_tools.jar" \
---outdir example/input_data/HiC/raw/ \
+--outdir example_chr22/input_data/HiC/raw/ \
 --chromosomes 22
 ```
 
 ```
 #Fit HiC data to powerlaw model and extract parameters
 python src/compute_powerlaw_fit_from_hic.py \
---bedDir example/input_data/HiC/bedgraph/ \
---outDir example/input_data/HiC/powerlaw/
+--hicDir example_chr22/input_data/HiC/raw/ \
+--outDir example_chr22/input_data/HiC/raw/powerlaw/ \
+--maxWindow 1000000 \
+--minWindow 5000 \
+--resolution 5000
 ```
 
 ## Gene Expression in ABC
