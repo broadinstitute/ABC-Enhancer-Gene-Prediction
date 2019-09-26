@@ -187,15 +187,9 @@ Average Hi-C data can be downloaded from: <ftp://ftp.broadinstitute.org/outgoing
 [TO DO:]
 Each bedgraph in this directory is Hi-C contact profile anchored at the gene TSS averaged over 10 human cell types. The Hi-C data is KR normalized and is provided at 5kb resolution. The ten cell types used for averaging are: GM12878, NHEK, HMEC, RPE1, THP1, IMR90, HUVEC, HCT116, K562, KBM7
 
-### Pipeline to Download and Format Hi-C data
+### Pipeline to Download Hi-C data
 
-The below pipeline will download a Hi-C matrix from Juicebox (in .hic format) and generate tss-anchored bedgraphs (the format the ABC model expects).
-
-Three steps
-
-1. Download raw data using Juicebox
-2. Make HiC Bedgraphs
-3. Get powerlaw parameters (Optional)
+The below pipeline will download a Hi-C matrix from Juicebox (in .hic format) and fit a powerlaw distribution.
 
 ```
 #Download hic matrix file from juicebox
