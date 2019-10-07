@@ -1,6 +1,7 @@
 
 
 src/makeQnormReference.py
+test.run.sh
 
 # emacs backups
 *~
