@@ -105,7 +105,7 @@ We recommend using ```--nStrongestPeaks 150000``` when making genome-wide peak c
 
 We have found that on some systems, MACS2 and Python3 are incompatible. It may be necessary to change virtual environments, or installed packages/dotkits after running MACS2. 
 
-Main output file:
+Main output files:
 
 * ***macs2_peaks.narrowPeak**: MACS2 narrowPeak file
 * ***macs2_peaks.narrowPeak.candidateRegions.bed**: filtered, extended and merged peak calls from MACS2. These are the candidate regions used in downstream scripts.
@@ -114,6 +114,8 @@ Main output file:
 ### Step 2. Quantifying Enhancer Activity: 
 
 ```run.neighborhoods.py``` will count DNase-seq (or ATAC-seq) and H3K27ac ChIP-seq reads in candidate enhancer regions. It also makes GeneList.txt, which includes data about genes and their promoters.
+
+Replicate epigenetic experiments should be included as comma delimited list of files. Read counts in replicate experiments will be averaged when computing enhancer Activity.
 
 Sample Command:
 
@@ -152,40 +154,42 @@ python src/predict.py \
 --threshold .022 \
 --cellType K562 \
 --outdir example_chr22/ABC_output/Predictions/ \
---skip_gene_files \
 --make_all_putative
 ```
 
 The main output files are:
 
-* **EnhancerPredictions.txt**: all element-gene pairs with scores above the provided threshold. Only includes expressed genes. 
+* **EnhancerPredictions.txt**: all element-gene pairs with scores above the provided threshold. Only includes expressed genes and does not include promoter elements. This file defines the set of 'positive' predictions of the ABC model.
+* **EnhancerPredictions.bedpe**: Same as above in .bedpe format. Can be loaded into IGV.
+* **EnhancerPredictionsAllPutative.txt.gz**: ABC scores for all element-gene pairs. Includes promoter elements and pairs with scores below the threshold. Only includes expressed genes. This file includes both the 'positive' and 'negative' predictions of the model. (use ```--make_all_putative``` to generate this file). 
+* **EnhancerPredictionsAllPutativeNonExpressedGenes.txt.gz**: Same as above for non-expressed genes. This file is provided for completeness but we generally do not recommend using these predictions.
+
 * **EnhancerPredictionsFull.txt**: same as above but includes more columns. See <https://docs.google.com/spreadsheets/d/1UfoVXoCxUpMNPfGypvIum1-RvS07928grsieiaPX67I/edit?usp=sharing> for column definitions
-* **EnhancerPredictions.bedpe**: Same as above in .bedpe format. Can be visualized in IGV.
-* **EnhancerPredictionsAllPutative.txt.gz**: ABC scores for all element-gene pairs. Includes non-expressed genes and pairs with scores below the threshold. (use ```--make_all_putative``` to generate this file). 
 
 The default threshold of 0.02 corresponds to 70% recall and 63% precision in the Fulco et al 2019 dataset.
 
 ## Defining Candidate Enhancers
-'Candidate elements' are the set of putative enhancers for which ABC scores will be computed. In computing the ABC score, the product of DNase-seq (or ATAC-seq) and H3K27ac ChIP-seq reads will be counted in the candidate element. Thus the candidate elements should be regions of open (nucleasome depleted) chromatin of sufficient length to capture H3K27ac marks on flanking nucleosomes. In Fulco et al 2019, we defined candidate regions to be 500bp (150bp of the DHS peak extended 175bp in each direction). 
+'Candidate elements' are the set of putative enhancers; ABC scores will be computed for all 'Candidate elements' within 5Mb of each gene. In computing the ABC score, the product of DNase-seq (or ATAC-seq) and H3K27ac ChIP-seq reads will be counted in each candidate element. Thus the candidate elements should be regions of open (nucleasome depleted) chromatin of sufficient length to capture H3K27ac marks on flanking nucleosomes. In Fulco et al 2019, we defined candidate regions to be 500bp (150bp of the DHS peak extended 175bp in each direction). 
 
 Given that the ABC score uses absolute counts of Dnase-seq reads in each region, ```makeCandidateRegions.py ``` selects the strongest peaks as measured by absolute read counts (not by pvalue). In order to do this, we first call peaks using a lenient significance threshold (.1 in the above example) and then consider the peaks with the most read counts. This procedure implicitly assumes that the active karyotype of the cell type is constant.
 
-We recommend removing elements overlapping regions of the genome that have been observed to accumulate anomalous number of reads in epigenetic sequencing experiments (‘blacklisted regions’). For convenience, we provide the list of blackedlisted regions available from https://sites.google.com/site/anshulkundaje/projects/blacklists.
+We recommend removing elements overlapping regions of the genome that have been observed to accumulate anomalous number of reads in epigenetic sequencing experiments (‘blacklisted regions’). For convenience, we provide the list of blackedlisted regions available from <https://sites.google.com/site/anshulkundaje/projects/blacklists>.
 
 ## Contact and Hi-C
-Given that cell-type specific Hi-C data is more difficult to generate than ATAC-seq or ChIP-seq, we have explored alternatives to using cell-type specific Hi-C data. It has been shown that Hi-C contact frequencies generally follow a powerlaw relationship (with respect to genomic distance) and that many TADs, loops and other structural features of the 3D genome are **not** cell-type specific [Ref Rao] [Ref Sanborn]. 
+Given that cell-type specific Hi-C data is more difficult to generate than ATAC-seq or ChIP-seq, we have explored alternatives to using cell-type specific Hi-C data. It has been shown that Hi-C contact frequencies generally follow a powerlaw relationship (with respect to genomic distance) and that many TADs, loops and other structural features of the 3D genome are **not** cell-type specific (Sanborn et al 2015, Rao et al 2014). 
 
 We have found that, for most genes, using an average Hi-C profile in the ABC model gives approximately equally good performance as using a cell-type specific Hi-C profile. To facilitate making ABC predictions in a large panel of cell types, including those without cell type-specific Hi-C data, we have provided an average Hi-C profile (averaged across 10 cell lines). 
 
-In the case where cell-type specific Hi-C data is available, we provide a pipeline which takes as input a .hic file, and formats it as the ABC model code expects (see below).
-
+TO DO:
 [PL Scaling of Hi-C]
+[bedpe vs juicebox formats]
 
 ### Description of Average Hi-C data provided
+[TO DO:]
 Average Hi-C data can be downloaded from: <ftp://ftp.broadinstitute.org/outgoing/lincRNA/average_hic/>
 
-[TO DO:]
-Each bedgraph in this directory is Hi-C contact profile anchored at the gene TSS averaged over 10 human cell types. The Hi-C data is KR normalized and is provided at 5kb resolution. The ten cell types used for averaging are: GM12878, NHEK, HMEC, RPE1, THP1, IMR90, HUVEC, HCT116, K562, KBM7
+
+GM12878, NHEK, HMEC, RPE1, THP1, IMR90, HUVEC, HCT116, K562, KBM7
 
 ### Pipeline to Download Hi-C data
 
