@@ -148,7 +148,7 @@ Sample Command:
 python src/predict.py \
 --enhancers example_chr22/ABC_output/Neighborhoods/EnhancerList.txt \
 --genes example_chr22/ABC_output/Neighborhoods/GeneList.txt \
---HiCdir example_chr22/input_data/HiC/bedgraph/ \
+--HiCdir example_chr22/input_data/HiC/raw/ \
 --hic_resolution 5000 \
 --scale_hic_using_powerlaw \
 --threshold .022 \
