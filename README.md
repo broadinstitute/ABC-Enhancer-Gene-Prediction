@@ -90,7 +90,7 @@ bedtools sort -faidx example_chr22/reference/chr22 -i example_chr22/ABC_output/P
 python src/makeCandidateRegions.py \
 --narrowPeak example_chr22/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.sorted \
 --bam example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam \
---outdir example_chr22/ABC_output/Peaks/ \
+--outDir example_chr22/ABC_output/Peaks/ \
 --chrom_sizes example_chr22/reference/chr22 \
 --regions_blacklist reference/wgEncodeHg19ConsensusSignalArtifactRegions.bed \
 --regions_whitelist example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.chr22.bed \
