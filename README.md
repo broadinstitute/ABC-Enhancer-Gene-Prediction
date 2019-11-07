@@ -137,6 +137,13 @@ Main output files:
   * **EnhancerList.txt**: Candidate enhancer regions with Dnase-seq and H3K27ac ChIP-seq read counts
   * **GeneList.txt**: Dnase-seq and H3K27ac ChIP-seq read counts on gene bodies and gene promoter regions
 
+Main output metric files: 
+
+  * **PeakFileQCSummary.txt**: QC Summary for Peak File : Number of Peaks, Max Width of Peaks, Mean and Stdev of Peaks 
+  * **EnhancersPerChrom.txt**: Number of enhancers per Chromosome
+  * **WidthOfPeaks.png**: Plot of distribution of Peak Width in Peak File 
+  * **EnhancersPerChromosome.png**: Plot of Distribution of Number of Enhancers Per Chromosome
+  
 
 ### Step 3. Computing the ABC Score
 
