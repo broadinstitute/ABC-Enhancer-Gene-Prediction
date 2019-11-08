@@ -1,6 +1,8 @@
 # Activity by Contact Model of Enhancer-Gene Specificity
 
-The Activity-by-Contact (ABC) model predicts which enhancers regulate which genes on a cell type specific basis. This repository contains the code needed to run the ABC model as well as small sample data files, example commands, and some general tips and suggestions. We provide a brief description of the model below, see Fulco et al (BioArxiv 2019) for a full description.
+The Activity-by-Contact (ABC) model predicts which enhancers regulate which genes on a cell type specific basis. This repository contains the code needed to run the ABC model as well as small sample data files, example commands, and some general tips and suggestions. We provide a brief description of the model below, see Fulco, Nasser et al (BioArxiv 2019) for a full description.
+
+
 
 ## Requirements
 For each cell-type, the inputs to the ABC model are:
@@ -29,7 +31,7 @@ bedtools (2.26.0)
 Tabix (0.2.5) - Partial dependancy
 MACS2 (2.1.1.20160309) - Partial dependancy
 Java (1.8) - Partial dependancy
-juicebox - Partial dependancy
+Juicer Tools (1.7.5) - Partial dependancy
 
 Python packages:
 pyranges (0.0.55)
@@ -83,12 +85,12 @@ macs2 callpeak \
 -g hs \
 -p .1 \
 --call-summits \
---outdir example_chr22/ABC_output/Peaks/ 
+--outdir example_chr22/ABC_output/Peaks/
 
 #Sort narrowPeak file
 bedtools sort -faidx example_chr22/reference/chr22 -i example_chr22/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak > example_chr22/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.sorted
 
-#May need to change virtual environments
+#May need to change virtual environments here
 
 python src/makeCandidateRegions.py \
 --narrowPeak example_chr22/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.sorted \
@@ -98,7 +100,7 @@ python src/makeCandidateRegions.py \
 --regions_blacklist reference/wgEncodeHg19ConsensusSignalArtifactRegions.bed \
 --regions_whitelist example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.chr22.bed \
 --peakExtendFromSummit 250 \
---nStrongestPeaks 3000 
+--nStrongestPeaks 3000
 ```
 
 We recommend using ```--nStrongestPeaks 150000``` when making genome-wide peak calls. ```3000``` is just used for the small example on chr22. 
@@ -129,7 +131,7 @@ python src/run.neighborhoods.py \
 --chrom_sizes example_chr22/reference/chr22 \
 --ubiquitously_expressed_genes reference/UbiquitouslyExpressedGenesHG19.txt \
 --cellType K562 \
---outdir example_chr22/ABC_output/Neighborhoods/ 
+--outdir example_chr22/ABC_output/Neighborhoods/
 ```
 
 Main output files:
@@ -151,7 +153,7 @@ python src/predict.py \
 --HiCdir example_chr22/input_data/HiC/raw/ \
 --hic_resolution 5000 \
 --scale_hic_using_powerlaw \
---threshold .022 \
+--threshold .02 \
 --cellType K562 \
 --outdir example_chr22/ABC_output/Predictions/ \
 --make_all_putative
@@ -236,7 +238,7 @@ Quantile normalization can be applied using ```--qnorm EnhancersQNormRef.K562.tx
 * Accurate transcription start site annotations are critical. The ABC model uses the TSS of the gene in order to assign enhancer-promoter contact frequency. If the TSS annotation is inaccurate (off by >5kb) it will lead to inaccurate predictions.
 * We have found that ubiquitously expressed genes appear insensitive to the effects of distal enhancers. For completeness, this code calculates the ABC score for all genes and flags ubiquitously expressed genes.
 * The size of candidate enhancer elements is important. For example, if two candidate regions are merged, then the ABC score of the merged region will be approximately the sum of the ABC scores for each individual region.
-* In our testing the ABC model typically predicts on average ~3 distal enhancers per expressed gene. If you run the model on a cell type and find a large deviation from this number (say <2 or > ~4.5) this may mean the ABC model is not well calibrated in the cell type. Typical remedies are to use quantile normalization, scale Hi-C or to lower/raise the cutoff on the ABC score.
+* In our testing the ABC model typically predicts on average ~3 distal enhancers per expressed gene. If you run the model on a cell type and find a large deviation from this number (say <2 or >5) this may mean the ABC model is not well calibrated in the cell type. Typical remedies are to use quantile normalization, scale Hi-C or to lower/raise the cutoff on the ABC score.
 
 ## Citation
 
