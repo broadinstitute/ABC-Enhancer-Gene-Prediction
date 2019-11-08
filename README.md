@@ -2,7 +2,10 @@
 
 The Activity-by-Contact (ABC) model predicts which enhancers regulate which genes on a cell type specific basis. This repository contains the code needed to run the ABC model as well as small sample data files, example commands, and some general tips and suggestions. We provide a brief description of the model below, see Fulco, Nasser et al (BioArxiv 2019) for a full description.
 
+Version history:
+v0.2 is the recommended version. The codebase used to generate the results from [] is available in the NG2019 branch of this repository. v0.2 is a faster and more scalable version of the NG2019 the branch. ABC Scores computed using v0.2 will not exactly reproduce those published in [] - there are minor differences related to Hi-C data processing.
 
+If you use the ABC model in published research, please cite...
 
 ## Requirements
 For each cell-type, the inputs to the ABC model are:
@@ -38,7 +41,6 @@ pyranges (0.0.55)
 numpy (1.15.2)
 pandas (0.23.4)
 scipy (0.18.1)
-intervaltree (2.1.0)
 pyBigWig (0.3.2) - Partial dependancy
 ```
 
@@ -112,10 +114,9 @@ Main output files:
 * ***macs2_peaks.narrowPeak**: MACS2 narrowPeak file
 * ***macs2_peaks.narrowPeak.candidateRegions.bed**: filtered, extended and merged peak calls from MACS2. These are the candidate regions used in downstream scripts.
 
-
 ### Step 2. Quantifying Enhancer Activity: 
 
-```run.neighborhoods.py``` will count DNase-seq (or ATAC-seq) and H3K27ac ChIP-seq reads in candidate enhancer regions. It also makes GeneList.txt, which includes data about genes and their promoters.
+```run.neighborhoods.py``` will count DNase-seq (or ATAC-seq) and H3K27ac ChIP-seq reads in candidate enhancer regions. It also makes GeneList.txt, which counts reads in gene bodies and promoter regions.
 
 Replicate epigenetic experiments should be included as comma delimited list of files. Read counts in replicate experiments will be averaged when computing enhancer Activity.
 
@@ -162,11 +163,11 @@ python src/predict.py \
 The main output files are:
 
 * **EnhancerPredictions.txt**: all element-gene pairs with scores above the provided threshold. Only includes expressed genes and does not include promoter elements. This file defines the set of 'positive' predictions of the ABC model.
+* **EnhancerPredictionsFull.txt**: same as above but includes more columns. See <https://docs.google.com/spreadsheets/d/1UfoVXoCxUpMNPfGypvIum1-RvS07928grsieiaPX67I/edit?usp=sharing> for column definitions
 * **EnhancerPredictions.bedpe**: Same as above in .bedpe format. Can be loaded into IGV.
 * **EnhancerPredictionsAllPutative.txt.gz**: ABC scores for all element-gene pairs. Includes promoter elements and pairs with scores below the threshold. Only includes expressed genes. This file includes both the 'positive' and 'negative' predictions of the model. (use ```--make_all_putative``` to generate this file). 
 * **EnhancerPredictionsAllPutativeNonExpressedGenes.txt.gz**: Same as above for non-expressed genes. This file is provided for completeness but we generally do not recommend using these predictions.
 
-* **EnhancerPredictionsFull.txt**: same as above but includes more columns. See <https://docs.google.com/spreadsheets/d/1UfoVXoCxUpMNPfGypvIum1-RvS07928grsieiaPX67I/edit?usp=sharing> for column definitions
 
 The default threshold of 0.02 corresponds to 70% recall and 63% precision in the Fulco et al 2019 dataset.
 
@@ -182,16 +183,16 @@ Given that cell-type specific Hi-C data is more difficult to generate than ATAC-
 
 We have found that, for most genes, using an average Hi-C profile in the ABC model gives approximately equally good performance as using a cell-type specific Hi-C profile. To facilitate making ABC predictions in a large panel of cell types, including those without cell type-specific Hi-C data, we have provided an average Hi-C profile (averaged across 10 cell lines). 
 
-TO DO:
-[PL Scaling of Hi-C]
-[bedpe vs juicebox formats]
+### Format of Hi-C data
+The ABC model supports two Hi-C data formats.
+ 
+* Juicer format: three column format representation of a Hi-C matrix.
+* bedpe format: More general format which can support variable and arbitrary bin sizes. 
 
-### Description of Average Hi-C data provided
-[TO DO:]
-Average Hi-C data can be downloaded from: <ftp://ftp.broadinstitute.org/outgoing/lincRNA/average_hic/>
+### Average Hi-C
+The celltypes used for averaging are: GM12878, NHEK, HMEC, RPE1, THP1, IMR90, HUVEC, HCT116, K562, KBM7
 
-
-GM12878, NHEK, HMEC, RPE1, THP1, IMR90, HUVEC, HCT116, K562, KBM7
+Average Hi-C data can be downloaded from: <ftp://ftp.broadinstitute.org/outgoing/lincRNA/average_hic/average_hic.v2.191020.tar.gz> (20 GB)
 
 ### Pipeline to Download Hi-C data
 
@@ -213,7 +214,8 @@ python src/compute_powerlaw_fit_from_hic.py \
 --outDir example_chr22/input_data/HiC/raw/powerlaw/ \
 --maxWindow 1000000 \
 --minWindow 5000 \
---resolution 5000
+--resolution 5000 \
+--chr 'chr22'
 ```
 
 ## Gene Expression in ABC
@@ -229,7 +231,7 @@ In an effort to make ABC scores comparable across cell types, the ABC model code
 
 Empirically, we have found that applying quantile normalization makes ABC predictions more comparable across cell types (particularly there is substantial variability in the signal to noise ratio of the epigenetic datasets across cell types). However, care should be taken as quantile normalization may not be applicable to all circumstances.
 
-Additionally, the threshold value on the ABC score of .022 (described in Fulco et al) is calculated based on the K562 epigenetic data. 
+Additionally, the threshold value on the ABC score of .02 (described in Fulco et al) is calculated based on the K562 epigenetic data. 
 
 Quantile normalization can be applied using ```--qnorm EnhancersQNormRef.K562.txt``` in ```run.neighborhoods.py```
 
