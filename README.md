@@ -87,11 +87,7 @@ macs2 callpeak \
 -g hs \
 -p .1 \
 --call-summits \
-<<<<<<< HEAD
 --outdir example_chr22/ABC_output/Peaks/
-=======
---outdir example_chr22/ABC_output/Peaks/ 
->>>>>>> master
 
 #Sort narrowPeak file
 bedtools sort -faidx example_chr22/reference/chr22 -i example_chr22/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak > example_chr22/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.sorted
@@ -102,10 +98,8 @@ python src/makeCandidateRegions.py \
 --narrowPeak example_chr22/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.sorted \
 --bam example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam \
 <<<<<<< HEAD
+<<<<<<< HEAD
 --outDir example_chr22/ABC_output/Peaks/ \
-=======
---outdir example_chr22/ABC_output/Peaks/ \
->>>>>>> master
 --chrom_sizes example_chr22/reference/chr22 \
 --regions_blacklist reference/wgEncodeHg19ConsensusSignalArtifactRegions.bed \
 --regions_whitelist example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.chr22.bed \
@@ -140,11 +134,7 @@ python src/run.neighborhoods.py \
 --chrom_sizes example_chr22/reference/chr22 \
 --ubiquitously_expressed_genes reference/UbiquitouslyExpressedGenesHG19.txt \
 --cellType K562 \
-<<<<<<< HEAD
 --outdir example_chr22/ABC_output/Neighborhoods/
-=======
---outdir example_chr22/ABC_output/Neighborhoods/ 
->>>>>>> master
 ```
 
 Main output files:
@@ -163,37 +153,23 @@ Sample Command:
 python src/predict.py \
 --enhancers example_chr22/ABC_output/Neighborhoods/EnhancerList.txt \
 --genes example_chr22/ABC_output/Neighborhoods/GeneList.txt \
-<<<<<<< HEAD
 --HiCdir example_chr22/input_data/HiC/raw/ \
 --hic_resolution 5000 \
-=======
---HiCdir example_chr22/input_data/HiC/bedgraph/ \
->>>>>>> master
 --scale_hic_using_powerlaw \
 --threshold .02 \
 --cellType K562 \
 --outdir example_chr22/ABC_output/Predictions/ \
-<<<<<<< HEAD
 --make_all_putative
-=======
---make_all_putative \
---skip_gene_files
->>>>>>> master
 ```
 
 The main output files are:
 
 * **EnhancerPredictions.txt**: all element-gene pairs with scores above the provided threshold. Only includes expressed genes and does not include promoter elements. This file defines the set of 'positive' predictions of the ABC model.
 * **EnhancerPredictionsFull.txt**: same as above but includes more columns. See <https://docs.google.com/spreadsheets/d/1UfoVXoCxUpMNPfGypvIum1-RvS07928grsieiaPX67I/edit?usp=sharing> for column definitions
-<<<<<<< HEAD
 * **EnhancerPredictions.bedpe**: Same as above in .bedpe format. Can be loaded into IGV.
 * **EnhancerPredictionsAllPutative.txt.gz**: ABC scores for all element-gene pairs. Includes promoter elements and pairs with scores below the threshold. Only includes expressed genes. This file includes both the 'positive' and 'negative' predictions of the model. (use ```--make_all_putative``` to generate this file). 
 * **EnhancerPredictionsAllPutativeNonExpressedGenes.txt.gz**: Same as above for non-expressed genes. This file is provided for completeness but we generally do not recommend using these predictions.
 
-=======
-* **EnhancerPredictions.bedpe**: Same as above in .bedpe format. Can be visualized in IGV.
-* **EnhancerPredictionsAllPutative.txt.gz**: ABC scores for all element-gene pairs. Includes non-expressed genes, promoter elements and pairs with scores below the threshold.
->>>>>>> master
 
 The default threshold of 0.02 corresponds to 70% recall and 63% precision in the Fulco et al 2019 dataset.
 
@@ -205,11 +181,8 @@ Given that the ABC score uses absolute counts of Dnase-seq reads in each region,
 We recommend removing elements overlapping regions of the genome that have been observed to accumulate anomalous number of reads in epigenetic sequencing experiments (‘blacklisted regions’). For convenience, we provide the list of blackedlisted regions available from <https://sites.google.com/site/anshulkundaje/projects/blacklists>.
 
 ## Contact and Hi-C
-<<<<<<< HEAD
 Given that cell-type specific Hi-C data is more difficult to generate than ATAC-seq or ChIP-seq, we have explored alternatives to using cell-type specific Hi-C data. It has been shown that Hi-C contact frequencies generally follow a powerlaw relationship (with respect to genomic distance) and that many TADs, loops and other structural features of the 3D genome are **not** cell-type specific (Sanborn et al 2015, Rao et al 2014). 
-=======
-Given that cell-type specific Hi-C data is more difficult to generate than ATAC-seq or ChIP-seq, we have explored alternatives to using cell-type specific Hi-C data. It has been shown that Hi-C contact frequencies generally follow a powerlaw relationship (with respect to genomic distance) and that many TADs, loops and other structural features of the 3D genome are **not** cell-type specific (Rao et al Cell 2014, Sanborn et al PNAS 2015). 
->>>>>>> master
+
 
 We have found that, for most genes, using an average Hi-C profile in the ABC model gives approximately equally good performance as using a cell-type specific Hi-C profile. To facilitate making ABC predictions in a large panel of cell types, including those without cell type-specific Hi-C data, we have provided an average Hi-C profile (averaged across 10 cell lines). 
 
