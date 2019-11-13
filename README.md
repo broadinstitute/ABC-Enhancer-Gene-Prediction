@@ -87,7 +87,7 @@ macs2 callpeak \
 -g hs \
 -p .1 \
 --call-summits \
---outdir example_chr22/ABC_output/Peaks/
+--outdir example_chr22/ABC_output/Peaks/ 
 
 #Sort narrowPeak file
 bedtools sort -faidx example_chr22/reference/chr22 -i example_chr22/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak > example_chr22/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.sorted
@@ -97,14 +97,12 @@ bedtools sort -faidx example_chr22/reference/chr22 -i example_chr22/ABC_output/P
 python src/makeCandidateRegions.py \
 --narrowPeak example_chr22/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.sorted \
 --bam example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam \
-<<<<<<< HEAD
-<<<<<<< HEAD
 --outDir example_chr22/ABC_output/Peaks/ \
 --chrom_sizes example_chr22/reference/chr22 \
 --regions_blacklist reference/wgEncodeHg19ConsensusSignalArtifactRegions.bed \
 --regions_whitelist example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.chr22.bed \
 --peakExtendFromSummit 250 \
---nStrongestPeaks 3000
+--nStrongestPeaks 3000 
 ```
 
 We recommend using ```--nStrongestPeaks 150000``` when making genome-wide peak calls. ```3000``` is just used for the small example on chr22. 
@@ -134,7 +132,7 @@ python src/run.neighborhoods.py \
 --chrom_sizes example_chr22/reference/chr22 \
 --ubiquitously_expressed_genes reference/UbiquitouslyExpressedGenesHG19.txt \
 --cellType K562 \
---outdir example_chr22/ABC_output/Neighborhoods/
+--outdir example_chr22/ABC_output/Neighborhoods/ 
 ```
 
 Main output files:
@@ -246,7 +244,7 @@ Quantile normalization can be applied using ```--qnorm EnhancersQNormRef.K562.tx
 * In our testing the ABC model typically predicts on average ~3 distal enhancers per expressed gene. If you run the model on a cell type and find a large deviation from this number (say <2 or >5) this may mean the ABC model is not well calibrated in the cell type. Typical remedies are to use quantile normalization, scale Hi-C or to lower/raise the cutoff on the ABC score.
 
 ## Contact
-Please submit a github issue if you experience and issues/bugs. Or you may contact Joseph Nasser at jnasser@broadinstitute.org directly.
+Please submit a github issue with any questions or if you experience any issues/bugs. Or you may contact Joseph Nasser at jnasser@broadinstitute.org directly.
 
 ## Citation
 
