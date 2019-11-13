@@ -139,6 +139,7 @@ def process_gene_bed(bed, name_cols, main_name, chrom_sizes=None, fail_on_nonuni
     #Remove genes that are not defined in chromosomes file
     if chrom_sizes is not None:
         sizes = read_bed(chrom_sizes)
+        bed['chr'] = bed['chr'].astype('str') #JN needed in case chromosomes are all integer
         bed = bed[bed['chr'].isin(set(sizes['chr'].values))]
 
     #Enforce that gene names should be unique
@@ -176,7 +177,12 @@ def load_enhancers(outdir=".",
                    class_override_file = None):
 
     enhancers = read_bed(candidate_peaks)
+<<<<<<< HEAD
     enhancers = enhancers.loc[~ (enhancers.chr.str.contains(re.compile('random|chrM|_|hap|Un')))]
+=======
+    enhancers['chr'] = enhancers['chr'].astype('str')
+    #enhancers = enhancers.ix[~ (enhancers.chr.str.contains(re.compile('random|chrM|_|hap|Un')))]
+>>>>>>> master
 
     enhancers = count_features_for_bed(enhancers, candidate_peaks, genome_sizes, features, outdir, "Enhancers", skip_rpkm_quantile, force, use_fast_count)
 
@@ -288,7 +294,7 @@ def run_count_reads(target, output, bed_file, genome_sizes, use_fast_count):
         raise ValueError("File {} name was not in .bam, .tagAlign.gz, .bw".format(target))
 
 
-def count_bam(bamfile, bed_file, output, genome_sizes, use_fast_count=True, verbose=False):
+def count_bam(bamfile, bed_file, output, genome_sizes, use_fast_count=True, verbose=True):
     completed = True
         
     #Fast count:
@@ -420,6 +426,7 @@ def count_single_feature_for_bed(df, bed_file, genome_sizes, feature_bam, featur
     domain_counts = domain_counts[['chr', 'start', 'end', score_column]]
     featurecount = feature_name + ".readCount"
     domain_counts.rename(columns={score_column: featurecount}, inplace=True)
+    domain_counts['chr'] = domain_counts['chr'].astype('str')
 
     df = df.merge(domain_counts.drop_duplicates())
     #df = smart_merge(df, domain_counts.drop_duplicates())
@@ -452,7 +459,8 @@ def average_features(df, feature, feature_bam_list, skip_rpkm_quantile):
 # From /seq/lincRNA/Jesse/bin/scripts/JuicerUtilities.R
 #
 bed_extra_colnames = ["name", "score", "strand", "thickStart", "thickEnd", "itemRgb", "blockCount", "blockSizes", "blockStarts"]
-chromosomes = ['chr' + str(entry) for entry in list(range(1,23)) + ['M','X','Y']]   # should pass this in as an input file to specify chromosome order
+#JN: 9/13/19: Don't assume chromosomes start with 'chr'
+#chromosomes = ['chr' + str(entry) for entry in list(range(1,23)) + ['M','X','Y']]   # should pass this in as an input file to specify chromosome order
 def read_bed(filename, extra_colnames=bed_extra_colnames, chr=None, sort=False, skip_chr_sorting=False):
     skip = 1 if ("track" in open(filename, "r").readline()) else 0
     names = ["chr", "start", "end"] + extra_colnames
@@ -460,7 +468,8 @@ def read_bed(filename, extra_colnames=bed_extra_colnames, chr=None, sort=False, 
     result = result.dropna(axis=1, how='all')  # drop empty columns
     assert result.columns[0] == "chr"
 
-    result['chr'] = pd.Categorical(result['chr'], chromosomes, ordered=True)
+    #result['chr'] = pd.Categorical(result['chr'], chromosomes, ordered=True)
+    result['chr'] = pd.Categorical(result['chr'], ordered=True)
     if chr is not None:
         result = result[result.chr == chr]
     if not skip_chr_sorting:
@@ -475,11 +484,12 @@ def read_bedgraph(filename):
 
 def count_bam_mapped(bam_file):
     # Counts number of reads in a BAM file WITHOUT iterating.  Requires that the BAM is indexed
-    chromosomes = ['chr' + str(x) for x in range(1,23)] + ['chrX'] + ['chrY']
+    # chromosomes = ['chr' + str(x) for x in range(1,23)] + ['chrX'] + ['chrY']
     command = ("samtools idxstats " + bam_file)
     data = check_output(command, shell=True)
     lines = data.decode("ascii").split("\n")
-    vals = list(int(l.split("\t")[2]) for l in lines[:-1] if l.split("\t")[0] in chromosomes)
+    #vals = list(int(l.split("\t")[2]) for l in lines[:-1] if l.split("\t")[0] in chromosomes)
+    vals = list(int(l.split("\t")[2]) for l in lines[:-1])
     if not sum(vals) > 0:
         raise ValueError("Error counting BAM file: count <= 0")
     return sum(vals)

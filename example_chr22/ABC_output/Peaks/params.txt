@@ -1,8 +1,0 @@
-narrowPeak example_chr22/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.sorted
-bam example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam
-chrom_sizes example_chr22/reference/chr22
-outDir example_chr22/ABC_output/Peaks/
-nStrongestPeaks 3000
-peakExtendFromSummit 250
-regions_whitelist example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.chr22.bed
-regions_blacklist reference/wgEncodeHg19ConsensusSignalArtifactRegions.bed
