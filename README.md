@@ -1,11 +1,13 @@
 # Activity by Contact Model of Enhancer-Gene Specificity
 
-The Activity-by-Contact (ABC) model predicts which enhancers regulate which genes on a cell type specific basis. This repository contains the code needed to run the ABC model as well as small sample data files, example commands, and some general tips and suggestions. We provide a brief description of the model below, see Fulco, Nasser et al (BioArxiv 2019) for a full description.
+The Activity-by-Contact (ABC) model predicts which enhancers regulate which genes on a cell type specific basis. This repository contains the code needed to run the ABC model as well as small sample data files, example commands, and some general tips and suggestions. We provide a brief description of the model below, see Fulco, Nasser et al (BioArxiv 2019) [1] for a full description.
 
-Version history:
-v0.2 is the recommended version. The codebase used to generate the results from [] is available in the NG2019 branch of this repository. v0.2 is a faster and more scalable version of the NG2019 the branch. ABC Scores computed using v0.2 will not exactly reproduce those published in [] - there are minor differences related to Hi-C data processing.
+v0.2 is the recommended version for the majority of users. There are some minor methodological differences between v0.2 and the model as described in [1]. These differences are related to Hi-C data processing and were implemented to improve the speed and scalability of the codebase. As such ABC scores computing using v0.2 will not exactly match those published in [1], although they will be very close. The codebase used to generate the results in [1] is available in the NG2019 branch of this repository. The NG2019 branch is no longer maintained.
 
-If you use the ABC model in published research, please cite...
+If you use the ABC model in published research, please cite:
+
+1. Fulco CP, Nasser J, Jones TR, Munson G, Bergman D, Subramanian V, Grossman SR, Anyoha R, Patwardhan TA, Nguyen TH, Kane M, Doughty B, Perez E, Durand NC, Stamenova EK, Lieberman Aiden E, Lander ES, Engreitz JM. Activity-by-Contact model for enhancer specificity from thousands of CRISPR perturbations. bioRxiv. 2019 Jan 26.
+
 
 ## Requirements
 For each cell-type, the inputs to the ABC model are:
@@ -169,10 +171,10 @@ The main output files are:
 * **EnhancerPredictionsAllPutativeNonExpressedGenes.txt.gz**: Same as above for non-expressed genes. This file is provided for completeness but we generally do not recommend using these predictions.
 
 
-The default threshold of 0.02 corresponds to 70% recall and 63% precision in the Fulco et al 2019 dataset.
+The default threshold of 0.02 corresponds to approximately 70% recall and 60% precision [1].
 
 ## Defining Candidate Enhancers
-'Candidate elements' are the set of putative enhancers; ABC scores will be computed for all 'Candidate elements' within 5Mb of each gene. In computing the ABC score, the product of DNase-seq (or ATAC-seq) and H3K27ac ChIP-seq reads will be counted in each candidate element. Thus the candidate elements should be regions of open (nucleasome depleted) chromatin of sufficient length to capture H3K27ac marks on flanking nucleosomes. In Fulco et al 2019, we defined candidate regions to be 500bp (150bp of the DHS peak extended 175bp in each direction). 
+'Candidate elements' are the set of putative enhancers; ABC scores will be computed for all 'Candidate elements' within 5Mb of each gene. In computing the ABC score, the product of DNase-seq (or ATAC-seq) and H3K27ac ChIP-seq reads will be counted in each candidate element. Thus the candidate elements should be regions of open (nucleasome depleted) chromatin of sufficient length to capture H3K27ac marks on flanking nucleosomes. In [1], we defined candidate regions to be 500bp (150bp of the DHS peak extended 175bp in each direction). 
 
 Given that the ABC score uses absolute counts of Dnase-seq reads in each region, ```makeCandidateRegions.py ``` selects the strongest peaks as measured by absolute read counts (not by pvalue). In order to do this, we first call peaks using a lenient significance threshold (.1 in the above example) and then consider the peaks with the most read counts. This procedure implicitly assumes that the active karyotype of the cell type is constant.
 
@@ -182,16 +184,16 @@ We recommend removing elements overlapping regions of the genome that have been 
 Given that cell-type specific Hi-C data is more difficult to generate than ATAC-seq or ChIP-seq, we have explored alternatives to using cell-type specific Hi-C data. It has been shown that Hi-C contact frequencies generally follow a powerlaw relationship (with respect to genomic distance) and that many TADs, loops and other structural features of the 3D genome are **not** cell-type specific (Sanborn et al 2015, Rao et al 2014). 
 
 
-We have found that, for most genes, using an average Hi-C profile in the ABC model gives approximately equally good performance as using a cell-type specific Hi-C profile. To facilitate making ABC predictions in a large panel of cell types, including those without cell type-specific Hi-C data, we have provided an average Hi-C profile (averaged across 10 cell lines). 
+We have found that, for most genes, using an average Hi-C profile in the ABC model gives approximately equally good performance as using a cell-type specific Hi-C profile. To facilitate making ABC predictions in a large panel of cell types, including those without cell type-specific Hi-C data, we have provided an average Hi-C matrix (averaged across 10 cell lines, at 5kb resolution). 
 
 ### Format of Hi-C data
 The ABC model supports two Hi-C data formats.
  
-* Juicer format: three column format representation of a Hi-C matrix.
+* Juicer format: three column 'sparse matrix' format representation of a Hi-C matrix.
 * bedpe format: More general format which can support variable and arbitrary bin sizes. 
 
 ### Average Hi-C
-The celltypes used for averaging are: GM12878, NHEK, HMEC, RPE1, THP1, IMR90, HUVEC, HCT116, K562, KBM7
+The celltypes used for averaging are: GM12878, NHEK, HMEC, RPE1, THP1, IMR90, HUVEC, HCT116, K562, KBM7. 
 
 Average Hi-C data can be downloaded from: <ftp://ftp.broadinstitute.org/outgoing/lincRNA/average_hic/average_hic.v2.191020.tar.gz> (20 GB)
 
@@ -232,9 +234,9 @@ In an effort to make ABC scores comparable across cell types, the ABC model code
 
 Empirically, we have found that applying quantile normalization makes ABC predictions more comparable across cell types (particularly there is substantial variability in the signal to noise ratio of the epigenetic datasets across cell types). However, care should be taken as quantile normalization may not be applicable to all circumstances.
 
-Additionally, the threshold value on the ABC score of .02 (described in Fulco et al) is calculated based on the K562 epigenetic data. 
+Additionally, the threshold value on the ABC score of .02 is calculated based on the K562 epigenetic data. 
 
-Quantile normalization can be applied using ```--qnorm EnhancersQNormRef.K562.txt``` in ```run.neighborhoods.py```
+Quantile normalization can be applied using ```--qnorm src/EnhancersQNormRef.K562.txt``` in ```run.neighborhoods.py```
 
 ## Tips and Comments
 
@@ -246,6 +248,4 @@ Quantile normalization can be applied using ```--qnorm EnhancersQNormRef.K562.tx
 ## Contact
 Please submit a github issue with any questions or if you experience any issues/bugs. Or you may contact Joseph Nasser at jnasser@broadinstitute.org directly.
 
-## Citation
 
-Fulco CP, Nasser J, Jones TR, Munson G, Bergman D, Subramanian V, Grossman SR, Anyoha R, Patwardhan TA, Nguyen TH, Kane M, Doughty B, Perez E, Durand NC, Stamenova EK, Lieberman Aiden E, Lander ES, Engreitz JM. Activity-by-Contact model for enhancer specificity from thousands of CRISPR perturbations. bioRxiv. 2019 Jan 26.
