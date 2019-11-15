@@ -143,6 +143,8 @@ Main output metric files:
   * **EnhancersPerChrom.txt**: Number of enhancers per Chromosome
   * **WidthOfPeaks.png**: Plot of distribution of Peak Width in Peak File 
   * **EnhancersPerChromosome.png**: Plot of Distribution of Number of Enhancers Per Chromosome
+  * **QuantileNorm_DHS_plot.png**: Quantile Normalized DNase counts v.s DNase Read Counts
+  * **QuantileNorm_H3K27ac_plot.png** : Quantile Normalized H3K27ac counts v.s H3K27ac Read Counts
   
 
 ### Step 3. Computing the ABC Score
