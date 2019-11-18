@@ -177,6 +177,16 @@ The main output files are:
 
 The default threshold of 0.02 corresponds to 70% recall and 63% precision in the Fulco et al 2019 dataset.
 
+Main output metric files: 
+ 
+  * **EnhancerGenePairsPerChrom.txt**: Mean/Stdev Number of enhancers per Chromosome
+  * **EnhancerPerGene.txt**: Mean/Stdev Number of Enhancers Per Gene
+  * **GenesPerEnhancer.txt**: Mean/Stdev Number of Genes Per Enhancer
+  * **EnhancerGeneDistance.png**: Distribution of Enhancer-Gene Distance
+  * **NumberOfEnhancersPerGene.png** : Distribution of Number of Enhancers per Gene reported 
+  * **NumberOfGenesPerEnhancer.png** : Distribution of Number of Genes per Enhancer reported 
+  
+  
 ## Defining Candidate Enhancers
 'Candidate elements' are the set of putative enhancers; ABC scores will be computed for all 'Candidate elements' within 5Mb of each gene. In computing the ABC score, the product of DNase-seq (or ATAC-seq) and H3K27ac ChIP-seq reads will be counted in each candidate element. Thus the candidate elements should be regions of open (nucleasome depleted) chromatin of sufficient length to capture H3K27ac marks on flanking nucleosomes. In Fulco et al 2019, we defined candidate regions to be 500bp (150bp of the DHS peak extended 175bp in each direction). 
 
