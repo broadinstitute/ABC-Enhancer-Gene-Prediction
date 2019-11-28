@@ -139,12 +139,12 @@ Main output files:
 
 Main output metric files: 
 
-  * **PeakFileQCSummary.txt**: QC Summary for Peak File : Number of Peaks, Max Width of Peaks, Mean and Stdev of Peaks 
+  * **PeakFileQCSummary.txt**: QC Summary for Peak File : PeakFile Used, Number of Peaks, Max Width of Peaks, Mean and Stdev of Peaks 
   * **EnhancersPerChrom.txt**: Number of enhancers per Chromosome
-  * **WidthOfPeaks.png**: Plot of distribution of Peak Width in Peak File 
-  * **EnhancersPerChromosome.png**: Plot of Distribution of Number of Enhancers Per Chromosome
-  * **QuantileNorm_DHS_plot.png**: Quantile Normalized DNase counts v.s DNase Read Counts
-  * **QuantileNorm_H3K27ac_plot.png** : Quantile Normalized H3K27ac counts v.s H3K27ac Read Counts
+  * **WidthOfPeaks.pdf**: Plot of distribution of Peak Width in Peak File 
+  * **EnhancersPerChromosome.pdf**: Plot of Distribution of Number of Enhancers Per Chromosome
+  * **QuantileNorm_DHS_plot.pdf**: Quantile Normalized DNase counts v.s DNase Read Counts
+  * **QuantileNorm_H3K27ac_plot.pdf** : Quantile Normalized H3K27ac counts v.s H3K27ac Read Counts
   
 
 ### Step 3. Computing the ABC Score
@@ -182,9 +182,9 @@ Main output metric files:
   * **EnhancerGenePairsPerChrom.txt**: Mean/Stdev Number of enhancers per Chromosome
   * **EnhancerPerGene.txt**: Mean/Stdev Number of Enhancers Per Gene
   * **GenesPerEnhancer.txt**: Mean/Stdev Number of Genes Per Enhancer
-  * **EnhancerGeneDistance.png**: Distribution of Enhancer-Gene Distance
-  * **NumberOfEnhancersPerGene.png** : Distribution of Number of Enhancers per Gene reported 
-  * **NumberOfGenesPerEnhancer.png** : Distribution of Number of Genes per Enhancer reported 
+  * **EnhancerGeneDistance.pdf**: Distribution of Enhancer-Gene Distance
+  * **NumberOfEnhancersPerGene.pdf** : Distribution of Number of Enhancers per Gene reported 
+  * **NumberOfGenesPerEnhancer.pdf** : Distribution of Number of Genes per Enhancer reported 
   
   
 ## Defining Candidate Enhancers
