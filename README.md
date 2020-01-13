@@ -124,12 +124,13 @@ python src/run.neighborhoods.py \
 --candidate_enhancer_regions example_chr22/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.sorted.candidateRegions.bed \
 --genes example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.bed \
 --H3K27ac example_chr22/input_data/Chromatin/ENCFF384ZZM.chr22.bam \
---DHS example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam,example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep2.chr22.bam \
+--DHS example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam \
 --expression_table example_chr22/input_data/Expression/K562.ENCFF934YBO.TPM.txt \
 --chrom_sizes example_chr22/reference/chr22 \
 --ubiquitously_expressed_genes reference/UbiquitouslyExpressedGenesHG19.txt \
 --cellType K562 \
---outdir example_chr22/ABC_output/Neighborhoods/ 
+--outdir example_chr22/ABC_output/Neighborhoods/ \
+--peak_file example_chr22/input_data/Chromatin/K562.H3K27ac_chipseq.narrowPeaks.bed 
 ```
 
 Main output files:
