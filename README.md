@@ -1,6 +1,6 @@
 # Activity by Contact Model of Enhancer-Gene Specificity
 
-The Activity-by-Contact (ABC) model predicts which enhancers regulate which genes on a cell type specific basis. This repository contains the code needed to run the ABC model as well as small sample data files, example commands, and some general tips and suggestions. We provide a brief description of the model below, see Fulco, Nasser et al (BioArxiv 2019) [1] for a full description.
+The Activity-by-Contact (ABC) model predicts which enhancers regulate which genes on a cell type specific basis. This repository contains the code needed to run the ABC model as well as small sample data files, example commands, and some general tips and suggestions. We provide a brief description of the model below, see Fulco, Nasser et al [1] for a full description.
 
 v0.2 is the recommended version for the majority of users. There are some minor methodological differences between v0.2 and the model as described in [1]. These differences are related to Hi-C data processing and were implemented to improve the speed and scalability of the codebase. As such ABC scores computing using v0.2 will not exactly match those published in [1], although they will be very close. The codebase used to generate the results in [1] is available in the NG2019 branch of this repository. The NG2019 branch is no longer maintained.
 
@@ -102,7 +102,7 @@ python src/makeCandidateRegions.py \
 --outDir example_chr22/ABC_output/Peaks/ \
 --chrom_sizes example_chr22/reference/chr22 \
 --regions_blacklist reference/wgEncodeHg19ConsensusSignalArtifactRegions.bed \
---regions_whitelist example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.chr22.bed \
+--regions_whitelist example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS500bp.chr22.bed \
 --peakExtendFromSummit 250 \
 --nStrongestPeaks 3000 
 ```
@@ -220,6 +220,9 @@ python src/compute_powerlaw_fit_from_hic.py \
 --resolution 5000 \
 --chr 'chr22'
 ```
+
+### Contact data in bedpe formats
+Contact data can also be loaded in a generic bedpe format. This supports promoter-capture Hi-C and mixed-resolution Hi-C matrices. Use ```--hic_type bedpe``` in ```predict.py``` to enable this. 
 
 ## Gene Expression in ABC
 The ABC model is designed to predict the effect of enhancers on expressed genes. If a gene is not expressed in a given cell type (or cell state) then we assume it does not have any activating enhancers (enhancers for which inhibition of the enhancer would lead to decrease in gene expression). Thus we typically only report enhancer-gene connections for expressed genes.
