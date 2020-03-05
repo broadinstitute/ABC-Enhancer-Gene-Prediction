@@ -224,6 +224,9 @@ python src/compute_powerlaw_fit_from_hic.py \
 ### Contact data in bedpe formats
 Contact data can also be loaded in a generic bedpe format. This supports promoter-capture Hi-C and mixed-resolution Hi-C matrices. Use ```--hic_type bedpe``` in ```predict.py``` to enable this. 
 
+### ABC model without experimental contact data
+If experimentally derived contact data is not available, one can run the ABC model using the powerlaw estimate only. In this case the ```--HiCdir``` argument should be excluded from ```predict.py``` and the ```--score_column powerlaw.Score``` argument should be included in ```predict.py```. In this case the ```ABC.Score``` column of the predictions file will be set to ```NaN```. The ```powerlaw.Score``` column of the output prediction files will be the relevant Score column to use.
+
 ## Gene Expression in ABC
 The ABC model is designed to predict the effect of enhancers on expressed genes. If a gene is not expressed in a given cell type (or cell state) then we assume it does not have any activating enhancers (enhancers for which inhibition of the enhancer would lead to decrease in gene expression). Thus we typically only report enhancer-gene connections for expressed genes.
 
