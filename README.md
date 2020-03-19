@@ -98,6 +98,7 @@ python src/makeCandidateRegions.py \
 --regions_blacklist reference/wgEncodeHg19ConsensusSignalArtifactRegions.bed \
 --regions_whitelist example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.chr22.bed \
 --peakExtendFromSummit 250 \
+--genome_tss example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.chr22.bed \
 --nStrongestPeaks 3000 
 ```
 
@@ -109,6 +110,10 @@ Main output files:
 
 * ***macs2_peaks.narrowPeak**: MACS2 narrowPeak file
 * ***macs2_peaks.narrowPeak.candidateRegions.bed**: filtered, extended and merged peak calls from MACS2. These are the candidate regions used in downstream scripts.
+
+Main output metric files: 
+* ***ENCFF030DCL.macs2_peaks.narrowPeak.annotated_peaks.bed**: Annotated MACS2 narrowPeak file to nearest Gene TSS. First three columns represent peak region (chr/start/end) followed by Gene TSS region (chr/start/end/gene/score/strand/Distance) (bp) is calculated as the last column. 
+* ***DistanceOfPeakToClosestTSS.pdf**: univariate distribution of Distances of MACS2 narrowPeak to nearest Gene TSS.
 
 
 ### Step 2. Quantifying Enhancer Activity: 
@@ -129,8 +134,7 @@ python src/run.neighborhoods.py \
 --chrom_sizes example_chr22/reference/chr22 \
 --ubiquitously_expressed_genes reference/UbiquitouslyExpressedGenesHG19.txt \
 --cellType K562 \
---outdir example_chr22/ABC_output/Neighborhoods/ \
---peak_file example_chr22/input_data/Chromatin/K562.H3K27ac_chipseq.narrowPeaks.bed 
+--outdir example_chr22/ABC_output/Neighborhoods/  
 ```
 
 Main output files:
@@ -140,12 +144,14 @@ Main output files:
 
 Main output metric files: 
 
-  * **PeakFileQCSummary.txt**: QC Summary for Peak File : PeakFile Used, Number of Peaks, Max Width of Peaks, Mean and Stdev of Peaks 
+  * **PeakFileQCSummary.txt**: 
+  QC Summary for Peak File : PeakFile Used, Number of Peaks, (Median/Mean/Stdev) width of peak, (Median/Mean/Stdev) Distance of Peak to Closest TSS, Number of Candidate Regions, (Median/Mean/Stdev) width of Candidate Regions, Number Of Counts in (Enhancers/GenesTSS/Genes)
   * **EnhancersPerChrom.txt**: Number of enhancers per Chromosome
-  * **WidthOfPeaks.pdf**: Plot of distribution of Peak Width in Peak File 
-  * **EnhancersPerChromosome.pdf**: Plot of Distribution of Number of Enhancers Per Chromosome
-  * **QuantileNorm_DHS_plot.pdf**: Quantile Normalized DNase counts v.s DNase Read Counts
-  * **QuantileNorm_H3K27ac_plot.pdf** : Quantile Normalized H3K27ac counts v.s H3K27ac Read Counts
+  * **WidthOfPeaks.pdf**: univariate distribution of Peak Width in Peak File 
+  * **WidthOfCandidateRegions.pdf** : univariate distribution of Candidate Region Width 
+  * **EnhancersPerChromosome.pdf**: univariate distribution of Number of Enhancers Per Chromosome
+  * **DHS_QuantileNorm.pdf**: Quantile Normalized DNase counts against DNase Read Counts
+  * **H3K27ac_QuantileNorm.pdf** : Quantile Normalized H3K27ac counts against H3K27ac Read Counts
   
 
 ### Step 3. Computing the ABC Score
@@ -180,12 +186,12 @@ The default threshold of 0.02 corresponds to 70% recall and 63% precision in the
 
 Main output metric files: 
  
-  * **EnhancerGenePairsPerChrom.txt**: Mean/Stdev Number of enhancers per Chromosome
-  * **EnhancerPerGene.txt**: Mean/Stdev Number of Enhancers Per Gene
-  * **GenesPerEnhancer.txt**: Mean/Stdev Number of Genes Per Enhancer
-  * **EnhancerGeneDistance.pdf**: Distribution of Enhancer-Gene Distance
-  * **NumberOfEnhancersPerGene.pdf** : Distribution of Number of Enhancers per Gene reported 
-  * **NumberOfGenesPerEnhancer.pdf** : Distribution of Number of Genes per Enhancer reported 
+  * **EnhancerGenePairsPerChrom.txt**: (Median/Mean/Stdev) Number of Enhancer-Gene pairs per Chromosome
+  * **EnhancerPerGene.txt**: (Median/Mean/Stdev) Number of Enhancers Per Gene
+  * **GenesPerEnhancer.txt**: (Mean/Mean/Stdev) Number of Genes Per Enhancer
+  * **EnhancerGeneDistance.pdf**: univariate distribution of Enhancer-Gene Distance
+  * **NumberOfEnhancersPerGene.pdf** : univariate distribution of Number of Enhancers per Gene reported 
+  * **NumberOfGenesPerEnhancer.pdf** : univariate distribution of Number of Genes per Enhancer reported 
   
   
 ## Defining Candidate Enhancers
