@@ -150,8 +150,8 @@ Main output metric files:
   * **WidthOfPeaks.pdf**: univariate distribution of Peak Width in Peak File 
   * **WidthOfCandidateRegions.pdf** : univariate distribution of Candidate Region Width 
   * **EnhancersPerChromosome.pdf**: univariate distribution of Number of Enhancers Per Chromosome
-  * **QuantileNorm_DHS_plot.pdf**: Quantile Normalized DNase counts against DNase Read Counts
-  * **QuantileNorm_H3K27ac_plot.pdf** : Quantile Normalized H3K27ac counts against H3K27ac Read Counts
+  * **DHS_QuantileNorm.pdf**: Quantile Normalized DNase counts against DNase Read Counts
+  * **H3K27ac_QuantileNorm.pdf** : Quantile Normalized H3K27ac counts against H3K27ac Read Counts
   
 
 ### Step 3. Computing the ABC Score
