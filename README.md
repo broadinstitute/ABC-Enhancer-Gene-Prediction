@@ -114,7 +114,8 @@ Main output files:
 Main output metric files: 
 * ***ENCFF030DCL.macs2_peaks.narrowPeak.annotated_peaks.bed**: Annotated MACS2 narrowPeak file to nearest Gene TSS. First three columns represent peak region (chr/start/end) followed by Gene TSS region (chr/start/end/gene/score/strand/Distance) (bp) is calculated as the last column. 
 * ***DistanceOfPeakToClosestTSS.pdf**: univariate distribution of Distances of MACS2 narrowPeak to nearest Gene TSS.
-
+* **PeakFileQCSummary.txt**: 
+  QC Summary for Peak File : PeakFile Used, Number of Peaks, (Median/Mean/Stdev) width of peak, (Median/Mean/Stdev) Distance of Peak to Closest TSS, Number of Candidate Regions, (Median/Mean/Stdev) width of Candidate Regions, Number Of Counts in (Enhancers/GenesTSS/Genes)
 
 ### Step 2. Quantifying Enhancer Activity: 
 
@@ -144,8 +145,6 @@ Main output files:
 
 Main output metric files: 
 
-  * **PeakFileQCSummary.txt**: 
-  QC Summary for Peak File : PeakFile Used, Number of Peaks, (Median/Mean/Stdev) width of peak, (Median/Mean/Stdev) Distance of Peak to Closest TSS, Number of Candidate Regions, (Median/Mean/Stdev) width of Candidate Regions, Number Of Counts in (Enhancers/GenesTSS/Genes)
   * **EnhancersPerChrom.txt**: Number of enhancers per Chromosome
   * **WidthOfPeaks.pdf**: univariate distribution of Peak Width in Peak File 
   * **WidthOfCandidateRegions.pdf** : univariate distribution of Candidate Region Width 
