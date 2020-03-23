@@ -6,6 +6,7 @@ import glob
 from subprocess import check_call, check_output, PIPE, Popen, getoutput, CalledProcessError
 
 def grab_nearest_tss_from_peak(macs_peaks, genome_tss, outdir):
+<<<<<<< HEAD
     # Grab nearest tss from peak
     outfile = os.path.join(outdir, os.path.basename(macs_peaks))
     files = pd.read_csv(outfile, sep="\t")
@@ -18,6 +19,15 @@ def grab_nearest_tss_from_peak(macs_peaks, genome_tss, outdir):
     err = str(stderrdata, 'utf-8')
 
     command = "bedtools closest -a {outfile} -b {genome_tss}.sorted -d > {annotated_peaks}"
+=======
+    
+    outfile = os.path.join(outdir, os.path.basename(macs_peaks))
+    files = pd.read_csv(outfile, sep="\t")
+    annotated_peaks = os.path.join(outdir, os.path.basename(macs_peaks) + ".annotated_peaks.bed")
+    
+    # command to get closest gene tss using bedtools 
+    command = "bedtools closest -a {outfile} -b {genome_tss} -d > {annotated_peaks}"
+>>>>>>> 83c5de0ed2e980b872d0eb9e4759ec6eceae265a
     command = command.format(**locals())
     p = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
     print("Running:" + command)
@@ -42,6 +52,7 @@ def GrabQCMetrics(prediction_df, outdir):
     mean_genes_per_enhancer = prediction_df[['chr', 'start', 'end']].groupby(['chr', 'start', 'end']).size().mean()
     stdev_genes_per_enhancer = prediction_df[['chr', 'start', 'end']].groupby(['chr', 'start', 'end']).size().std()
     median_genes_per_enhancer = prediction_df[['chr', 'start', 'end']].groupby(['chr', 'start', 'end']).size().median()
+    
     # Grab Number of Enhancer-Gene Pairs Per Chromsome
     enhancergeneperchrom = prediction_df.groupby(['chr']).size()
     enhancergeneperchrom.to_csv(os.path.join(outdir, "EnhancerGenePairsPerChrom.txt"), sep="\t")
@@ -53,13 +64,19 @@ def GrabQCMetrics(prediction_df, outdir):
     distance = np.array(prediction_df['distance'])
     thquantile = np.percentile(distance, 10)
     testthquantile = np.percentile(distance, 90)
+<<<<<<< HEAD
 
     # Plot Distributions and save as png
+=======
+    
+    # Plot Distributions and save as pdf
+>>>>>>> 83c5de0ed2e980b872d0eb9e4759ec6eceae265a
     PlotDistribution(num_enhancers, "NumberOfGenesPerEnhancer", outdir)
     PlotDistribution(GeneCounts, "NumberOfEnhancersPerGene", outdir)
     PlotDistribution(enhancergeneperchrom, "EnhancersPerChromosome", outdir)
     PlotDistribution(distance, "EnhancerGeneDistance", outdir)
 
+    # save file in predictions directory 
     with open(os.path.join(outdir,"QCSummary.txt"), "w") as f:
         f.write("Enhancer Per Gene:")
         f.write(str(GeneMedian))
@@ -95,8 +112,13 @@ def GrabQCMetrics(prediction_df, outdir):
         f.write("E-G 90th quantile:")
         f.write(str(testthquantile))
         f.close()
+<<<<<<< HEAD
 
 
+=======
+    
+# Grab Number of Counts that lie in Enhancers, GeneTSS and Gene Bodies - appended to PeakFileQCSummary.txt 
+>>>>>>> 83c5de0ed2e980b872d0eb9e4759ec6eceae265a
 def NeighborhoodFileQC(neighborhood_dir, outdir):
     x = glob.glob(os.path.join(neighborhood_dir, "Enhancers.DHS.*"))
     y = glob.glob(os.path.join(neighborhood_dir, "Genes.TSS1kb.DHS.*"))
@@ -126,11 +148,14 @@ def PeakFileQC(macs_peaks, outdir):
     else:
         peaks = pd.read_csv(macs_peaks, sep="\t", header=None)
     outfile = os.path.join(outdir, os.path.basename(macs_peaks) + ".candidateRegions.bed")
+    
+    # Grab width of candidate regions
     candidateRegions = pd.read_csv(outfile, sep="\t", header=None)
     candidateRegions['dist'] = candidateRegions[2] - candidateRegions[1]
     candreg = list(candidateRegions['dist'])
     PlotDistribution(candreg, 'WidthOfCandidateRegions', outdir)
 
+    # Grab Distance of Peak To Closest TSS
     annotatedFile = os.path.join(outdir, os.path.basename(macs_peaks) + ".annotated_peaks.bed")
     annotatedPeaks = pd.read_csv(annotatedFile, sep="\t", header=None)
     median = annotatedPeaks.iloc[:, 9].median()
@@ -138,10 +163,12 @@ def PeakFileQC(macs_peaks, outdir):
     stdev = np.std(np.array(annotatedPeaks.iloc[:, 9]))
     PlotDistribution(np.array(annotatedPeaks.iloc[:,9]), "DistanceOfPeakToClosestTSS", outdir)
 
+    # Grab Width of Peaks
     peaks['dist'] = peaks[2]-peaks[1]
     peaks_array = list(peaks['dist'])
     PlotDistribution(peaks_array, "WidthOfPeaks", outdir)
 
+    # Save to PeakFileQCSummary
     with open(os.path.join(outdir, "PeakFileQCSummary.txt"),"w") as f:
         f.write(str(macs_peaks))
         f.write("\n")
@@ -174,7 +201,7 @@ def PeakFileQC(macs_peaks, outdir):
         f.write("\n")
         f.close()
 
-# Plots and saves a distribution as *.png
+# Plots and saves a distribution as *.pdf
 def PlotDistribution(array, title, outdir):
     ax = sns.distplot(array, hist=True)
     ax.set_title(title)
