@@ -2,13 +2,21 @@ import os,sys
 import pandas as pd
 import seaborn as sns
 import glob
+import numpy as np
+from subprocess import check_call, check_output, PIPE, Popen, getoutput, CalledProcessError
 
 def grab_nearest_tss_from_peak(macs_peaks, genome_tss, outdir):
     # Grab nearest tss from peak
-    outfile = os.path.join(outdir, os.path.basename(macs_peaks) + ".candidateRegions.bed")
+    outfile = os.path.join(outdir, os.path.basename(macs_peaks) + ".gz.candidateRegions.bed")
     files = pd.read_csv(outfile, sep="\t")
     annotated_peaks = os.path.join(outdir, os.path.basename(macs_peaks) + ".annotated_peaks.bed")
-    command = "bedtools closest -a {outfile} -b {genome_tss} -d > {annotated_peaks}"
+    sort_command = "sort -k1,1 -k2,2n {outfile} > {outfile}.sorted"
+    sort_command = sort_command.format(**locals())
+    p = Popen(sort_command, stdout=PIPE, stderr=PIPE, shell=True)
+    print("Running:" + sort_command)
+    (stdoutdata, stderrdata) = p.communicate()
+    err = str(stderrdata, 'utf-8')
+    command = "bedtools closest -a {outfile}.sorted -b {genome_tss} -d > {annotated_peaks}"
     command = command.format(**locals())
     p = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
     print("Running:" + command)
@@ -55,19 +63,21 @@ def GrabQCMetrics(prediction_df, outdir):
     PlotDistribution(distance, "EnhancerGeneDistance", outdir)
 
     with open(os.path.join(outdir,"QCSummary.txt"), "w") as f:
-        f.write("Enhancer Per Gene:")
+        f.write("Median Enhancer Per Gene:")
         f.write(str(GeneMedian))
-        f.write("\t")
-        f.write(str(GeneMean))
         f.write("\t")
         f.write(str(GeneStdev))
         f.write("\n")
-        f.write("Genes Per Enhancer:")
+        f.write("Median Genes Per Enhancer:")
         f.write(str(median_genes_per_enhancer))
         f.write("\t")
-        f.write(str(mean_genes_per_enhancer))
-        f.write("\t")
         f.write(str(stdev_genes_per_enhancer))
+        f.write("\n")
+        f.write("Mean Enhancer Per Gene:")
+        f.write(str(GeneMean))
+        f.write("\n")
+        f.write("Mean Genes Per Enhancer:")
+        f.write(str(mean_genes_per_enhancer))
         f.write("\n")
         f.write("E-G distance:")
         f.write(str(np.median(distance)))
@@ -140,22 +150,22 @@ def PeakFileQC(macs_peaks, outdir):
         peaks = pd.read_csv(macs_peaks, compression="gzip", sep="\t", header=None)
     else:
         peaks = pd.read_csv(macs_peaks, sep="\t", header=None)
-    outfile = os.path.join(outdir, os.path.basename(macs_peaks) + ".candidateRegions.bed")
+    outfile = os.path.join(outdir, os.path.basename(macs_peaks) + ".gz.candidateRegions.bed")
     candidateRegions = pd.read_csv(outfile, sep="\t", header=None)
     candidateRegions['dist'] = candidateRegions[2] - candidateRegions[1]
     candreg = list(candidateRegions['dist'])
-    PlotDistribution(candreg, 'WidthOfCandidateRegions', outdir)
+#    PlotDistribution(candreg, 'WidthOfCandidateRegions', outdir)
 
     annotatedFile = os.path.join(outdir, os.path.basename(macs_peaks) + ".annotated_peaks.bed")
     annotatedPeaks = pd.read_csv(annotatedFile, sep="\t", header=None)
     median = annotatedPeaks.iloc[:, 9].median()
     mean = annotatedPeaks.iloc[:, 9].mean()
     stdev = np.std(np.array(annotatedPeaks.iloc[:, 9]))
-    PlotDistribution(np.array(annotatedPeaks.iloc[:,9]), "DistanceOfPeakToClosestTSS", outdir)
+#    PlotDistribution(np.array(annotatedPeaks.iloc[:,9]), "DistanceOfPeakToClosestTSS", outdir)
 
     peaks['dist'] = peaks[2]-peaks[1]
     peaks_array = list(peaks['dist'])
-    PlotDistribution(peaks_array, "WidthOfPeaks", outdir)
+#    PlotDistribution(peaks_array, "WidthOfPeaks", outdir)
 
     with open(os.path.join(outdir, "PeakFileQCSummary.txt"),"w") as f:
         f.write(str(macs_peaks))
