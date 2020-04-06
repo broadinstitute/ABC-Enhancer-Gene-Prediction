@@ -7,11 +7,7 @@ from subprocess import check_call, check_output, PIPE, Popen, getoutput, CalledP
 
 def grab_nearest_tss_from_peak(macs_peaks, genome_tss, outdir):
     # Grab nearest tss from peak
-<<<<<<< HEAD
-    outfile = macs_peaks
-=======
     outfile = os.path.join(outdir, os.path.basename(macs_peaks))
->>>>>>> b9d3e38e47b7401eccd378f047ca0841b5d795a8
     files = pd.read_csv(outfile, sep="\t")
     annotated_peaks = os.path.join(outdir, os.path.basename(macs_peaks) + ".annotated_peaks.bed")
     if outfile.endswith(".gz"):
