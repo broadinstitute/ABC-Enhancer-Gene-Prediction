@@ -2,6 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 import re
+import seaborn as sns
 from subprocess import check_call
 import sys
 import pyranges as pr
@@ -33,7 +34,7 @@ def process_quantile(enhancer_list, outdir):
     plt.clf()
 
     ax = sns.scatterplot(x=dataframe[col_to_use[2]], y=dataframe[col_to_use[5]])
-    title = col_to_use[5]
+    title = col_to_use[2]
     ax.set_title(str(title))
     ax.set_ylabel('Estimated PDF of distribution')
     ax.set_xlabel(str(title))
