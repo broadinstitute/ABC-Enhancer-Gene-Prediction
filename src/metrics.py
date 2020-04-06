@@ -7,7 +7,7 @@ from subprocess import check_call, check_output, PIPE, Popen, getoutput, CalledP
 
 def grab_nearest_tss_from_peak(macs_peaks, genome_tss, outdir):
     # Grab nearest tss from peak
-    outfile = os.path.join(outdir, os.path.basename(macs_peaks) + ".gz.candidateRegions.bed")
+    outfile = os.path.join(outdir, os.path.basename(macs_peaks))
     files = pd.read_csv(outfile, sep="\t")
     annotated_peaks = os.path.join(outdir, os.path.basename(macs_peaks) + ".annotated_peaks.bed")
     sort_command = "sort -k1,1 -k2,2n {outfile} > {outfile}.sorted"
@@ -123,9 +123,9 @@ def PlotQuantilePlot(EnhancerList, title, outdir):
     
 
 def NeighborhoodFileQC(neighborhood_dir, outdir):
-    x = glob.glob(os.path.join(neighborhood_dir, "Enhancers.DHS.*"))
-    y = glob.glob(os.path.join(neighborhood_dir, "Genes.TSS1kb.DHS.*"))
-    z = glob.glob(os.path.join(neighborhood_dir, "Genes.DHS.*"))
+    x = glob.glob(os.path.join(neighborhood_dir, "Enhancers.DHS.*CountReads.bed"))
+    y = glob.glob(os.path.join(neighborhood_dir, "Genes.TSS1kb.DHS.*CountReads.bed"))
+    z = glob.glob(os.path.join(neighborhood_dir, "Genes.DHS.*CountReads.bed"))
     
     data = pd.read_csv(x[0],sep="\t", header=None)
     data1 = pd.read_csv(y[0],sep="\t", header=None)
@@ -150,12 +150,14 @@ def PeakFileQC(macs_peaks, outdir):
         peaks = pd.read_csv(macs_peaks, compression="gzip", sep="\t", header=None)
     else:
         peaks = pd.read_csv(macs_peaks, sep="\t", header=None)
+    # Calculate metrics for candidate regions 
     outfile = os.path.join(outdir, os.path.basename(macs_peaks) + ".gz.candidateRegions.bed")
     candidateRegions = pd.read_csv(outfile, sep="\t", header=None)
     candidateRegions['dist'] = candidateRegions[2] - candidateRegions[1]
     candreg = list(candidateRegions['dist'])
 #    PlotDistribution(candreg, 'WidthOfCandidateRegions', outdir)
-
+    
+    # Calculate metrics to grab closest TSS to peak 
     annotatedFile = os.path.join(outdir, os.path.basename(macs_peaks) + ".annotated_peaks.bed")
     annotatedPeaks = pd.read_csv(annotatedFile, sep="\t", header=None)
     median = annotatedPeaks.iloc[:, 9].median()
@@ -163,6 +165,7 @@ def PeakFileQC(macs_peaks, outdir):
     stdev = np.std(np.array(annotatedPeaks.iloc[:, 9]))
 #    PlotDistribution(np.array(annotatedPeaks.iloc[:,9]), "DistanceOfPeakToClosestTSS", outdir)
 
+    # Calculate width of peaks 
     peaks['dist'] = peaks[2]-peaks[1]
     peaks_array = list(peaks['dist'])
 #    PlotDistribution(peaks_array, "WidthOfPeaks", outdir)
@@ -191,11 +194,11 @@ def PeakFileQC(macs_peaks, outdir):
         f.write(str(len(candidateRegions['dist'])))
         f.write("\n")
         f.write("Median width of Candidate Regions:")
-        f.write(str((peaks['dist'].median())))
+        f.write(str((candidateRegions['dist'].median())))
         f.write("\t")
-        f.write(str(peaks['dist'].mean()))
+        f.write(str(candidateRegions['dist'].mean()))
         f.write("\t")
-        f.write(str(peaks['dist'].std()))
+        f.write(str(candidateRegions['dist'].std()))
         f.write("\n")
         f.close()
 
