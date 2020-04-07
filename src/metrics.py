@@ -54,13 +54,13 @@ def GrabQCMetrics(prediction_df, outdir):
     # Grab Number of genes per enhancers
     NumGenesPerEnhancer = prediction_df[['chr', 'start', 'end']].groupby(['chr', 'start', 'end']).size()
     NumGenesPerEnhancer.to_csv(os.path.join(outdir,"GenesPerEnhancer.txt"), sep="\t")
-    mean_genes_per_enhancer, median_genes_per_enhancer,stdev_genes_per_enhancer = grabStatistic(NumGenesPerEnhancer) 
+    mean_genes_per_enhancer, median_genes_per_enhancer,stdev_genes_per_enhancer = grabStatistics(NumGenesPerEnhancer) 
 
     # Grab Number of Enhancer-Gene Pairs Per Chromsome
     enhancergeneperchrom = prediction_df.groupby(['chr']).size()
     enhancergeneperchrom.to_csv(os.path.join(outdir, "EnhancerGenePairsPerChrom.txt"), sep="\t")
     
-    mean_enhancergeneperchrom, median_enhancergeneperchrom ,stdev_enhancergeneperchrom = grabStatistic(enhancergeneperchrom) 
+    mean_enhancergeneperchrom, median_enhancergeneperchrom ,stdev_enhancergeneperchrom = grabStatistics(enhancergeneperchrom) 
 
     # Enhancer-Gene Distancee
     distance = np.array(prediction_df['distance'])
@@ -135,16 +135,11 @@ def PlotQuantilePlot(EnhancerList, title, outdir):
     
 
 def NeighborhoodFileQC(neighborhood_dir, outdir):
-<<<<<<< HEAD
+
     x = glob.glob(os.path.join(neighborhood_dir, "Enhancers.DHS.*CountReads.bedgraph"))
     y = glob.glob(os.path.join(neighborhood_dir, "Genes.TSS1kb.DHS.*CountReads.bedgraph"))
     z = glob.glob(os.path.join(neighborhood_dir, "Genes.DHS.*CountReads.bedgraph"))
-=======
-    x = glob.glob(os.path.join(neighborhood_dir, "Enhancers.DHS.*CountReads.bed"))
-    y = glob.glob(os.path.join(neighborhood_dir, "Genes.TSS1kb.DHS.*CountReads.bed"))
-    z = glob.glob(os.path.join(neighborhood_dir, "Genes.DHS.*CountReads.bed"))
     
->>>>>>> b9d3e38e47b7401eccd378f047ca0841b5d795a8
     data = pd.read_csv(x[0],sep="\t", header=None)
     data1 = pd.read_csv(y[0],sep="\t", header=None)
     data2 = pd.read_csv(z[0],sep="\t", header=None)
@@ -169,26 +164,16 @@ def PeakFileQC(macs_peaks, outdir):
         peaks = pd.read_csv(macs_peaks, compression="gzip", sep="\t", header=None)
     else:
         peaks = pd.read_csv(macs_peaks, sep="\t", header=None)
-<<<<<<< HEAD
+
+    # Calculate metrics for candidate regions 
     outfile = os.path.join(outdir, os.path.basename(macs_peaks) + ".candidateRegions.bed")
-    if not os.path.exists(outfile):
-        outfile = os.path.join(outdir, os.path.basename(macs_peaks) + ".gz.candidateRegions.bed")
     
     candidateRegions = pd.read_csv(outfile, sep="\t", header=None)
     candidateRegions['dist'] = candidateRegions[2] - candidateRegions[1]
     candreg = list(candidateRegions['dist'])
     PlotDistribution(candreg, 'WidthOfCandidateRegions', outdir)
-
-=======
-    # Calculate metrics for candidate regions 
-    outfile = os.path.join(outdir, os.path.basename(macs_peaks) + ".gz.candidateRegions.bed")
-    candidateRegions = pd.read_csv(outfile, sep="\t", header=None)
-    candidateRegions['dist'] = candidateRegions[2] - candidateRegions[1]
-    candreg = list(candidateRegions['dist'])
-#    PlotDistribution(candreg, 'WidthOfCandidateRegions', outdir)
     
     # Calculate metrics to grab closest TSS to peak 
->>>>>>> b9d3e38e47b7401eccd378f047ca0841b5d795a8
     annotatedFile = os.path.join(outdir, os.path.basename(macs_peaks) + ".annotated_peaks.bed")
     annotatedPeaks = pd.read_csv(annotatedFile, sep="\t", header=None)
     annote = annotatedPeaks.loc[annotatedPeaks.iloc[:,9]!=-1]
