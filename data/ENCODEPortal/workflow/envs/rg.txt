@@ -1,0 +1,2 @@
+@RG	ID:HWI-ST208:532:C72EYACXX	DT:2015-08-21	PL:ILLUMINA	PU:C72EYACXX	SM:/srv/scratch/kmualim/celltype_files//
+@RG	ID:HWI-ST1120:363:C72GNACXX	DT:2015-09-29	PL:ILLUMINA	PU:C72GNACXX	SM:/srv/scratch/kmualim/celltype_files//

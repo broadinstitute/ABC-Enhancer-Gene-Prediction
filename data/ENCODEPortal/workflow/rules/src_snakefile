@@ -1,0 +1,42 @@
+ASSAYS=["DHS", "H3K27ac", "ATAC"]
+endtype = ["pairedend", "singleend"]
+
+# config files 
+
+rule all:
+	input: "/srv/scratch/kmualim/celltype_files/filtered_files"
+
+# filter respective bam_hg19 files 
+# TODO: expand to hg38 as well 
+rule remove_pe_dup_filter_bam:
+	input:
+		exe = "run_encode_filter_wrapper.sh",
+		data = "pe_download.txt"
+	params:
+		outdir = "/srv/scratch/kmualim/celltype_files",
+		paired = "--paired_end",
+		threads = 8
+	output: "/srv/scratch/kmualim/celltype_files/filtered_files"
+	shell: 
+		"""
+		bash {input.exe} {input.data} {params.outdir} {output} {params.paired}
+		mv {output}/*.bam {params.outdir}
+		""" 
+
+rule remove_se_dup_filter_bam:
+	input: 
+		exe = "run_encode_filter_wrapper.sh",
+		data = "download.txt",
+		pe_datadir = "/srv/scratch/kmualim/celltype_files/filtered_files"
+	params:
+		outdir = "/srv/scratch/kmualim/celltype_files",
+		threads = 8,
+		output_dir = "/srv/scratch/kmualim/celltype_files/se_filtered_files"
+	output: "/srv/scratch/kmualim/celltype_files/combined_nodup_files"
+	shell:  
+		"""
+		bash {input.exe} {input.data} {params.outdir} {output}
+		mv {output}/*.bam {params.output_dir}
+		
+		"""
+
