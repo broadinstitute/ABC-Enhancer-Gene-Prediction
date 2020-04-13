@@ -8,7 +8,6 @@ genome = config['params_download']['genome']
 rule all:
 	input: expand("bam_{genome_build}_{assay}.tsv", assay=ASSAYS, genome_build=genome), expand("{pairtype}_bam_{genome_build}_{assays}.tsv", assays=ASSAYS, pairtype=endtype, genome_build=genome)
 
-# TODO: have rules that take in genome build 
 rule download_bam:
 	input:
 		exe = config['prefix']['workflow_scripts']+"log.sh"
