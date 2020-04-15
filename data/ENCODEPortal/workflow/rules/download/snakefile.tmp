@@ -1,0 +1,92 @@
+import yaml
+ASSAYS=["DHS", "H3K27ac", "ATAC"]
+endtype = ["pairedend", "singleend"]
+download_SCRIPTS = ["log.sh", "log_kristy.sh"]
+
+# config files 
+config = yaml.load(open('../../envs/wd.yaml'))
+
+wildcard_constraints:
+	outputdir=config['params_preprocess']['preprocess_dir'],
+	assays=config['params_download']['assays'],
+	genome=config['params_download']['genome'],
+	pairedness=config['params_download']['pairedness']
+
+OUTPUT_FILES=[]
+
+# Add output files from downloading metadata 
+OUTPUT_FILES.extend(expand("{config}/bam_{genome_build}_{assay}.tsv", config=config['params_preprocess']['preprocess_dir'], assay=ASSAYS, genome_build=config['params_download']['genome']))
+# Add output files from download paired-end, single-end metadata 
+#OUTPUT_FILES.extend(expand("{config}/{pairtype}_bam_{genome_build}_{assays}.tsv", config=config['params_preprocess']['preprocess_dir'], assays=ASSAYS, pairtype=endtype, genome_build=config['params_download']['genome']))
+# Add output files from obtaining unique pairedend, singleend datafiles
+OUTPUT_FILES.extend(expand("{config}/unique_{endtype}_h3k27ac_dhs.tsv", config=config['params_preprocess']['preprocess_dir'], endtype=endtype))
+#OUTPUT_FILES.append(config['params_preprocess']['preprocess_dir']+"Experiments_ToCombine.txt")
+#OUTPUT_FILES.extend(expand(config['prefix']['data']+"{pairede_sample}.nodup.bam", pairede_sample=PAIREDEND_SAMPLES))
+#OUTPUT_FILES.extend(expand(config['prefix']['data']+"{single_sample}.nodup.bam", single_sample=SINGLEEND_SAMPLES))
+#OUTPUT_FILES.extend(config['prefix']['data']+"/input_data")
+# 
+
+
+rule target:
+	input: OUTPUT_FILES
+
+rule download_bam:
+        input:
+                exe = config['prefix']['workflow_scripts']+"download_log.sh",
+		outdir = config['params_preprocess']['preprocess_dir']
+
+        message: "Executing log bash files to download files"
+        
+	params:	genome_build = config['params_download']['genome']
+
+	output:	files = expand("{config}/bam_{genome_build}_{assay}.tsv", config=config['params_preprocess']['preprocess_dir'], assay=ASSAYS, genome_build=config['params_download']['genome'])		
+	
+	shell: """
+		bash {input.exe}
+		mv *hg19* {input.outdir}
+		mv *38* {input.outdir}
+		""" 
+
+rule obtain_paired_single_files:
+        input:
+                exe = config['prefix']['workflow_scripts']+"log_kristy.sh",
+		outdir = config['params_preprocess']['preprocess_dir']
+
+	message: "Executing log_kristy.sh to download paired-end / single-end file information"	
+	params: genome_build = config['params_download']['genome']
+        
+	output:	files = expand("{config}/{pairtype}_bam_{genome_build}_{assays}.tsv", config=config['params_preprocess']['preprocess_dir'], assays=ASSAYS, pairtype=endtype, genome_build=config['params_download']['genome'])
+        
+	shell: 	"""
+		bash {input.exe} 
+		mv *hg19* {input.outdir}
+                mv *38* {input.outdir}
+		"""
+# filter files 
+rule filter_files:
+        input:
+                exe = config['prefix']['workflow_scripts']+"grabDownload.py",
+#                data = expand("{config}/bam_{genome_build}_{assays}.tsv", config=config['params_preprocess']['preprocess_dir'], assays=ASSAYS, genome_build=config['params_download']['genome']),
+                dir = config['params_preprocess']['preprocess_dir']
+
+	params: data = expand("{config}/bam_{genome_build}_{assays}.tsv", config=config['params_preprocess']['preprocess_dir'], assays=ASSAYS, genome_build=config['params_download']['genome']), 
+		files = expand("{config}/{pairtype}_bam_{genome_build}_{assays}.tsv", config=config['params_preprocess']['preprocess_dir'], assays=ASSAYS, pairtype=endtype, genome_build=config['params_download']['genome'])
+
+	output: touch(expand("{config}/unique_{endtype}_h3k27ac_dhs.tsv", config=config['params_preprocess']['preprocess_dir'], endtype=endtype))
+#        output: touch(expand("{config}/unique_{endtype}_h3k27ac_dhs.tsv", config=config['params_preprocess']['preprocess_dir'], endtype=endtype)), touch(expand("{config}/Experiments_ToCombine.txt", config=config['params_preprocess']['preprocess_dir']))
+
+        shell: "python {input.exe} --dhs {params.data[0]} --h3k27ac {params.data[1]} --atac {params.data[2]} --genome_assembly hg19 --include_extra_map_length --download_files --outdir {input.dir}"
+
+# 
+#rule obtain_pe_se_unique:
+#	input: 
+#		data = expand(config['params_preprocess']['preprocess_dir']+"/pairedend_bam_{genome}_{assays}.tsv", genome=config['params_download']['genome'], assays=ASSAYS)
+#	output: touch(config['params_preprocess']['preprocess_dir']+"unique_pairedend_h3k27ac_dhs.tsv")
+#	shell: "cat {input.data} | sort -u  > {output}"
+
+#rule obtain_se_unique:
+#	input:
+#		data = expand(config['params_preprocess']['preprocess_dir']+"/singleend_bam_{genome}_{assays}.tsv", genome=config['params_download']['genome'], assays=ASSAYS)
+#	output: touch(config['params_preprocess']['preprocess_dir']+"unique_singleend_h3k27ac_dhs.tsv")
+#	shell: "cat {input.data} | sort -u > {output}"
+	
