@@ -3,15 +3,22 @@ prefix:
         code: "/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/"
         results: "/mnt/lab_data2/kmualim/modified_ABC/apr10_ABC/"
         workflow_dir: "/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/data/ENCODEPortal/"
-        env_dir: "/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/data/ENCODEPortal/workflow/envs"
+        env_dir: "/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/data/ENCODEPortal/workflow/envs/"
         workflow_scripts: "/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/data/ENCODEPortal/workflow/scripts/"
         
 params_preprocess:
-        preprocess_dir: "/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/data/ENCODEPortal/output/"
+        preprocess_dir: "/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/data/ENCODEPortal/workflow/output/"
         lookup_table: "/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/data/ENCODEPortal/output/input_data_lookup.tsv"
 
 params_download:
-       genome: "hg19"
+        genome: "hg19"
+        assays: 
+                - "DHS"
+                - "H3K27ac"
+                - "ATAC"
+        pairedness:
+                - "pairedend"
+                - "singleend"
 params_candidate:
         chrom_sizes: "/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/reference/chr_sizes"
         regions_blacklist: "/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/reference/wgEncodeHg19ConsensusSignalArtifactRegions.bed"

@@ -44,5 +44,8 @@ rule filter_files:
 
 	output: expand("{config}/unique_{endtype}_h3k27ac_dhs_files.tsv", config=config['params_preprocess']['preprocess_dir'], endtype=endtype)
 
-        shell: "python {input.exe} --dhs {input.data[0]} --h3k27ac {input.data[1]} --atac {input.data[2]} --genome_assembly hg19 --include_extra_map_length --download_files --outdir {input.dir}"
+        shell: """
+		python {input.exe} --dhs {input.data[0]} --h3k27ac {input.data[1]} --atac {input.data[2]} --genome_assembly hg19 --include_extra_map_length --download_files --outdir {input.dir}
+		cat {input.dir}/Experiments_ToCombine.txt.tmp | sed 's/[][]//g' | sed s/"'"//g | sed "s/,/   /g" > {input.dir}/Experiments_ToCombine.txt
+		"""
 

@@ -1,0 +1,96 @@
+import yaml 
+import os
+
+ASSAYS=["DHS", "H3K27ac", "ATAC"]
+endtype = ["pairedend", "singleend"]
+
+envs_dir = "/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/data/ENCODEPortal/workflow/envs" 
+config = yaml.load(open(os.path.join(envs_dir,"wd.yaml")))
+
+SAMPLES=[]
+#with open("{}/cells.txt".format(config['params_preprocess']['preprocess_dir']), "r") as f:
+with open("cells.txt", "r") as f:
+	SAMPLES= f.read().splitlines()
+f.close()
+
+
+rule all:
+	input: expand("{config}/Neighborhood_{sample}/EnhancerList.txt", config=config['prefix']['results'] ,sample=SAMPLES), expand("{config}/Prediction_{sample}/EnhancerPredictionsAllPutative.txt.gz", config=config['prefix']['results'] ,sample=SAMPLES)
+
+rule call_macs_peaks: 
+	input: 
+		exe = config['prefix']['workflow_scripts']+"call_macs.sh",
+		data = config['params_preprocess']['lookup_table'],
+		input_dir = config['prefix']['data'],
+		output_dir = config['prefix']['results']
+	params:
+		pval=0.1,
+		threads = 10
+	output: expand("{config}/Peaks_{sample}/NA_peaks.narrowPeak", config=config['prefix']['results'] ,sample=SAMPLES)
+	shell: 
+		""" 
+		bash {input.exe} {input.data} {params.pval} {input.output_dir} {input.input_dir}
+		"""
+
+rule call_candidate_regions:
+	input:
+		exe = config['prefix']['workflow_scripts']+"call_candidates.sh", 
+		data = "test_input_data_lookup.txt", 
+		input_dir = config['prefix']['data'],
+	params:
+		code_dir = config['prefix']['code'],
+		chrom_sizes = config['params_candidate']['chrom_sizes'],
+		regions_blacklist = config['params_candidate']['regions_blacklist'],
+		genome_tss = config['params_candidate']['genome_tss'],
+		peakExtendFromSummit = config['params_candidate']['peakExtendFromSummit'],
+		nStrongestPeaks = config['params_candidate']['nStrongestPeaks'],
+		output_dir = config['prefix']['results']
+		
+	output: expand("{config}/Peaks_{sample}/NA_peaks.narrowPeak.candidateRegions.bed", config=config['prefix']['results'] ,sample=SAMPLES)
+	shell: 
+		"""
+		bash {input.exe} {input.data} {params.chrom_sizes} {params.regions_blacklist} {params.genome_tss} {params.peakExtendFromSummit} {params.nStrongestPeaks} {input.input_dir} {params.output_dir} {params.code_dir}
+		"""
+
+rule call_neighborhoods:
+	input:
+		exe = config['prefix']['workflow_scripts']+"call_neighborhoods.sh", 
+	 	data = config['params_preprocess']['lookup_table'],
+		input_dir = config['prefix']['data'],
+		input = expand("{config}/Peaks_{sample}/NA_peaks.narrowPeak.candidateRegions.bed", config=config['prefix']['results'] ,sample=SAMPLES)
+		
+	params:
+		code_dir = config['prefix']['code'],
+		genes = config['params_neighborhoods']['genes'],
+		ubiquitous_genes = config['params_neighborhoods']['ubiquitous_genes'],
+		chrom_sizes = config['params_candidate']['chrom_sizes'],
+		qnorm = config['params_neighborhoods']['qnorm'],
+		output_dir = config['prefix']['results']
+	
+	output: expand("{config}/Neighborhood_{sample}/EnhancerList.txt", config=config['prefix']['results'] ,sample=SAMPLES)
+	shell: 
+		"""
+		bash {input.exe} {input.data} {params.chrom_sizes} {input.input_dir} {params.code_dir} {params.output_dir} {params.genes} {params.ubiquitous_genes} {params.qnorm}
+		"""
+
+rule predictions:
+	input:
+		exe = config['prefix']['workflow_scripts']+"run_predictions.sh",
+		data = config['params_preprocess']['lookup_table'],
+		input_dir = config['prefix']['data'],
+		input = expand("{config}/Neighborhood_{sample}/EnhancerList.txt", config=config['prefix']['results'] ,sample=SAMPLES)
+	
+	params:
+		code_dir = config['prefix']['code'],
+		hic_dir = config['params_predict']['hic_dir'],
+		hic_resolution = config['params_predict']['hic_resolution'],
+		scale_hic_using_powerlaw = config['params_predict']['scale_hic'],
+		threshold = config['params_predict']['threshold'], 
+		make_all_putative = config['params_predict']['all_putative'],
+		output_dir = config['prefix']['results']
+	
+	output: expand("{config}/Prediction_{sample}/EnhancerPredictionsAllPutative.txt.gz", config=config['prefix']['results'] ,sample=SAMPLES)
+	shell:
+		"""
+		bash {input.exe} {input.data} {params.output_dir} {params.code_dir} {params.hic_dir} {params.hic_resolution} {params.scale_hic_using_powerlaw} {params.threshold} {params.make_all_putative}
+		"""
