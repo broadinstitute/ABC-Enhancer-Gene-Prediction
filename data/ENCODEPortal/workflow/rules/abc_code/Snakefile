@@ -8,8 +8,7 @@ envs_dir = "/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/data/
 config = yaml.load(open(os.path.join(envs_dir,"wd.yaml")))
 
 SAMPLES=[]
-#with open("{}/cells.txt".format(config['params_preprocess']['preprocess_dir']), "r") as f:
-with open("cells.txt", "r") as f:
+with open("{}/cells.txt".format(config['params_preprocess']['preprocess_dir']), "r") as f:
 	SAMPLES= f.read().splitlines()
 f.close()
 

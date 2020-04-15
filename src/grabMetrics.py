@@ -16,7 +16,7 @@ def parse_args():
     return args 
     
 
-def generateQCMetrics(args, cell):
+def generateQCMetrics(args):
     genome_tss = "../reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.bed"
     prediction = "{}/EnhancerPredictionsFull.txt".format(args.preds_outdir)
     grab_nearest_tss_from_peak(args.macs_peaks, genome_tss, args.peaks_outdir)
@@ -25,7 +25,7 @@ def generateQCMetrics(args, cell):
     # Generate QC Summary.txt in Predictions Directory
     GrabQCMetrics(prediction_df, preds_outdir)
     # Generate PeakFileQCSummary.txt in Peaks Directory#    
-    PeakFileQC(macs_peaks, args.peaks_outdir)
+    PeakFileQC(args.macs_peaks, args.peaks_outdir)
     # Appends Percentage Counts in Promoters into PeakFileQCSummary.txt
     NeighborhoodFileQC(args.neighborhood_outdir, args.peaks_outdir)
 
@@ -38,4 +38,4 @@ def generateQCMetrics(args, cell):
 
 if __name__=="__main__":
     args = parse_args()
-    generateQCMetrics(args, cell)
+    generateQCMetrics(args)
