@@ -69,6 +69,7 @@ def assignFiltersToDataFrame(args):
     # filter for mapped read lengths of usually 32.0 or 36.0
     columns = ['Biosample term name']
     final_experiment_file = subset_intersected
+    final_experiment_file = subset_intersected.loc[np.logical_not(subset_intersected['Biosample term name'].isin(df_biological_rep))].drop_duplicates(columns)
 #    final_experiment_file = subset_intersected.loc[np.logical_not(subset_intersected['Biosample term name'].isin(df_biological_rep)) & subset_intersected['Mapped read length_y'].between(30.0,40.0)].drop_duplicates(columns)
     combined_experiments = pd.concat([final_experiment_file, duplicates])
     # include entries with higher mapped read lengths
