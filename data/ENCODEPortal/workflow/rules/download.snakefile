@@ -28,3 +28,5 @@ rule obtain_paired_single_files:
 	message: "Executing log_kristy.sh to download paired-end / single-end file information"
 	log: "logs/pe_se_download.log"
 	shell: "bash {input.exe} {} {output.outdir}".format(genome)
+
+
