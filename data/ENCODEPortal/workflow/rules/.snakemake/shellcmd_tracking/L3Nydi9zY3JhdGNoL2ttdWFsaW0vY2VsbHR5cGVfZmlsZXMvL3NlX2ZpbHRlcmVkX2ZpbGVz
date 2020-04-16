@@ -1,4 +1,0 @@
-
-                parallel -j 10 bash /users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/data/ENCODEPortal/workflow/scripts/run_encode_filter_wrapper.sh ::: /users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/data/ENCODEPortal/output/unique_singleend_h3k27ac_dhs.tsv ::: /srv/scratch/kmualim/celltype_files/ ::: /srv/scratch/kmualim/celltype_files//se_filtered_files
-                mv /srv/scratch/kmualim/celltype_files//se_filtered_files/*.bam /srv/scratch/kmualim/celltype_files/
-                
