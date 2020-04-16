@@ -46,7 +46,7 @@ rule remove_pe_dup_filter_bam:
         
 	shell:
                 """
-                parallel -j {params.threads} bash {input.exe} ::: {input.data} ::: {params.outdir} ::: {output} ::: {params.paired}
+                bash {input.exe} {input.data} {params.outdir} {output} {params.paired}
                 """
 
 rule remove_se_dup_filter_bam:
@@ -60,7 +60,7 @@ rule remove_se_dup_filter_bam:
 	output: expand(config['prefix']['data']+"{singlese_samples}.nodup.bam", singlese_samples=SINGLEEND_SAMPLES)
         shell:
                 """
-                paralle -j {params.threads} bash {input.exe} ::: {input.data} ::: {params.outdir} ::: {params.outdir}
+                bash {input.exe} {input.data} {params.outdir} {params.outdir}
 
                 """
 
