@@ -47,6 +47,7 @@ def assignFiltersToDataFrame(args):
     h3k27ac = h3k27ac_data.loc[h3k27ac_data['Assembly'] == args.genome_assembly]
 
     merge_columns = ['Biosample term name','Biosample organism', 'Biosample treatments','Biosample treatments amount', 'Biosample treatments duration','Biosample genetic modifications methods','Biosample genetic modifications categories','Biosample genetic modifications targets','Biosample genetic modifications gene targets']
+    
     # merge dhs and h3k27ac
     intersected = pd.merge(dhs, h3k27ac, how='inner', on=merge_columns)
     
@@ -95,8 +96,8 @@ def downloadFiles(args, df):
     if not os.path.exists(args.outdir):
         os.mkdir(args.outdir)
 
-#    commands = "parallel --verbose -j 10 bash downloadFiles.sh ::: {} :::  {}".format(outfile, args.outdir)
-#    process = subprocess.call(commands, shell=True)
+    commands = "parallel --verbose -j 10 bash downloadFiles.sh ::: {} :::  {}".format(outfile, args.outdir)
+    process = subprocess.call(commands, shell=True)
     return outfile 
 
 
