@@ -17,7 +17,7 @@ OUTPUT_FILES.extend(expand("{config}/unique_{endtype}_h3k27ac_dhs_files.tsv", co
 rule target:
 	input: OUTPUT_FILES
 
-rule download_bam:
+rule download_metadata:
         input:
                 exe = config['prefix']['workflow_scripts']+"download_log.sh",
 		outdir = config['params_preprocess']['preprocess_dir']
@@ -36,7 +36,7 @@ rule download_bam:
 
 
 # filter files 
-rule filter_files:
+rule filter_metadata:
         input:
                 exe = config['prefix']['workflow_scripts']+"grabDownload.py",
                 dir = config['params_preprocess']['preprocess_dir'],
