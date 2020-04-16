@@ -1,0 +1,17 @@
+placenta
+liver
+AG04450
+tibial_artery
+HepG2
+spleen
+H9
+iPS_DF_19.11
+esophagus_muscularis_mucosa
+RWPE1
+neural_stem_progenitor_cell
+osteoblast
+mesendoderm
+right_atrium_auricular_region
+IMR-90
+transverse_colon
+mesenchymal_stem_cell
