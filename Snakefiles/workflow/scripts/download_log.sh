@@ -1,8 +1,5 @@
 #################################################################################
 ## Get list of files from ENCODE Portal for ABC predictions
-&audit.ERROR.category%21=extremely+low+spot+score&aud%5Cit.ERROR.category%21=extremely+low+read+depth&files.file_type=bam&assay_title=ChIP-seq&target.investigated_as=histone+modification&audit.NOT_COMPLIANT.category%21=insufficient+read+depth%5C&status=released/metadata.tsv”
-
-&audit.ERROR.category%21=extremely+low+spot+score&aud%5Cit.ERROR.category%21=extremely+low+read+depth&&audit.ERROR.category%21=extremely+low+spot+score&aud%5Cit.ERROR.category%21=extremely+low+read+depth&audit.NOT_COMPLIANT.category%21=insufficient+read+depth%5C&files.status=released&files.assembly=hg19audit.NOT_COMPLIANT.category%21=insufficient+read+depth%5C&files.status=released&files.assembly=hg19
 
 ## Download metadata files from ENCODE portal
 wget --quiet -O bam_hg19_DHS.tsv "https://www.encodeproject.org/metadata/?type=Experiment&status=released&files.file_type=bam&assembly=hg19&assay_title=DNase-seq&audit.ERROR.category%21=extremely+low+spot+score&aud%5Cit.ERROR.category%21=extremely+low+read+depth&audit.NOT_COMPLIANT.category%21=insufficient+read+depth%5C&files.status=released&files.assembly=hg19" 
