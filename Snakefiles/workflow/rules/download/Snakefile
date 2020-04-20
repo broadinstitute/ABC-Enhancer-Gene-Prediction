@@ -1,4 +1,5 @@
 import yaml
+import os
 ASSAYS=["DHS", "H3K27ac", "ATAC"]
 endtype = ["pairedend", "singleend"]
 
@@ -10,8 +11,7 @@ OUTPUT_FILES=[]
 
 # Add output files from downloading metadata 
 #OUTPUT_FILES.extend(expand("{config}/bam_{genome_build}_{assay}.tsv", config=config['params_preprocess']['preprocess_dir'], assay=ASSAYS, genome_build=config['params_download']['genome']))
-OUTPUT_FILES.extend(expand("{config}/unique_{endtype}_h3k27ac_dhs_files.tsv", config=config['params_preprocess']['preprocess_dir'], endtype=endtype))
-
+OUTPUT_FILES.extend(expand("{config}/unique_{endtype}_h3k27ac_dhs_files.tsv", config=config['working_dir']+config['params_preprocess']['preprocess_dir'], endtype=endtype))
 # Add output files from download paired-end, single-end metadata 
 
 rule target:
@@ -19,14 +19,14 @@ rule target:
 
 rule download_metadata:
         input:
-                exe = config['prefix']['workflow_scripts']+"download_log.sh",
-		outdir = config['params_preprocess']['preprocess_dir']
+                exe = config['working_dir']+config['prefix']['workflow_scripts']+"download_log.sh",
+		outdir = config['working_dir']+config['params_preprocess']['preprocess_dir']
 
         message: "Executing log bash files to download files"
         
 	params:	genome_build = config['params_download']['genome']
 
-	output:	files = expand("{config}/bam_{genome_build}_{assay}.tsv", config=config['params_preprocess']['preprocess_dir'], assay=ASSAYS, genome_build=config['params_download']['genome'])		
+	output:	files = expand("{config}/bam_{genome_build}_{assay}.tsv", config=config['working_dir']+config['params_preprocess']['preprocess_dir'], assay=ASSAYS, genome_build=config['params_download']['genome'])		
 	
 	shell: """
 		bash {input.exe}
@@ -38,14 +38,15 @@ rule download_metadata:
 # filter files 
 rule filter_metadata:
         input:
-                exe = config['prefix']['workflow_scripts']+"grabDownload.py",
-                dir = config['params_preprocess']['preprocess_dir'],
-		data = expand("{config}/bam_{genome_build}_{assays}.tsv", config=config['params_preprocess']['preprocess_dir'], assays=ASSAYS, genome_build=config['params_download']['genome'])
+                exe = config['working_dir']+config['prefix']['workflow_scripts']+"grabDownload.py",
+                dir = config['working_dir']+config['params_preprocess']['preprocess_dir'],
+		data_dir = config['output_data_dir'],
+		data = expand("{config}/bam_{genome_build}_{assays}.tsv", config=config['working_dir']+config['params_preprocess']['preprocess_dir'], assays=ASSAYS, genome_build=config['params_download']['genome'])
 
-	output: expand("{config}/unique_{endtype}_h3k27ac_dhs_files.tsv", config=config['params_preprocess']['preprocess_dir'], endtype=endtype)
+	output: expand("{config}/unique_{endtype}_h3k27ac_dhs_files.tsv", config=config['working_dir']+config['params_preprocess']['preprocess_dir'], endtype=endtype)
 
         shell: """
-		python {input.exe} --dhs {input.data[0]} --h3k27ac {input.data[1]} --atac {input.data[2]} --genome_assembly hg19 --include_extra_map_length --download_files --outdir {input.dir}
+		python {input.exe} --dhs {input.data[0]} --h3k27ac {input.data[1]} --atac {input.data[2]} --genome_assembly hg19 --download_files --outdir {input.dir} --data_outdir {input.data_dir} 
 		cat {input.dir}/Experiments_ToCombine.txt.tmp | sed 's/[][]//g' | sed s/"'"//g | sed "s/,/   /g" > {input.dir}/Experiments_ToCombine.txt
 		"""
 
