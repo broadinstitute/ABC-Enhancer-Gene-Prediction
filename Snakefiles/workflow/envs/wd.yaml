@@ -1,18 +1,24 @@
+# working directory where ABC repo is located
+working_dir: "/users/kmualim/updated_ABC/github/"
+# directory to output DHS/h3k27ac bam files
+output_data_dir: "/srv/scratch/kmualim/celltype_files/"
+# directory to output ABC Predictions
+predictions_results_dir: "/mnt/lab_data2/kmualim/modified_ABC/apr10_ABC/"
+hic_dir: "/mnt/lab_data2/kmualim/data/send_to_Kristy/HiC/AverageHiC/raw"
+
+# This section should not need any changes, it works off the ABC repo and accessing files that are present in the repository
 prefix:
-        data: "/srv/scratch/kmualim/celltype_files/"
-        code: "/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/"
-        results: "/mnt/lab_data2/kmualim/modified_ABC/apr10_ABC/"
-        workflow_dir: "/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/data/ENCODEPortal/"
-        env_dir: "/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/data/ENCODEPortal/workflow/envs/"
-        workflow_scripts: "/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/data/ENCODEPortal/workflow/scripts/"
-        
+        code: "/ABC-Enhancer-Gene-Prediction/"
+        env_dir: "/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/envs/"
+        workflow_scripts: "/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/scripts/"
+
 params_preprocess:
-        preprocess_dir: "/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/data/ENCODEPortal/workflow/output/"
-        lookup_table: "/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/data/ENCODEPortal/output/input_data_lookup.tsv"
+        preprocess_dir: "/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/output/"
+        lookup_table: "/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/output/input_data_lookup.tsv"
 
 params_download:
         genome: "hg19"
-        assays: 
+        assays:
                 - "DHS"
                 - "H3K27ac"
                 - "ATAC"
@@ -20,21 +26,19 @@ params_download:
                 - "pairedend"
                 - "singleend"
 params_candidate:
-        chrom_sizes: "/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/reference/chr_sizes"
-        regions_blacklist: "/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/reference/wgEncodeHg19ConsensusSignalArtifactRegions.bed"
-        genome_tss: "/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.bed"
+        chrom_sizes: "/ABC-Enhancer-Gene-Prediction/reference/chr_sizes"
+        regions_blacklist: "/ABC-Enhancer-Gene-Prediction/reference/wgEncodeHg19ConsensusSignalArtifactRegions.bed"
+        genome_tss: "/ABC-Enhancer-Gene-Prediction/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.bed"
         peakExtendFromSummit: 250
         nStrongestPeaks: 150000
 
 params_neighborhoods:
-        ubiquitous_genes: "/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/reference/UbiquitouslyExpressedGenesHG19.txt"
-        genes: "/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.bed"
-        qnorm: "/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/src/EnhancersQNormRef.K562.txt"
+        ubiquitous_genes: "/ABC-Enhancer-Gene-Prediction/reference/UbiquitouslyExpressedGenesHG19.txt"
+        genes: "/ABC-Enhancer-Gene-Prediction/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.bed"
+        qnorm: "/ABC-Enhancer-Gene-Prediction/src/EnhancersQNormRef.K562.txt"
 
-params_predict:     
-        hic_dir: "/mnt/lab_data2/kmualim/data/send_to_Kristy/HiC/AverageHiC/raw"
+params_predict:
         hic_resolution: 5000
         scale_hic: "--scale_hic_using_powerlaw"
         threshold: 0.02
         all_putative: "--make_all_putative"
-        
