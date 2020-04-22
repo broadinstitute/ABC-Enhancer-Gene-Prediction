@@ -19,22 +19,22 @@ fr.close()
 with open(config['working_dir']+config['params_preprocess']['preprocess_dir']+"Experiments_ToCombine.txt", "r") as file_a:
 	FILES = [line.split("\t")[1] for line in file_a.readlines()]
 file_a.close()
-FILES_OUTPUT = [file.split("    ") for file in FILES]
-
-POOLED = [item for sublist in FILES_OUTPUT for item in sublist]
-POOLED_SAMPLES = set([item.split(".")[0] for sublist in FILES_OUTPUT for item in sublist])
-print(POOLED_SAMPLES)
+FILES_OUTPUT = [file.split("    ")[0] for file in FILES]
+print(FILES_OUTPUT)
+#POOLED = [item for sublist in FILES_OUTPUT for item in sublist]
+#POOLED_SAMPLES = set([item.split(".")[0] for sublist in FILES_OUTPUT for item in sublist])
+#print(POOLED_SAMPLES)
 
 FINAL_FILES=[]
 FINAL_FILES.extend(expand(config['output_data_dir']+"{single_sample}.nodup.bam", single_sample=SINGLEEND_SAMPLES))
 FINAL_FILES.extend(expand(config['output_data_dir']+"{pooled_samples}.nodup.bam", pooled_samples=PAIREDEND_SAMPLES))
 
-FINAL_FILES.extend(expand(config['output_data_dir']+"{pooled_samples}_pooled.nodup.bam", pooled_samples=POOLED_SAMPLES))
+FINAL_FILES.extend(expand(config['output_data_dir']+"{pooled_samples}_pooled.nodup.bam", pooled_samples=FILES_OUTPUT))
 
 rule process_bam:
 	input:	FINAL_FILES
 
-ruleorder : remove_se_dup_filter_bam > remove_pe_dup_filter_bam > merge_pe_duplicates
+ruleorder : remove_pe_dup_filter_bam > remove_se_dup_filter_bam > merge_pe_duplicates
 
 rule remove_pe_dup_filter_bam:
         input:
@@ -78,7 +78,7 @@ rule merge_pe_duplicates:
 
 	params:	threads = config['threads']
 
-        output: expand(config['output_data_dir']+"{pooled_samples}_pooled.nodup.bam", pooled_samples=POOLED_SAMPLES)
+        output: expand(config['output_data_dir']+"{pooled_samples}_pooled.nodup.bam", pooled_samples=FILES_OUTPUT)
         
 	shell:
                 """
