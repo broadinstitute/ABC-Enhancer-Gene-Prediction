@@ -7,7 +7,13 @@ output_data_dir: "/srv/scratch/kmualim/celltype_files/"
 predictions_results_dir: "/mnt/lab_data2/kmualim/modified_ABC/apr10_ABC/"
 hic_dir: "/mnt/lab_data2/kmualim/data/send_to_Kristy/HiC/AverageHiC/raw"
 
+# parameters to determine whether to apply pooling + number of threads 
+# leave blank if not applicable 
+pooling_param: "--apply_pool"
+threads: 10
+
 # This section should not need any changes, it works off the ABC repo and accessing files that are present in the repository 
+# + modifies parameters for the respective steps in ABC
 prefix:
         code: "/ABC-Enhancer-Gene-Prediction/"
         env_dir: "/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/envs/"
