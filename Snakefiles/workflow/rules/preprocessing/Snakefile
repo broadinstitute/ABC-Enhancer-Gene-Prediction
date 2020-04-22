@@ -26,8 +26,8 @@ POOLED_SAMPLES = set([item.split(".")[0] for sublist in FILES_OUTPUT for item in
 print(POOLED_SAMPLES)
 
 FINAL_FILES=[]
-#FINAL_FILES.extend(expand(config['output_data_dir']+"{single_sample}.nodup.bam", single_sample=SINGLEEND_SAMPLES))
-#FINAL_FILES.extend(expand(config['output_data_dir']+"{pooled_samples}.nodup.bam", pooled_samples=PAIREDEND_SAMPLES))
+FINAL_FILES.extend(expand(config['output_data_dir']+"{single_sample}.nodup.bam", single_sample=SINGLEEND_SAMPLES))
+FINAL_FILES.extend(expand(config['output_data_dir']+"{pooled_samples}.nodup.bam", pooled_samples=PAIREDEND_SAMPLES))
 
 FINAL_FILES.extend(expand(config['output_data_dir']+"{pooled_samples}_pooled.nodup.bam", pooled_samples=POOLED_SAMPLES))
 
@@ -66,8 +66,7 @@ rule remove_se_dup_filter_bam:
         
 	shell:
                 """
-		python {input.exe} --input_file {input.data} --out_dir {params.outdir} --threads {params.threads}
-{params.pool}
+		python {input.exe} --input_file {input.data} --out_dir {params.outdir} --threads {params.threads} {params.pool}
                 """
 
 rule merge_pe_duplicates:
