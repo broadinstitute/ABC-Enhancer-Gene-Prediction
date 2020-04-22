@@ -9,16 +9,14 @@ def is_unique(entries):
     a = entries.to_numpy()
     return (a[0] == a[1:]).all()
 
-def check_x_and_y(entries):
-    columns = ['Biological replicate(s)_x', 'Biological replicate(s)_y']
-    return_values = ['File accession_x', 'File accession_y']
+def check_x_and_y(entries, column):
+    columns = column
+    return_values = ['File accession_Accessibility', 'File accession_H3K27ac']
     if not is_unique(entries[columns[0]]):
-        print(columns)
         return str(return_values[0]), str(return_values[1])
     elif not is_unique(entries[columns[1]]):
         return str(return_values[1]), str(return_values[0])
-    return 
-
+    
 # This function is used by grabUnique to treat all ambigiously paired bam files as singleend 
 def findFilterFiles(outfile, outfile2):
     p = pd.read_csv(outfile, sep="\t", header=None)
@@ -46,44 +44,56 @@ def grabUnique(outdir, filenames):
 # This function prepares the lookup tables for input into ABC
 # Where each DHS, H3K27ac bam file is appended to its corresponding celltype
 def prepareLookup(args, metadata, title):
-    metadata['File accession_x bam'] = metadata['File accession_x'].astype('str') + ".nodup.bam"
-    metadata['File accession_y bam'] = metadata['File accession_y'].astype('str') + ".nodup.bam"
+    metadata['File accession_Accessibility bam'] = metadata['File accession_Accessibility'].astype('str') + ".nodup.bam"
+    metadata['File accession_H3K27ac bam'] = metadata['File accession_H3K27ac'].astype('str') + ".nodup.bam"
     # process biosample term name 
-    metadata['Biosample term name_x'] = [str(i).replace(" ", "_") for i in metadata['Biosample term name']]
-    celltypes = metadata['Biosample term name_x'].drop_duplicates()
+    metadata['Biosample term name'] = [str(i).replace(",", "").replace(" ", "_") for i in metadata['Biosample term name']]
+    celltypes = metadata['Biosample term name'].drop_duplicates()
     celltypes.to_csv(os.path.join(args.outdir, "cells.txt"), sep="\t", header=False, index=False)
-    metadata[['Biosample term name_x', 'File accession_x bam', 'File accession_y bam']].to_csv(os.path.join(args.outdir, str(title)+".tsv"), sep="\t", header=False, index=False)
+    metadata[['Biosample term name', 'File accession_Accessibility bam', 'File accession_H3K27ac bam']].to_csv(os.path.join(args.outdir, str(title)+".tsv"), sep="\t", header=False, index=False)
     return metadata
+
+def mapExperimentToLength(dhs):
+    dhs_lookup = dhs[['Experiment accession', 'Read length', 'Run type']].dropna(subset=['Run type']).drop_duplicates()
+    dhs_bam = dhs.loc[(dhs['File format']=='bam') & (dhs['Output type']=='alignments')]
+    for name, length, paired in zip(dhs_lookup['Experiment accession'], dhs_lookup['Read length'], dhs_lookup['Run type']):
+        matched = dhs_bam.loc[dhs_bam['Experiment accession']==name]
+        indices = matched.index.astype('int')
+        dhs_bam.loc[indices, 'Mapped read length'] = length
+        dhs_bam.loc[indices, 'Run type'] = paired
+    return dhs_bam
+        
 
 # This function updates the lookup table such that entries that have bamfiles with biological replicates undergo a merging process and the collective pooled bam is now updated in the table 
 def getExperimentsCombined(metadata, biosample_entries):
     to_combine = {}
     df = metadata
     update_lookup = {}
-    for biosample in biosample_entries:
+    for biosample in list(biosample_entries):
         biosample_entry = metadata.loc[metadata['Biosample term name']==biosample]
-        col1, col2 = check_x_and_y(biosample_entry)
-        to_combine[str(biosample).replace(" ", "_")] = [str(entry)+".nodup.bam" for entry in biosample_entry.loc[:,col1]]
-
-        index = list(biosample_entry.index.astype('int'))
-        df.loc[index[0], col1] = str(biosample_entry.loc[index[0], col1])+"_pooled_nodup.bam"
-        df = df.drop(index[1:])
+        if len(biosample_entry) > 1:
+            col1, col2 = check_x_and_y(biosample_entry, column=['Biological replicate(s)_Accessibility', 'Biological replicate(s)_H3K27ac'])
+            to_combine[str(biosample).replace(",", "").replace(" ", "_")] = [str(entry)+".nodup.bam" for entry in biosample_entry.loc[:,col1]]
+            index = list(biosample_entry.index.astype('int'))
+            df.loc[index[0], col1] = str(biosample_entry.loc[index[0], col1])+"_pooled"
+            df = df.drop(index[1:])
     return to_combine, df
 
 # This function grabs the samples that have paired ends for paired end bam processing 
 # It saves pairedend bams and singleend bams for removal of duplicates 
 def obtainDuplicated(args, subset_intersected):
-    dhs_duplicates = subset_intersected[subset_intersected.duplicated(['Experiment accession_x'], keep=False) & ~subset_intersected.duplicated(['Experiment accession_x', 'Biological replicate(s)_x'], keep=False)].drop_duplicates(['Biosample term name', 'Biological replicate(s)_x'])
+    dhs_duplicates = subset_intersected[subset_intersected.duplicated(['Experiment accession_Accessibility'], keep=False)].drop_duplicates(['Biosample term name', 'Biological replicate(s)_Accessibility'])
 
-    h3k27acduplicates = subset_intersected[subset_intersected.duplicated(['Experiment accession_y'], keep=False) & ~subset_intersected.duplicated(['Experiment accession_y', 'Biological replicate(s)_y'], keep=False)].drop_duplicates(['Biosample term name', 'Biological replicate(s)_y'])
-
-    duplicates = pd.concat([dhs_duplicates, h3k27acduplicates])
-    duplicates.to_csv(os.path.join(args.outdir, "Biological_replicates_metadata.txt"), sep="\t", index=False)
-    # grab celltypes with biological replicates
-    dhs_biological_rep = dhs_duplicates['Biosample term name'].drop_duplicates()
-    h3k27ac_biological_rep = h3k27acduplicates['Biosample term name'].drop_duplicates()
-    df_biological_rep = dhs_biological_rep.append(h3k27ac_biological_rep)
+    h3k27acduplicates = subset_intersected[subset_intersected.duplicated(['Experiment accession_H3K27ac'], keep=False)].drop_duplicates(['Biosample term name', 'Biological replicate(s)_H3K27ac'])
     
+    comb_duplicates = pd.concat([dhs_duplicates, h3k27acduplicates])
+    duplicates = comb_duplicates.drop_duplicates()[:15]
+    duplicates.to_csv(os.path.join(args.outdir, "metadata.tsv"), sep="\t", index=False)
+    metadata_orig = duplicates.copy()
+    # grab celltypes with biological replicates
+    df_biological =  duplicates.loc[duplicates.duplicated(['Biosample term name'], keep=False)]
+    df_biological.to_csv(os.path.join(args.outdir, "Replicates_metadata.tsv"), sep="\t", index=False)
+    df_biological_rep = df_biological['Biosample term name'].drop_duplicates()
     to_combine, metadata_unique = getExperimentsCombined(duplicates, df_biological_rep)
     with open(os.path.join(args.outdir, "Experiments_ToCombine.txt.tmp"), "w") as f:
         for key, value in zip(to_combine.keys(), to_combine.values()):
@@ -93,5 +103,5 @@ def obtainDuplicated(args, subset_intersected):
             f.write("\n")
         f.close()
     
-    return duplicates, df_biological_rep, metadata_unique
+    return metadata_orig, metadata_unique
 
