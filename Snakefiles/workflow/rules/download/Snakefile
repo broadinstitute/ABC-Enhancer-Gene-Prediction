@@ -10,8 +10,9 @@ config = yaml.load(open('../../envs/wd.yaml'))
 OUTPUT_FILES=[]
 
 # Add output files from downloading metadata 
-#OUTPUT_FILES.extend(expand("{config}/bam_{genome_build}_{assay}.tsv", config=config['params_preprocess']['preprocess_dir'], assay=ASSAYS, genome_build=config['params_download']['genome']))
+OUTPUT_FILES.extend(expand("{config}/bam_{genome_build}_{assay}.tsv", config=config['working_dir']+config['params_preprocess']['preprocess_dir'], assay=ASSAYS, genome_build=config['params_download']['genome']))
 OUTPUT_FILES.extend(expand("{config}/unique_{endtype}_h3k27ac_dhs_files.tsv", config=config['working_dir']+config['params_preprocess']['preprocess_dir'], endtype=endtype))
+
 # Add output files from download paired-end, single-end metadata 
 
 rule target:
@@ -41,12 +42,15 @@ rule filter_metadata:
                 exe = config['working_dir']+config['prefix']['workflow_scripts']+"grabDownload.py",
                 dir = config['working_dir']+config['params_preprocess']['preprocess_dir'],
 		data_dir = config['output_data_dir'],
-		data = expand("{config}/bam_{genome_build}_{assays}.tsv", config=config['working_dir']+config['params_preprocess']['preprocess_dir'], assays=ASSAYS, genome_build=config['params_download']['genome'])
+		data = expand(config['working_dir']+config['params_preprocess']['preprocess_dir']+"/bam_{genome_build}_{assays}.tsv", assays=ASSAYS, genome_build=config['params_download']['genome'])
+
+	params: pool = config['pooling_param'],
+                threads = config['threads']
 
 	output: expand("{config}/unique_{endtype}_h3k27ac_dhs_files.tsv", config=config['working_dir']+config['params_preprocess']['preprocess_dir'], endtype=endtype)
 
         shell: """
-		python {input.exe} --dhs {input.data[0]} --h3k27ac {input.data[1]} --atac {input.data[2]} --genome_assembly hg19 --download_files --outdir {input.dir} --data_outdir {input.data_dir} 
+		python {input.exe} --dhs {input.data[0]} --h3k27ac {input.data[1]} --atac {input.data[2]} --genome_assembly hg19 --download_files {params.pool} --threads {params.threads} --outdir {input.dir} --data_outdir {input.data_dir} 
 		cat {input.dir}/Experiments_ToCombine.txt.tmp | sed 's/[][]//g' | sed s/"'"//g | sed "s/,/   /g" > {input.dir}/Experiments_ToCombine.txt
 		"""
 

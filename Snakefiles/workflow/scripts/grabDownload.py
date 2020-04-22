@@ -5,7 +5,9 @@ import argparse
 import subprocess
 import numpy as np
 import pandas as pd
+import itertools
 from utils import *
+from multiprocessing import Pool
 from subprocess import check_call, check_output, PIPE, Popen, getoutput, CalledProcessError
 
 def parse_args():
@@ -17,6 +19,8 @@ def parse_args():
     parser.add_argument('--download_files', action='store_true', help="Flag to download files or not")
     parser.add_argument('--outdir', default=".", help="Outdir to save downloaded metadata files")
     parser.add_argument('--data_outdir', help="Outdir to save downloaded bam files")
+    parser.add_argument('--apply_pool', action='store_true', help="Apply multiprocessing Pool")
+    parser.add_argument('--threads', default=1, help="Number of threads")
     args = parser.parse_args()
     return args 
 
@@ -33,9 +37,8 @@ def assignFiltersToDataFrame(args):
     # TODO: Filters work on current hg19 file
     # Add filters to deal with paired end, single end
     # Paired end flag in metadata doesn't seem to be informative 
-
     # open dataframes 
-    rint("Opening DHS and H3K27ac Experiment Files...")
+    print("Opening DHS and H3K27ac Experiment Files...")
     dhs_data = pd.read_csv(args.dhs, sep="\t")
     h3k27ac_data = pd.read_csv(args.h3k27ac, sep="\t")
 
@@ -47,9 +50,11 @@ def assignFiltersToDataFrame(args):
     dhs_alignment_bam = mapExperimentToLength(dhs_data)
     # H3K27ac goes through a different filtering because 
     h3k27ac_alignment_bam = mapExperimentToLength(h3k27ac_data)
-
-    merge_columns = ['Biosample term name','Biosample organism',  'Biosample treatments','Biosample treatments amount', 'Biosample treatments duration','Biosample genetic modifications methods','Biosample genetic modifications categories','Biosample genetic modifications targets','Biosample genetic modifications gene targets', 'Assembly', 'Biosample type', 'File Status', 'File format', 'File type', 'Library made from', 'Output type', 'Biosample term id', 'Genome annotation', 'File format type', 'Output type', 'Mapped read length']
-   
+    merge_columns = ['Biosample term name','Biosample organism', 'Biosample treatments', 
+                             'Biosample treatments amount', 'Biosample treatments duration','Biosample genetic modifications methods',
+                                              'Biosample genetic modifications categories','Biosample genetic modifications targets',
+                                                               'Biosample genetic modifications gene targets', 'Assembly', 'Genome annotation', 'File format'
+                                                                               , 'File type', 'Output type']
     # merge dhs and h3k27ac
     intersected = pd.merge(dhs_alignment_bam, h3k27ac_alignment_bam, how='inner', on=merge_columns, suffixes=('_Accessibility', '_H3K27ac'))
     
@@ -60,7 +65,6 @@ def assignFiltersToDataFrame(args):
         copy = intersected
         intersected = pd.concat([copy, intersected_df])
     # filter for filtered file + released files 
-    #filtered_intersected = intersected.loc[intersected['Output type'].eq('alignments') & intersected['File Status'].eq('released')]
     # fill columns that are filled with NAN
     df = intersected.fillna(0.0)
     
@@ -76,17 +80,30 @@ def assignFiltersToDataFrame(args):
     prepareLookup(args, metadata_unique, "input_data_lookup")
     return full_metadata
 
+def download_single_bam(bam):
+    command = "wget {} -P {}".format(bam[0], bam[1])
+    p = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
+    print("Running: " + command)
+    (stdoutdata, stderrdata) = p.communicate()
+    err = str(stderrdata, 'utf-8')
+    return stdoutdata
+
 def downloadFiles(args, df):
     # get download links and start downloading 
-    download_links = df[['File download URL_Accessibility', 'File download URL_H3K27ac']].melt(value_name='download_links')
+    download_links = df[['File download URL_Accessibility', 'File download URL_H3K27ac']].melt(value_name='download_links').drop_duplicates()
     outfile=os.path.join(args.outdir, "linkstodownload.txt")
     download_links[['download_links']].to_csv( outfile, sep="\t", index=False, header=None)
     
     if not os.path.exists(args.data_outdir):
         os.mkdir(args.data_outdir)
-
-    commands = "bash downloadFiles.sh {} {}".format(outfile, args.data_outdir)
-    process = subprocess.call(commands, shell=True)
+    
+    if args.apply_pool:
+        with Pool(int(args.threads)) as p:
+            p.map(download_single_bam, zip(list(download_links['download_links']), itertools.repeat(args.data_outdir)))
+    
+    else:
+        for link in list(download_links['download_links']):
+            download_single_bam(link)
     return outfile 
 
 def save_paired_single_end_files(args, metadata):

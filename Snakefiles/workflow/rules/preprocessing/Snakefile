@@ -26,9 +26,10 @@ POOLED_SAMPLES = set([item.split(".")[0] for sublist in FILES_OUTPUT for item in
 print(POOLED_SAMPLES)
 
 FINAL_FILES=[]
-FINAL_FILES.extend(expand(config['output_data_dir']+"{single_sample}.nodup.bam", single_sample=SINGLEEND_SAMPLES))
-#FINAL_FILES.extend(expand(config['output_data_dir']+"{pooled_samples}", pooled_samples=POOLED))
-FINAL_FILES.extend(expand(config['output_data_dir']+"{pooled_samples}.nodup.bam", pooled_samples=POOLED_SAMPLES))
+#FINAL_FILES.extend(expand(config['output_data_dir']+"{single_sample}.nodup.bam", single_sample=SINGLEEND_SAMPLES))
+#FINAL_FILES.extend(expand(config['output_data_dir']+"{pooled_samples}.nodup.bam", pooled_samples=PAIREDEND_SAMPLES))
+
+FINAL_FILES.extend(expand(config['output_data_dir']+"{pooled_samples}_pooled.nodup.bam", pooled_samples=POOLED_SAMPLES))
 
 rule process_bam:
 	input:	FINAL_FILES
@@ -42,13 +43,14 @@ rule remove_pe_dup_filter_bam:
         params:
                 outdir = config['output_data_dir'],
                 paired = "--paired-end",
-		threads = 10
+		pool = config['pooling_param'],
+		threads = config['threads']
         
-	output: expand(config['output_data_dir']+"{pooled_samples}.nodup.bam", pooled_samples=POOLED)
+	output: expand(config['output_data_dir']+"{pooled_samples}.nodup.bam", pooled_samples=PAIREDEND_SAMPLES)
         
 	shell:
                 """
-                python {input.exe} --input_file {input.data} {params.paired} --out_dir {params.outdir} --threads {params.threads} 
+                python {input.exe} --input_file {input.data} {params.paired} --out_dir {params.outdir} --threads {params.threads} {params.pool} 
                 """
 
 rule remove_se_dup_filter_bam:
@@ -57,14 +59,15 @@ rule remove_se_dup_filter_bam:
                 data = config['working_dir']+config['params_preprocess']['preprocess_dir']+"unique_singleend_h3k27ac_dhs_files.tsv"
 	params:
                 outdir = config['output_data_dir'], 
-		threads = 10
+		pool = config['pooling_param'],
+		threads = config['threads']
         
 	output: expand(config['output_data_dir']+"{singlese_samples}.nodup.bam", singlese_samples=SINGLEEND_SAMPLES)
         
 	shell:
                 """
-		python {input.exe} --input_file {input.data} --out-dir {params.outdir} --threads {params.threads}
-
+		python {input.exe} --input_file {input.data} --out_dir {params.outdir} --threads {params.threads}
+{params.pool}
                 """
 
 rule merge_pe_duplicates:
@@ -72,12 +75,13 @@ rule merge_pe_duplicates:
                 exe = config['working_dir']+config['prefix']['workflow_scripts']+"merge_dup.sh",
                 datafile = config['working_dir']+config['params_preprocess']['preprocess_dir']+"Experiments_ToCombine.txt",
                 indir = config['output_data_dir'],
-		data = expand(config['output_data_dir']+"{pooled_samples}.nodup.bam", pooled_samples=POOLED)
-	
+#		data = expand(config['output_data_dir']+"{pooled_samples}", pooled_samples=POOLED),
 
-        output: expand(config['output_data_dir']+"{pooled_samples}.nodup.bam", pooled_samples=POOLED_SAMPLES)
+	params:	threads = config['threads']
+
+        output: expand(config['output_data_dir']+"{pooled_samples}_pooled.nodup.bam", pooled_samples=POOLED_SAMPLES)
         
 	shell:
                 """
-                bash {input.exe} {input.indir} {input.indir} {input.datafile}
+                bash {input.exe} {input.indir} {input.indir} {input.datafile} {params.threads}
                 """ 
