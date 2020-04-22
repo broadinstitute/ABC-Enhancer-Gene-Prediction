@@ -1,5 +1,6 @@
 
 # working directory where ABC repo is located 
+# working directory where ABC repo is located
 working_dir: "/users/kmualim/updated_ABC/github/"
 # directory to output DHS/h3k27ac bam files
 output_data_dir: "/srv/scratch/kmualim/celltype_files/"
@@ -14,18 +15,19 @@ threads: 10
 
 # This section should not need any changes, it works off the ABC repo and accessing files that are present in the repository 
 # + modifies parameters for the respective steps in ABC
+# This section should not need any changes, it works off the ABC repo and accessing files that are present in the repository
 prefix:
         code: "/ABC-Enhancer-Gene-Prediction/"
         env_dir: "/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/envs/"
         workflow_scripts: "/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/scripts/"
-        
+
 params_preprocess:
         preprocess_dir: "/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/output/"
         lookup_table: "/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/output/input_data_lookup.tsv"
 
 params_download:
         genome: "hg19"
-        assays: 
+        assays:
                 - "DHS"
                 - "H3K27ac"
                 - "ATAC"
@@ -44,9 +46,8 @@ params_neighborhoods:
         genes: "/ABC-Enhancer-Gene-Prediction/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.bed"
         qnorm: "/ABC-Enhancer-Gene-Prediction/src/EnhancersQNormRef.K562.txt"
 
-params_predict:      
+params_predict:
         hic_resolution: 5000
         scale_hic: "--scale_hic_using_powerlaw"
         threshold: 0.02
         all_putative: "--make_all_putative"
-        
