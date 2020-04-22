@@ -6,6 +6,14 @@ envs : contains the software environment in conda + config yaml file for snakema
 	- all the input/output files are very specific to where its located relative to the ABC-rep, so working directories need to be accurately specified 
 
 output : contains the output files from the rules from the metadata snakemake workflow, data input files for input into preprocessing rule + input data lookup into abc 
+	- most of the output files here are generated from download snakefile which runs scripts/grabDownload.py and scripts/download_log.sh : 
+	-	download_log.sh outputs metadata files for all hg19/GHCR38 DHS/ATAC/H3K27ac which is used as input into preprocessing bam files 
+	-	grabDownload.py uses the metadata file to perform filtering steps as well as to generate input data lookup table to pair (DHS/H3K27ac) for each biosample term name, and to generate the list of pairedend/singleend bam files for removing duplicates. 
+	-	 Experiments_ToCombine.txt also gets generated and lists the bam files to combine. 	
 
 rules : contains rules for downloading metadata + bamfiles, preprocessing downloaded bam files (handles pairedend + singleend), running abc
-	- To run each snakefile workflow: simply cd into the directory and run the command """ snakemake """
+	-	 To run each snakefile workflow: simply cd into the directory and run the command """ snakemake """
+	- 	download: download bamfiles 
+	-	preprocessing: preprocesses bamfiles based on DHS/H3K27ac bamfiles 
+	-	abc_code : runs ABC on input_data_lookup.txt files and generates enhancer-gene predictions
+	
