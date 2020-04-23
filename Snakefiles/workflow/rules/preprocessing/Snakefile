@@ -6,20 +6,21 @@ config = yaml.load(open('../../envs/wd.yaml'))
 
 # obtain PAIREDEND SAMPLES
 with open(config['working_dir']+config['params_preprocess']['preprocess_dir']+"unique_pairedend_h3k27ac_dhs_files.tsv", "r") as f:
-        PAIREDEND_SAMPLES = [line for line in f.readlines()]
+        PAIREDEND_SAMPLES = [line for line in f.read().splitlines()]
 f.close()
 #print(PAIREDEND_SAMPLES)
 
 # obtain SINGLEEND SAMPLES
 with open(config['working_dir']+config['params_preprocess']['preprocess_dir']+"unique_singleend_h3k27ac_dhs_files.tsv", "r") as fr:
-        SINGLEEND_SAMPLES = [line for line in fr.readlines()]
+        SINGLEEND_SAMPLES = [line for line in fr.read().splitlines()]
 fr.close()
+print(SINGLEEND_SAMPLES)
 
 # obtain EXPERIMENT MERGED
 with open(config['working_dir']+config['params_preprocess']['preprocess_dir']+"Experiments_ToCombine.txt", "r") as file_a:
 	FILES = [line.split("\t")[1] for line in file_a.readlines()]
 file_a.close()
-FILES_OUTPUT = [file.split("    ")[0] for file in FILES]
+FILES_OUTPUT = [file.split("    ")[0].split(".")[0] for file in FILES]
 print(FILES_OUTPUT)
 #POOLED = [item for sublist in FILES_OUTPUT for item in sublist]
 #POOLED_SAMPLES = set([item.split(".")[0] for sublist in FILES_OUTPUT for item in sublist])
@@ -29,7 +30,7 @@ FINAL_FILES=[]
 FINAL_FILES.extend(expand(config['output_data_dir']+"{single_sample}.nodup.bam", single_sample=SINGLEEND_SAMPLES))
 FINAL_FILES.extend(expand(config['output_data_dir']+"{pooled_samples}.nodup.bam", pooled_samples=PAIREDEND_SAMPLES))
 
-FINAL_FILES.extend(expand(config['output_data_dir']+"{pooled_samples}_pooled.nodup.bam", pooled_samples=FILES_OUTPUT))
+FINAL_FILES.extend(expand(config['output_data_dir']+"{samples}_pooled.nodup.bam", samples=FILES_OUTPUT))
 
 rule process_bam:
 	input:	FINAL_FILES
