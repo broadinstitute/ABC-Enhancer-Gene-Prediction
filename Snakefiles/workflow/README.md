@@ -6,7 +6,7 @@ This Snakefile directory contains four directories, namely:
 envs : contains the software environment in conda + config yaml file for snakemake rules <br>
 * working directories need to be configured for the current system <br>
 * parameters can all be adjusted in the environment folders <br>
-* all the input/output files are very specific to where its located relative to the ABC-rep, so working directories need to be accurately specified 
+* all the input/output files are very specific to where its located relative to the ABC-repo, so working directories need to be accurately specified 
 
 output : contains the output files from the rules from the metadata snakemake workflow, data input files for input into preprocessing rule + input data lookup into abc 
 * most of the output files here are generated from Snakefile in download which runs scripts/grabDownload.py and scripts/download_log.sh : 
