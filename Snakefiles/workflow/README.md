@@ -14,11 +14,13 @@ output : contains the output files from the rules from the metadata snakemake wo
 ** ```grabDownload.py``` uses the metadata file to perform filtering steps as well as to generate input data lookup table to pair (DHS/H3K27ac) for each biosample term name, and to generate the list of pairedend/singleend bam files for removing duplicates.  
 ** Experiments_ToCombine.txt also gets generated and lists the bam files to combine. 	
 
-rules : contains rules for downloading metadata + bamfiles, preprocessing downloaded bam files (handles pairedend + singleend), running abc
+rules : contains rules for 
+1. downloading metadata + bamfiles
+2. preprocessing downloaded bam files (handles pairedend + singleend)
+3. running abc
+
 * To run each snakefile workflow: simply cd into the directory and run the command ***snakemake***
-* download: download bamfiles 
-* preprocessing: preprocesses bamfiles based on DHS/H3K27ac bamfiles 
-* abc_code : runs ABC on input_data_lookup.txt files and generates enhancer-gene predictions
+** download: download bamfiles 
+** preprocessing: preprocesses bamfiles based on DHS/H3K27ac bamfiles 
+** abc_code : runs ABC on input_data_lookup.txt files and generates enhancer-gene predictions
 	
-rules : contains rules for downloading metadata + bamfiles, preprocessing downloaded bam files (handles pairedend + singleend), running ABC <br>
-* To run each snakefile workflow: simply cd into the directory and run the command ***snakemake***
