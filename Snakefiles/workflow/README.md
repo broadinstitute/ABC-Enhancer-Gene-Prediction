@@ -28,6 +28,7 @@ Listed below is what each directory contains.
 * To run each snakefile workflow: simply cd into the directory and run the command ***snakemake***
 	* download: download bamfiles 
 	* preprocessing: preprocesses bamfiles based on DHS/H3K27ac bamfiles 
+		* preprocessing includes removing duplicates from paired-end experiment files 
 	* abc_code : runs ABC on input_data_lookup.txt files and generates enhancer-gene predictions
 	
 4. scripts: contains relevant additional scripts to allow rules to run. 
