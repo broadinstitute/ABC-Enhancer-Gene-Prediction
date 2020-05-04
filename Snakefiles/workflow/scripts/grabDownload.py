@@ -48,13 +48,11 @@ def assignFiltersToDataFrame(args):
     
 
     dhs_alignment_bam = mapExperimentToLength(dhs_data)
+    print(len(dhs_alignment_bam))
     # H3K27ac goes through a different filtering because 
     h3k27ac_alignment_bam = mapExperimentToLength(h3k27ac_data)
-    merge_columns = ['Biosample term name','Biosample organism', 'Biosample treatments', 
-                             'Biosample treatments amount', 'Biosample treatments duration','Biosample genetic modifications methods',
-                                              'Biosample genetic modifications categories','Biosample genetic modifications targets',
-                                                               'Biosample genetic modifications gene targets', 'Assembly', 'Genome annotation', 'File format'
-                                                                               , 'File type', 'Output type']
+    print(len(h3k27ac_alignment_bam))
+    merge_columns = ['Biosample term name','Biosample organism', 'Biosample treatments','Biosample treatments amount', 'Biosample treatments duration','Biosample genetic modifications methods','Biosample genetic modifications categories','Biosample genetic modifications targets', 'Biosample genetic modifications gene targets', 'Assembly', 'Genome annotation', 'File format', 'File type', 'Output type']
     # merge dhs and h3k27ac
     intersected = pd.merge(dhs_alignment_bam, h3k27ac_alignment_bam, how='inner', on=merge_columns, suffixes=('_Accessibility', '_H3K27ac'))
     
@@ -73,7 +71,8 @@ def assignFiltersToDataFrame(args):
     full_metadata, metadata_unique = obtainDuplicated(args, df)
     # grab entries with no biological repliates 
     # filter for mapped read lengths of usually 32.0 or 36.0
-
+    print(len(full_metadata))
+    print(len(metadata_unique))
     # metadata_unique contains the combined accession numbers for experiments with technical/biological replicates 
     # full metadata contains every technical and biological replicate as its own single entry
     # save relevant columns into input data lookup for input into ABC code
@@ -97,13 +96,13 @@ def downloadFiles(args, df):
     if not os.path.exists(args.data_outdir):
         os.mkdir(args.data_outdir)
     
-    if args.apply_pool:
-        with Pool(int(args.threads)) as p:
-            p.map(download_single_bam, zip(list(download_links['download_links']), itertools.repeat(args.data_outdir)))
-    
-    else:
-        for link in list(download_links['download_links']):
-            download_single_bam(link)
+    #if args.apply_pool:
+    #    with Pool(int(args.threads)) as p:
+    #        p.map(download_single_bam, zip(list(download_links['download_links']), itertools.repeat(args.data_outdir)))
+    #
+    #else:
+    #    for link in list(download_links['download_links']):
+    #        download_single_bam(link)
     return outfile 
 
 def save_paired_single_end_files(args, metadata):

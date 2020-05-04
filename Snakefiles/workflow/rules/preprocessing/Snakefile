@@ -27,7 +27,7 @@ print(POOLED_SAMPLES)
 
 FINAL_FILES=[]
 #FINAL_FILES.extend(expand(config['output_data_dir']+"{single_sample}.nodup.bam", single_sample=SINGLEEND_SAMPLES))
-#FINAL_FILES.extend(expand(config['output_data_dir']+"{pooled_samples}.nodup.bam", pooled_samples=PAIREDEND_SAMPLES))
+FINAL_FILES.extend(expand(config['output_data_dir']+"{pooled_samples}.nodup.bam", pooled_samples=PAIREDEND_SAMPLES))
 
 FINAL_FILES.extend(expand(config['output_data_dir']+"{pooled_samples}_pooled.nodup.bam", pooled_samples=POOLED_SAMPLES))
 
@@ -53,22 +53,22 @@ rule remove_pe_dup_filter_bam:
                 python {input.exe} --input_file {input.data} {params.paired} --out_dir {params.outdir} --threads {params.threads} {params.pool} 
                 """
 
-rule remove_se_dup_filter_bam:
-        input:
-                exe = config['working_dir']+config['prefix']['workflow_scripts']+"encode_task_filter.py",
-                data = config['working_dir']+config['params_preprocess']['preprocess_dir']+"unique_singleend_h3k27ac_dhs_files.tsv"
-	params:
-                outdir = config['output_data_dir'], 
-		pool = config['pooling_param'],
-		threads = config['threads']
-        
-	output: expand(config['output_data_dir']+"{singlese_samples}.nodup.bam", singlese_samples=SINGLEEND_SAMPLES)
-        
-	shell:
-                """
-		python {input.exe} --input_file {input.data} --out_dir {params.outdir} --threads {params.threads}
-{params.pool}
-                """
+#rule remove_se_dup_filter_bam:
+#        input:
+#                exe = config['working_dir']+config['prefix']['workflow_scripts']+"encode_task_filter.py",
+#                data = config['working_dir']+config['params_preprocess']['preprocess_dir']+"unique_singleend_h3k27ac_dhs_files.tsv"
+#	params:
+#                outdir = config['output_data_dir'], 
+#		pool = config['pooling_param'],
+#		threads = config['threads']
+#        
+#	output: expand(config['output_data_dir']+"{singlese_samples}.nodup.bam", singlese_samples=SINGLEEND_SAMPLES)
+#        
+#	shell:
+#                """
+#		python {input.exe} --input_file {input.data} --out_dir {params.outdir} --threads {params.threads}
+#{params.pool}
+#                """
 
 rule merge_pe_duplicates:
         input:

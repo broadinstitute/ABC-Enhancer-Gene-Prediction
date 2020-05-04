@@ -7,6 +7,9 @@ output_data_dir: "/srv/scratch/kmualim/celltype_files/"
 predictions_results_dir: "/mnt/lab_data2/kmualim/modified_ABC/apr10_ABC/"
 hic_dir: "/mnt/lab_data2/kmualim/data/send_to_Kristy/HiC/AverageHiC/raw"
 
+pooling_param: "--apply_pool"
+threads: 10
+
 # This section should not need any changes, it works off the ABC repo and accessing files that are present in the repository 
 prefix:
         code: "/ABC-Enhancer-Gene-Prediction/"
