@@ -94,7 +94,6 @@ def obtainDuplicated(args, subset_intersected):
     h3k27acduplicates = subset_intersected[subset_intersected.duplicated(['Experiment accession_H3K27ac'], keep=False)].drop_duplicates(['Biosample term name', 'Biological replicate(s)_H3K27ac'])
     
     comb_duplicates = pd.concat([dhs_duplicates, h3k27acduplicates])
-<<<<<<< HEAD
     duplicates = comb_duplicates.drop_duplicates()
     duplicates.to_csv(os.path.join(args.outdir, "metadata.tsv"), sep="\t", index=False)
     
