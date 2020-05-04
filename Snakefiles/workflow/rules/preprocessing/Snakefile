@@ -6,35 +6,40 @@ config = yaml.load(open('../../envs/wd.yaml'))
 
 # obtain PAIREDEND SAMPLES
 with open(config['working_dir']+config['params_preprocess']['preprocess_dir']+"unique_pairedend_h3k27ac_dhs_files.tsv", "r") as f:
-        PAIREDEND_SAMPLES = [line for line in f.readlines()]
+        PAIREDEND_SAMPLES = [line for line in f.read().splitlines()]
 f.close()
 #print(PAIREDEND_SAMPLES)
 
 # obtain SINGLEEND SAMPLES
 with open(config['working_dir']+config['params_preprocess']['preprocess_dir']+"unique_singleend_h3k27ac_dhs_files.tsv", "r") as fr:
-        SINGLEEND_SAMPLES = [line for line in fr.readlines()]
+        SINGLEEND_SAMPLES = [line for line in fr.read().splitlines()]
 fr.close()
+print(SINGLEEND_SAMPLES)
 
 # obtain EXPERIMENT MERGED
 with open(config['working_dir']+config['params_preprocess']['preprocess_dir']+"Experiments_ToCombine.txt", "r") as file_a:
 	FILES = [line.split("\t")[1] for line in file_a.readlines()]
 file_a.close()
-FILES_OUTPUT = [file.split("    ") for file in FILES]
-
-POOLED = [item for sublist in FILES_OUTPUT for item in sublist]
-POOLED_SAMPLES = set([item.split(".")[0] for sublist in FILES_OUTPUT for item in sublist])
-print(POOLED_SAMPLES)
+FILES_OUTPUT = [file.split("    ")[0].split(".")[0] for file in FILES]
+print(FILES_OUTPUT)
+#POOLED = [item for sublist in FILES_OUTPUT for item in sublist]
+#POOLED_SAMPLES = set([item.split(".")[0] for sublist in FILES_OUTPUT for item in sublist])
+#print(POOLED_SAMPLES)
 
 FINAL_FILES=[]
+<<<<<<< HEAD
 #FINAL_FILES.extend(expand(config['output_data_dir']+"{single_sample}.nodup.bam", single_sample=SINGLEEND_SAMPLES))
+=======
+FINAL_FILES.extend(expand(config['output_data_dir']+"{single_sample}.nodup.bam", single_sample=SINGLEEND_SAMPLES))
+>>>>>>> 06b765c711ecec882c5656241d6d1cc8de893ee8
 FINAL_FILES.extend(expand(config['output_data_dir']+"{pooled_samples}.nodup.bam", pooled_samples=PAIREDEND_SAMPLES))
 
-FINAL_FILES.extend(expand(config['output_data_dir']+"{pooled_samples}_pooled.nodup.bam", pooled_samples=POOLED_SAMPLES))
+FINAL_FILES.extend(expand(config['output_data_dir']+"{samples}_pooled.nodup.bam", samples=FILES_OUTPUT))
 
 rule process_bam:
 	input:	FINAL_FILES
 
-ruleorder : remove_se_dup_filter_bam > remove_pe_dup_filter_bam > merge_pe_duplicates
+ruleorder : remove_pe_dup_filter_bam > remove_se_dup_filter_bam > merge_pe_duplicates
 
 rule remove_pe_dup_filter_bam:
         input:
@@ -53,6 +58,7 @@ rule remove_pe_dup_filter_bam:
                 python {input.exe} --input_file {input.data} {params.paired} --out_dir {params.outdir} --threads {params.threads} {params.pool} 
                 """
 
+<<<<<<< HEAD
 #rule remove_se_dup_filter_bam:
 #        input:
 #                exe = config['working_dir']+config['prefix']['workflow_scripts']+"encode_task_filter.py",
@@ -69,6 +75,23 @@ rule remove_pe_dup_filter_bam:
 #		python {input.exe} --input_file {input.data} --out_dir {params.outdir} --threads {params.threads}
 #{params.pool}
 #                """
+=======
+rule remove_se_dup_filter_bam:
+        input:
+                exe = config['working_dir']+config['prefix']['workflow_scripts']+"encode_task_filter.py",
+                data = config['working_dir']+config['params_preprocess']['preprocess_dir']+"unique_singleend_h3k27ac_dhs_files.tsv"
+	params:
+                outdir = config['output_data_dir'], 
+		pool = config['pooling_param'],
+		threads = config['threads']
+        
+	output: expand(config['output_data_dir']+"{singlese_samples}.nodup.bam", singlese_samples=SINGLEEND_SAMPLES)
+        
+	shell:
+                """
+		python {input.exe} --input_file {input.data} --out_dir {params.outdir} --threads {params.threads} {params.pool}
+                """
+>>>>>>> 06b765c711ecec882c5656241d6d1cc8de893ee8
 
 rule merge_pe_duplicates:
         input:
@@ -79,7 +102,7 @@ rule merge_pe_duplicates:
 
 	params:	threads = config['threads']
 
-        output: expand(config['output_data_dir']+"{pooled_samples}_pooled.nodup.bam", pooled_samples=POOLED_SAMPLES)
+        output: expand(config['output_data_dir']+"{pooled_samples}_pooled.nodup.bam", pooled_samples=FILES_OUTPUT)
         
 	shell:
                 """

@@ -19,11 +19,6 @@ def check_x_and_y(entries, column):
         return str(return_values[1]), str(return_values[0])
     else:
         return -1, -1
-    # also check for different file samples 
-#    elif not is_unique(entries[return_values[1]]):
-#        return str(return_values[1]), str(return_values[0])
-#    elif not is_unique(entries[return_values[0]]):
-#        return str(return_values[0]), str(return_values[1])
     
 # This function is used by grabUnique to treat all ambigiously paired bam files as singleend 
 def findFilterFiles(outfile, outfile2):
@@ -99,6 +94,7 @@ def obtainDuplicated(args, subset_intersected):
     h3k27acduplicates = subset_intersected[subset_intersected.duplicated(['Experiment accession_H3K27ac'], keep=False)].drop_duplicates(['Biosample term name', 'Biological replicate(s)_H3K27ac'])
     
     comb_duplicates = pd.concat([dhs_duplicates, h3k27acduplicates])
+<<<<<<< HEAD
     duplicates = comb_duplicates.drop_duplicates()
     duplicates.to_csv(os.path.join(args.outdir, "metadata.tsv"), sep="\t", index=False)
     
