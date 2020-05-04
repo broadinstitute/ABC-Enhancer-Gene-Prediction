@@ -27,11 +27,7 @@ print(FILES_OUTPUT)
 #print(POOLED_SAMPLES)
 
 FINAL_FILES=[]
-<<<<<<< HEAD
 #FINAL_FILES.extend(expand(config['output_data_dir']+"{single_sample}.nodup.bam", single_sample=SINGLEEND_SAMPLES))
-=======
-FINAL_FILES.extend(expand(config['output_data_dir']+"{single_sample}.nodup.bam", single_sample=SINGLEEND_SAMPLES))
->>>>>>> 06b765c711ecec882c5656241d6d1cc8de893ee8
 FINAL_FILES.extend(expand(config['output_data_dir']+"{pooled_samples}.nodup.bam", pooled_samples=PAIREDEND_SAMPLES))
 
 FINAL_FILES.extend(expand(config['output_data_dir']+"{samples}_pooled.nodup.bam", samples=FILES_OUTPUT))
@@ -58,7 +54,6 @@ rule remove_pe_dup_filter_bam:
                 python {input.exe} --input_file {input.data} {params.paired} --out_dir {params.outdir} --threads {params.threads} {params.pool} 
                 """
 
-<<<<<<< HEAD
 #rule remove_se_dup_filter_bam:
 #        input:
 #                exe = config['working_dir']+config['prefix']['workflow_scripts']+"encode_task_filter.py",
@@ -73,25 +68,6 @@ rule remove_pe_dup_filter_bam:
 #	shell:
 #                """
 #		python {input.exe} --input_file {input.data} --out_dir {params.outdir} --threads {params.threads}
-#{params.pool}
-#                """
-=======
-rule remove_se_dup_filter_bam:
-        input:
-                exe = config['working_dir']+config['prefix']['workflow_scripts']+"encode_task_filter.py",
-                data = config['working_dir']+config['params_preprocess']['preprocess_dir']+"unique_singleend_h3k27ac_dhs_files.tsv"
-	params:
-                outdir = config['output_data_dir'], 
-		pool = config['pooling_param'],
-		threads = config['threads']
-        
-	output: expand(config['output_data_dir']+"{singlese_samples}.nodup.bam", singlese_samples=SINGLEEND_SAMPLES)
-        
-	shell:
-                """
-		python {input.exe} --input_file {input.data} --out_dir {params.outdir} --threads {params.threads} {params.pool}
-                """
->>>>>>> 06b765c711ecec882c5656241d6d1cc8de893ee8
 
 rule merge_pe_duplicates:
         input:

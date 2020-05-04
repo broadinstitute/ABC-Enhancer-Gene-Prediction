@@ -8,11 +8,8 @@ output_data_dir: "/srv/scratch/kmualim/celltype_files/"
 predictions_results_dir: "/mnt/lab_data2/kmualim/modified_ABC/apr10_ABC/"
 hic_dir: "/mnt/lab_data2/kmualim/data/send_to_Kristy/HiC/AverageHiC/raw"
 
-<<<<<<< HEAD
-=======
 # parameters to determine whether to apply pooling + number of threads 
 # leave blank if not applicable 
->>>>>>> 06b765c711ecec882c5656241d6d1cc8de893ee8
 pooling_param: "--apply_pool"
 threads: 10
 
