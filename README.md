@@ -222,7 +222,23 @@ python src/compute_powerlaw_fit_from_hic.py \
 ```
 
 ### Contact data in bedpe formats
-Contact data can also be loaded in a generic bedpe format. This supports promoter-capture Hi-C and mixed-resolution Hi-C matrices. Use ```--hic_type bedpe``` in ```predict.py``` to enable this. 
+Contact data can also be loaded in a generic bedpe format. This supports promoter-capture Hi-C and mixed-resolution Hi-C matrices. Use ```--hic_type bedpe``` in ```predict.py``` to enable this. Note that if contact data is provided in bedpe format, some of the default Hi-C normalizations are not applied. (For example, the code will not adjust the diagonal of the contact matrix)
+
+The bedpe file should be a tab delimited file containing 8 columns (chr1,start1,end1,chr2,start2,end2,name,score) where score denotes the contact frequency. An example is given here: ```input_data/HiC/raw/chr22/chr22.bedpe.gz```
+
+```
+python src/predict.py \
+--enhancers example_chr22/ABC_output/Neighborhoods/EnhancerList.txt \
+--genes example_chr22/ABC_output/Neighborhoods/GeneList.txt \
+--HiCdir example_chr22/input_data/HiC/raw/ \
+--hic_type bedpe \
+--hic_resolution 5000 \
+--scale_hic_using_powerlaw \
+--threshold .02 \
+--cellType K562 \
+--outdir example_chr22/ABC_output/Predictions/ \
+--make_all_putative
+```
 
 ### ABC model without experimental contact data
 If experimentally derived contact data is not available, one can run the ABC model using the powerlaw estimate only. In this case the ```--HiCdir``` argument should be excluded from ```predict.py``` and the ```--score_column powerlaw.Score``` argument should be included in ```predict.py```. In this case the ```ABC.Score``` column of the predictions file will be set to ```NaN```. The ```powerlaw.Score``` column of the output prediction files will be the relevant Score column to use.
