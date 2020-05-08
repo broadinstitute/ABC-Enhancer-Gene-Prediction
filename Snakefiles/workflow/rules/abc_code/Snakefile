@@ -4,7 +4,7 @@ import os
 ASSAYS=["DHS", "H3K27ac", "ATAC"]
 endtype = ["pairedend", "singleend"]
 
-envs_dir = "/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/envs" 
+envs_dir = "../../envs" 
 config = yaml.load(open(os.path.join(envs_dir,"wd.yaml")))
 
 SAMPLES=[]
