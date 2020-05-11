@@ -18,6 +18,8 @@ wget --quiet -O bam_GRCh38_H3K27ac.tsv "https://www.encodeproject.org/metadata/?
 	## For DNase data — mostly good
 	## For Histone data – might often find files from multiple labs (default to Broad)
 
+## Potential flags to include (this is an old command, not sure it will work anymore):
+## curl -L -o "metadata.H3K27ac_bam.tsv" "https://www.encodeproject.org/metadata/searchTerm=H3K27ac&type=Experiment&assembly=hg19&audit.ERROR.category%21=extremely+low+spot+score&aud%5Cit.ERROR.category%21=extremely+low+read+depth&files.file_type=bam&assay_title=ChIP-seq&target.investigated_as=histone+modification&audit.NOT_COMPLIANT.category%21=insufficient+read+depth%5C&status=released/metadata.tsv"
 
 ##################################################################################
 # From Kristy:
