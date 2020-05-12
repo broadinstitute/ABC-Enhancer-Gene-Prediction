@@ -1,0 +1,17 @@
+{
+    "__default__" :
+    {
+        "memory" : 8,
+        "output" : "\"logs/{rule}.{wildcards}.out.txt\""
+    },
+
+    "analyze_emul_duplication" :
+    {
+        "memory" : 32
+    },
+
+    "collapse_barcodes" :
+    {
+        "memory" : 32
+    }
+}

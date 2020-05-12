@@ -1,0 +1,4 @@
+cluster: "source /broad/software/scripts/useuse ; reuse -q GridEngine8 ; qsub -q gsa -j y -cwd -o {cluster.output} -l virtual_free={cluster.memory}G"
+jobscript: /seq/lincRNA/RAP/ABC/200330_ENCODE/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/envs/BroadGSA/jobscript.sh
+cluster-config: /seq/lincRNA/RAP/ABC/200330_ENCODE/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/envs/BroadGSA/cluster.json
+jobs: 100
