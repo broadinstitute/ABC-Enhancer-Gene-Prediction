@@ -21,9 +21,11 @@ prefix:
         env_dir: "/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/envs/"
         workflow_scripts: "/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/scripts/"
 
-params_preprocess:
-        preprocess_dir: "/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/output/"
-        lookup_table: "/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/output/input_data_lookup.tsv"
+download_dir: "/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/output/"
+lookup_table: "/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/output/input_data_lookup.tsv"
+#params_preprocess:
+#        preprocess_dir: "/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/output/"
+#        lookup_table: "/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/output/input_data_lookup.tsv"
 
 params_download:
         genome: "hg19"
