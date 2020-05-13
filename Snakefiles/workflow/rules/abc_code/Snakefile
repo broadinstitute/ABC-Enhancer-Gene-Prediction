@@ -1,107 +1,101 @@
 import yaml 
+import json
 import os
 
-ASSAYS=["DHS", "H3K27ac", "ATAC"]
-endtype = ["pairedend", "singleend"]
 
-envs_dir = "../../envs" 
-config = yaml.load(open(os.path.join(envs_dir,"wd.yaml")))
-
-SAMPLES=[]
-with open("{}/cells.txt".format(config['working_dir']+config['params_preprocess']['preprocess_dir']), "r") as f:
-	SAMPLES= f.read().splitlines()
-f.close()
-
-# look at bam files 
-DHS_BAMFILES=[]
-with open(config['working_dir']+config['params_preprocess']['lookup_table'], "r") as f:
-	DHS_BAMFILES = [line.split("\t")[1] for line in f.readlines()] 
-
+# import json file 
+with open(workflow.workdir_init+config['download_dir']+"input_data_lookup.json", "r") as handle:
+	sample_lookup = json.load(handle)
+print(type(sample_lookup))
+print(sample_lookup)
 
 rule all:
-	input: expand("{config}/Peaks_{sample}/NA_peaks.narrowPeak.candidateRegions.bed", config=config['predictions_results_dir'] ,sample=SAMPLES)
-#	input: expand("{config}/Peaks_{sample}/NA_peaks.narrowPeak.candidateRegions.bed", config=config['predictions_results_dir'] ,sample=SAMPLES), expand("{config}/Neighborhood_{sample}/EnhancerList.txt", config=config['predictions_results_dir'] ,sample=SAMPLES), expand("{config}/Prediction_{sample}/EnhancerPredictionsAllPutative.txt.gz", config=config['predictions_results_dir'] ,sample=SAMPLES)
+	input: expand("{config}/Peaks_{sample}/NA_peaks.narrowPeak", config=config['predictions_results_dir'] ,sample=list(sample_lookup.keys()))
+
+def rule_input(wildcards):
+	""" Returns DNA bam file for specific sample """
+	return config['output_data_dir']+sample_lookup[wildcards.sample]['1']
 
 rule call_macs_peaks: 
 	input: 
-		exe = config['working_dir']+config['prefix']['workflow_scripts']+"call_macs.sh",
-		data = config['working_dir']+config['params_preprocess']['lookup_table'],
+		data = rule_input,
 		input_dir = config['output_data_dir'],
-		output_dir = config['predictions_results_dir']
+		output_dir = config['predictions_results_dir']+"/Peaks_{sample}"
 	params:
-		pval=0.1,
-		threads = 10
-	output: expand("{config}/Peaks_{sample}/NA_peaks.narrowPeak", config=config['predictions_results_dir'] ,sample=SAMPLES)
+		pval = config['params_macs']['pval'],
+		threads = config['params_macs']['threads'],
+		chrom_sizes = config['params_candidate']['chrom_sizes']
+	output: 
+		file = config['predictions_results_dir']+"/Peaks_{sample}/NA_peaks.narrowPeak"
 	shell: 
 		""" 
-		bash {input.exe} {input.data} {params.pval} {input.output_dir} {input.input_dir}
+		macs2 callpeak -f BAM -g hs -p {params.pval} --call-summits --outdir {input.output_dir} -t {input.data}
+		bedtools sort -faidx {params.chrom_sizes} -i {output.file} > {output.file}.sorted
 		"""
+
 
 rule call_candidate_regions:
-	input:
-		exe = config['working_dir']+config['prefix']['workflow_scripts']+"call_candidates.sh",  
-		data = expand("{config}/Peaks_{sample}/NA_peaks.narrowPeak.sorted", config=config['predictions_results_dir'] ,sample=SAMPLES),
-		bam = expand("{config}/{samples}", config=config['output_data_dir'], samples=DHS_BAMFILES),
-#		data = config['working_dir']+config['params_preprocess']['lookup_table'],
-		input_dir = config['output_data_dir']
-
+        input:
+                exe = workflow.workdir_init+config['code']+"makeCandidateRegions.py",
+                data = config['predictions_results_dir']+"/Peaks_{sample}/NA_peaks.narrowPeak.sorted",
+		bam_inputs = rule_input,
+		output_dir = config['predictions_results_dir']+"/Peaks_{sample}"
 	params:
-		code_dir = config['working_dir']+config['prefix']['code'],
-		chrom_sizes = config['working_dir']+config['params_candidate']['chrom_sizes'],
-		regions_blacklist = config['working_dir']+config['params_candidate']['regions_blacklist'],
-		genome_tss = config['working_dir']+config['params_candidate']['genome_tss'],
-		peakExtendFromSummit = config['params_candidate']['peakExtendFromSummit'],
+		code_dir = workflow.workdir_init+config['code'],
+		chrom_sizes = config['params_candidate']['chrom_sizes'],
+		regions_blacklist = config['params_candidate']['regions_blacklist'],
+		genome_tss = config['params_candidate']['genome_tss'],
+                peakExtendFromSummit = config['params_candidate']['peakExtendFromSummit'],
 		nStrongestPeaks = config['params_candidate']['nStrongestPeaks'],
-		output_dir = config['predictions_results_dir'], 
 		threads = 10
-		
+	output: config['predictions_results_dir']+"/Peaks_{sample}/NA_peaks.narrowPeak.candidateRegions.bed"
+                                                                  
+	shell: """
+		python {input.exe} --narrowPeak {input.data} --bam {input.bam_inputs} --outDir {input.output_dir} --chrom_sizes {params.chrom_sizes} --regions_blacklist {params.regions_blacklist} --regions_whitelist {params.genome_tss} --peakExtendFromSummit {params.peakExtendFromSummit} --nStrongestPeak {params.nStrongestPeak} --genome_tss {params.genome_tss}
+		"""
 
-	output: expand("{config}/Peaks_{sample}/NA_peaks.narrowPeak.candidateRegions.bed", config=config['predictions_results_dir'] ,sample=SAMPLES)
-	shell: 
-		"""
-		python {input.exe} --narrowPeak {input.data} --bam {input.bam} --outDir {params.output_dir} --chrom_sizes {params.chrom_sizes} --regions_blacklist {params.regions_blacklist} --regions_whitelist {params.genome_tss} --peakExtendFromSummit {params.peakExtendFromSummit} --nStrongestPeaks {params.nStrongestPeaks} 
-#		bash {input.exe} {input.data} {params.chrom_sizes} {params.regions_blacklist} {params.genome_tss} {params.peakExtendFromSummit} {params.nStrongestPeaks} {input.input_dir} {params.output_dir} {params.code_dir}
-		"""
+def rule_getbam(wildcards):
+        """ Returns DHS and H3K27ac bam file for specific sample """
+        files = [sample_lookup[wildcards.sample]['1'], sample_lookup[wildcards.sample]['2']]
+	return [config['output_data_dir']+str(file) for file in files]
 
 rule call_neighborhoods:
-	input:
-		exe = config['working_dir']+config['prefix']['workflow_scripts']+"call_neighborhoods.sh", 
-	 	data = config['working_dir']+config['params_preprocess']['lookup_table'],
-		input_dir = config['output_data_dir'],
-		input = expand("{config}/Peaks_{sample}/NA_peaks.narrowPeak.candidateRegions.bed", config=config['predictions_results_dir'] ,sample=SAMPLES)
-		
-	params:
-		code_dir = config['working_dir']+config['prefix']['code'],
-		genes = config['working_dir']+config['params_neighborhoods']['genes'],
-		ubiquitous_genes = config['working_dir']+config['params_neighborhoods']['ubiquitous_genes'],
-		chrom_sizes = config['working_dir']+config['params_candidate']['chrom_sizes'],
-		qnorm = config['working_dir']+config['params_neighborhoods']['qnorm'],
-		output_dir = config['predictions_results_dir']
-	
-	output: expand("{config}/Neighborhood_{sample}/EnhancerList.txt", config=config['predictions_results_dir'] ,sample=SAMPLES)
-	shell: 
-		"""
-		bash {input.exe} {input.data} {params.chrom_sizes} {input.input_dir} {params.code_dir} {params.output_dir} {params.genes} {params.ubiquitous_genes} {params.qnorm}
-		"""
+        input:
+                exe = workflow.workdir_init+config['code']+"run.neighborhoods.py",
+                input_dir = config['output_data_dir'],
+                data = config['predictions_results_dir']+"/Peaks_{sample}/NA_peaks.narrowPeak.candidateRegions.bed" ,
+		bam_files = rule_getbam,
+		output_dir = config['predictions_results_dir']+"/Neighborhoods_{sample}"
+
+        params:
+                code_dir = workflow.workdir_init+config['code'],
+                genes = config['params_neighborhoods']['genes'],
+                ubiquitous_genes = config['params_neighborhoods']['ubiquitous_genes'],
+                chrom_sizes = config['params_candidate']['chrom_sizes'],
+                qnorm = config['params_neighborhoods']['qnorm']
+
+        output: config['predictions_results_dir']+"/Neighborhood_{sample}/EnhancerList.txt"
+        shell:
+                """
+                python {input.exe} --candidate_enhancer_regions {input.data} --DHS {input.bam_files}[0] --H3K27ac {input.bam_files}[1] --chrom_sizes {params.chrom_sizes} --outdir {input.output_dir} --genes {params.genes} --ubiquitously_expressed_genes {params.ubiquitous_genes} --qnorm {params.qnorm}
+                """
 
 rule predictions:
-	input:
-		exe = config['working_dir']+config['prefix']['workflow_scripts']+"run_predictions.sh",
-		data = config['working_dir']+config['params_preprocess']['lookup_table'],
-		input_dir = config['output_data_dir'],
-		input = expand("{config}/Neighborhood_{sample}/EnhancerList.txt", config=config['predictions_results_dir'] ,sample=SAMPLES)
-	
-	params:
-		code_dir = config['working_dir']+config['prefix']['code'],
-		hic_dir = config['hic_dir'],
-		hic_resolution = config['params_predict']['hic_resolution'],
-		scale_hic_using_powerlaw = config['params_predict']['scale_hic'],
-		threshold = config['params_predict']['threshold'], 
-		make_all_putative = config['params_predict']['all_putative'],
-		output_dir = config['predictions_results_dir']
-	
-	output: expand("{config}/Prediction_{sample}/EnhancerPredictionsAllPutative.txt.gz", config=config['predictions_results_dir'] ,sample=SAMPLES)
-	shell:
-		"""
-		bash {input.exe} {input.data} {params.output_dir} {params.code_dir} {params.hic_dir} {params.hic_resolution} {params.scale_hic_using_powerlaw} {params.threshold} {params.make_all_putative}
-		"""
+        input:
+                exe = workflow.workdir_init+config['workflow_scripts']+"predict.py",
+                data = config['predictions_results_dir']+"Neighborhood_{sample}/EnhancerList.txt",
+		output_dir = config['predictions_results_dir']+"/Predictions_{sample}",
+		cellType = "{sample}"
+        params:
+                code_dir = workflow.workdir_init+config['code'],
+                hic_dir = config['hic_dir'],
+                hic_resolution = config['params_predict']['hic_resolution'],
+                scale_hic_using_powerlaw = config['params_predict']['scale_hic'],
+                threshold = config['params_predict']['threshold'],
+                make_all_putative = config['params_predict']['all_putative']
+
+        output: config['predictions_results_dir']+"/Prediction_{sample}/EnhancerPredictionsAllPutative.txt.gz"
+        shell:
+                """
+                python {input.exe} --enhancers {input.data} --outdir {input.output_dir} --HiCdir {params.hic_dir} --hic_resolution {params.hic_resolution} --scale_hic_using_powerlaw {params.scale_hic_using_powerlaw} --threshold {params.threshold} --make_all_putative {params.make_all_putative} --cellType {input.cellType} 
+                """
