@@ -10,10 +10,7 @@ print(type(sample_lookup))
 print(sample_lookup)
 
 rule all:
-	input: expand("{config}/Prediction_{sample}/EnhancerPredictionsAllPutative.txt.gz", config=config['predictions_results_dir'], sample=list(sample_lookup.keys()))
-#	input: expand("{config}/Neighborhood_{sample}/EnhancerList.txt", config=config['predictions_results_dir'], sample=list(sample_lookup.keys())), expand("{config}/Prediction_{sample}/EnhancerPredictionsAllPutative.txt.gz", config=config['predictions_results_dir'], sample=list(sample_lookup.keys()))
-#	input: expand("{config}/Peaks_{sample}/NA_peaks.narrowPeak.sorted.candidateRegions.bed", config=config['predictions_results_dir'], sample=list(sample_lookup.keys())), expand("{config}/Neighborhood_{sample}/EnhancerList.txt", config=config['predictions_results_dir'], sample=list(sample_lookup.keys())), expand("{config}/Prediction_{sample}/EnhancerPredictionsAllPutative.txt.gz", config=config['predictions_results_dir'], sample=list(sample_lookup.keys()))
-#	input: expand("{config}/Peaks_{sample}/NA_peaks.narrowPeak", config=config['predictions_results_dir'] ,sample=list(sample_lookup.keys()))
+	input: expand("{config}/Peaks_{sample}/NA_peaks.narrowPeak.sorted.candidateRegions.bed", config=config['predictions_results_dir'], sample=list(sample_lookup.keys())), expand("{config}/Neighborhood_{sample}/GeneList.txt", config=config['predictions_results_dir'], sample=list(sample_lookup.keys())), expand("{config}/Neighborhood_{sample}/EnhancerList.txt", config=config['predictions_results_dir'], sample=list(sample_lookup.keys())), expand("{config}/Prediction_{sample}/EnhancerPredictionsAllPutative.txt.gz", config=config['predictions_results_dir'], sample=list(sample_lookup.keys()))
 
 def rule_input(wildcards):
 	""" Returns DNA bam file for specific sample """
