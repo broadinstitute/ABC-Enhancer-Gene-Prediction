@@ -1,31 +1,29 @@
 import yaml
 import os
 
-# config files [REMOVED - SPECIFY --configfile on command line instead]
-#config = yaml.load(open('../../envs/wd.yaml'))
-
 
 OUTPUT_FILES=[]
 
-# Add output files from downloading metadata 
-OUTPUT_FILES.extend(expand("{config}/bam_{genome_build}_{assay}.tsv", config=config['download_dir'], assay=config['params_download']['assays'], genome_build=config['params_download']['genome']))
-OUTPUT_FILES.extend(expand("{config}/unique_{endtype}_h3k27ac_dhs_files.tsv", config=config['download_dir'], endtype=config['params_download']['pairedness']))
+### List output files from rules from downloading metadata
+OUTPUT_FILES.extend(expand("{config}/bam_{genome_build}_{assay}.tsv", config=workflow.workdir_init+config['download_dir'], assay=config['params_download']['assays'], genome_build=config['params_download']['genome']))
+OUTPUT_FILES.extend(expand("{config}/unique_{endtype}_h3k27ac_dhs_files.tsv", config=workflow.workdir_init+config['download_dir'], endtype=config['params_download']['pairedness']))
 
-# Add output files from download paired-end, single-end metadata 
-
+### Overall rule that runs rule download_metadata and rule filter_metadata
 rule target:
 	input: OUTPUT_FILES
 
+### This rule downloads the metadata file off ENCODE for all samples that contain both DHS/ATAC bam files and H3K27ac bam files
+### Outputs metadata files in both hg19 and GRCh38
 rule download_metadata:
         input:
-                exe = config['working_dir']+config['prefix']['workflow_scripts']+"download_log.sh",
-		outdir = config['download_dir']
+                exe = workflow.workdir_init+config['workflow_scripts']+"download_log.sh",
+		outdir = workflow.workdir_init+config['download_dir']
 
         message: "Executing log bash files to download files"
         
 	params:	genome_build = config['params_download']['genome']
 
-	output:	files = expand("{config}/bam_{genome_build}_{assay}.tsv", config=config['download_dir'], assay=config['params_download']['assays'], genome_build=config['params_download']['genome'])		
+	output:	files = expand("{config}/bam_{genome_build}_{assay}.tsv", config=workflow.workdir_init+config['download_dir'], assay=config['params_download']['assays'], genome_build=config['params_download']['genome'])		
 	
 	shell: """
 		bash {input.exe}
@@ -34,18 +32,19 @@ rule download_metadata:
 		""" 
 
 
-# filter files 
+# This rule filters the above metadata file and filters it on specific criterion, grabbing only files that are required for the ABC pipeline and for duplicate filtering in the preprocessing step of this pipeline
+### Output input_data_lookup.json and other files that are necessary for the Snakefile in rule preprocessing as well as in the ABC Snakefile workflow. 
 rule filter_metadata:
         input:
-                exe = config['working_dir']+config['prefix']['workflow_scripts']+"grabDownload.py",
-                dir = config['download_dir'],
+                exe = workflow.workdir_init+config['workflow_scripts']+"grabDownload.py",
+                dir = workflow.workdir_init+config['download_dir'],
 		data_dir = config['output_data_dir'],
-		data = expand(config['download_dir']+"/bam_{genome_build}_{assays}.tsv", assays=config['params_download']['assays'], genome_build=config['params_download']['genome'])
+		data = expand(workflow.workdir_init+config['download_dir']+"/bam_{genome_build}_{assays}.tsv", assays=config['params_download']['assays'], genome_build=config['params_download']['genome'])
 
 	params: pool = config['pooling_param'],
                 threads = config['threads']
 
-	output: expand("{config}/unique_{endtype}_h3k27ac_dhs_files.tsv", config=config['download_dir'], endtype=config['params_download']['pairedness'])
+	output: expand("{config}/unique_{endtype}_h3k27ac_dhs_files.tsv", config=workflow.workdir_init+config['download_dir'], endtype=config['params_download']['pairedness'])
 
         shell: """
 		python {input.exe} --dhs {input.data[0]} --h3k27ac {input.data[1]} --atac {input.data[2]} --genome_assembly hg19 --download_files {params.pool} --threads {params.threads} --outdir {input.dir} --data_outdir {input.data_dir} 

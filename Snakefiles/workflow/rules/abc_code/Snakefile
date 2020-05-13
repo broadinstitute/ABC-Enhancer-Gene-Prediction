@@ -2,20 +2,28 @@ import yaml
 import json
 import os
 
+### TO NOTE: parameters used to run the ABC pipeline are set as default and are extracted from the config file. These rules also run on the specification of the current working directory. When running this snakemake file, do specify --directory [which should be the directory that contains the ABC-Enhancer-Gene-Prediction repo]
 
-# import json file 
+### importing json file
+### Input_data_lookup.json is generated from running Snakefile in download directory
+### It is a lookup table that matches DHS and H3K27ac bamfile to respective samples
 with open(workflow.workdir_init+config['download_dir']+"input_data_lookup.json", "r") as handle:
 	sample_lookup = json.load(handle)
 print(type(sample_lookup))
 print(sample_lookup)
 
+### Overall rule that runs the ABC pipeline from start to finish
 rule all:
 	input: expand("{config}/Peaks_{sample}/NA_peaks.narrowPeak.sorted.candidateRegions.bed", config=config['predictions_results_dir'], sample=list(sample_lookup.keys())), expand("{config}/Neighborhood_{sample}/GeneList.txt", config=config['predictions_results_dir'], sample=list(sample_lookup.keys())), expand("{config}/Neighborhood_{sample}/EnhancerList.txt", config=config['predictions_results_dir'], sample=list(sample_lookup.keys())), expand("{config}/Prediction_{sample}/EnhancerPredictionsAllPutative.txt.gz", config=config['predictions_results_dir'], sample=list(sample_lookup.keys()))
 
+### This function generates DHS bam files for each sample for input into rule call_macs_peaks and rule call_candidate_regions
 def rule_input(wildcards):
 	""" Returns DNA bam file for specific sample """
-	return config['output_data_dir']+sample_lookup[wildcards.sample]['1']
+	return config['output_data_dir']+sample_lookup[wildcards.sample]['File accession_Accessibility bam']
 
+### This rule runs macs callpeaks on DHS bam files for samples 
+### Takes in DHS bam file and outputs NA_peaks.narrowPeak
+### narrowPeak file also sorted for input into rule call_candidate_regions
 rule call_macs_peaks: 
 	input: 
 		data = rule_input,
@@ -33,7 +41,8 @@ rule call_macs_peaks:
 		bedtools sort -faidx {params.chrom_sizes} -i {output.file} > {output.file}.sorted
 		"""
 
-
+### This rule runs ABC Candidate Regions script for samples
+### Takes in NA_peaks.narrowPeak.sorted for each sample generated from macs2 callpeak from rule call_macs_peaks and generates NA_peaks.narrowPeak.sorted.candidateRegions.bed
 rule call_candidate_regions:
         input:
                 exe = workflow.workdir_init+config['code']+"makeCandidateRegions.py",
@@ -54,11 +63,15 @@ rule call_candidate_regions:
 		python {input.exe} --narrowPeak {input.data} --bam {input.bam_inputs} --outDir {input.output_dir} --chrom_sizes {params.chrom_sizes} --regions_blacklist {params.regions_blacklist} --regions_whitelist {params.genome_tss} --peakExtendFromSummit {params.peakExtendFromSummit} --nStrongestPeak {params.nStrongestPeak} --genome_tss {params.genome_tss}
 		"""
 
+### This function generates the bam files for DHS, H3K27ac
 def rule_getbam(wildcards):
         """ Returns DHS and H3K27ac bam file for specific sample """
-        files = [sample_lookup[wildcards.sample]['1'], sample_lookup[wildcards.sample]['2']]
+        files = [sample_lookup[wildcards.sample]['File accession_Accessibility bam'], sample_lookup[wildcards.sample]['File accession_H3K27ac bam']]
 	return_files = [config['output_data_dir']+str(file) for file in files]
 	return return_files
+
+### This rule runs ABC Neighborhoods script for samples 
+### Takes in NA_peaks.narrowPeak.sorted generated from rule call_candidate_regions and DHS Bam file and outputs EnhancerList.txt and GeneList.txt for input into rule predictions
 
 rule call_neighborhoods:
         input:
@@ -83,6 +96,8 @@ rule call_neighborhoods:
                 python {input.exe} --candidate_enhancer_regions {input.data} --DHS {input.bam_files[0]} --H3K27ac {input.bam_files[1]} --chrom_sizes {params.chrom_sizes} --outdir {params.output_dir} --genes {params.genes} --ubiquitously_expressed_genes {params.ubiquitous_genes} --qnorm {params.qnorm}
                 """
 
+### This rule runs ABC Predictions script for samples
+### Takes in EnhancerList.txt and GeneList.txt generated from rule call_neighborhoods above and generates Enhancer-Gene Predictions and links
 rule predictions:
         input:
                 exe = workflow.workdir_init+config['code']+"predict.py",
