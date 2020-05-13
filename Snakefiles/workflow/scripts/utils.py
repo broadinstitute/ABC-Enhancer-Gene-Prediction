@@ -54,6 +54,8 @@ def prepareLookup(args, metadata, title):
     celltypes = metadata['Biosample term name'].drop_duplicates()
     celltypes.to_csv(os.path.join(args.outdir, "cells.txt"), sep="\t", header=False, index=False)
     metadata[['Biosample term name', 'File accession_Accessibility bam', 'File accession_H3K27ac bam']].to_csv(os.path.join(args.outdir, str(title)+".tsv"), sep="\t", header=False, index=False)
+    new_data = metadata.rename(index={key:value for key, value in zip(metadata.index, metadata['Biosample term name'])})
+    new_data[['File accession_Accessibility bam', 'File accession_H3K27ac bam']].to_json(os.path.join(args.outdir, "input_data_lookup.json"), orient='index')
     return metadata
 
 def mapExperimentToLength(dhs):

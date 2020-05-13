@@ -345,10 +345,11 @@ def main():
     else:
         pbc_qc_se(dupmark_bam, args.mito_chr_name, args.out_dir)
 
-    log.info('samtools index (raw bam)...')
-    bam = copy_f_to_dir(args.bam, args.out_dir)
-    bai = samtools_index(bam, args.nth, args.out_dir)
-    temp_files.extend([bam, bai])
+    #log.info('samtools index (raw bam)...')
+    # trying to copy itself error
+    #bam = copy_f_to_dir(args.bam, args.out_dir)
+    #bai = samtools_index(args.bam, args.nth, args.out_dir)
+    #temp_files.extend([bam, bai])
 
     log.info('Removing temporary files...')
     rm_f(temp_files)
