@@ -11,7 +11,7 @@ Listed below is what each directory contains.
 ## Existing Directories
 1. envs : contains the software environment in conda + config yaml file for snakemake rules <br>
 	* working directories need to be configured for the current system <br>
-	* parameters can all be adjusted in the environment folders <br>	
+	* parameters can all be adjusted in the wd yaml file <br>	
 	* all the input/output files are very specific to where its located relative to the ABC-repo, so working directories 		need to be accurately specified 
 
 2. output : contains the output files from the rules from the metadata snakemake workflow, data input files for input into preprocessing rule + input data lookup into abc 
@@ -25,11 +25,12 @@ Listed below is what each directory contains.
 	2. preprocessing downloaded bam files (handles pairedend + singleend)
 	3. running abc
 
-* To run each snakefile workflow: simply cd into the directory and run the command ***snakemake***
+* To run each snakefile workflow: simply run command ```snakemake -s "$CODEDIR/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/rules/abc_code/Snakefile --configfile $CODEDIR/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/envs/wd.yaml --directory $CODEDIR/ &> logs/abc_code.out```
 	* download: download bamfiles 
 	* preprocessing: preprocesses bamfiles based on DHS/H3K27ac bamfiles 
 		* preprocessing includes removing duplicates from paired-end and single-end experiment files 
 		* merging biological and technical replicate bam files 
 	* abc_code : runs ABC on input_data_lookup.txt files and generates enhancer-gene predictions
+		* parameters to abc_code needs to be all specified in the envs/wd.yaml file, it's currently all using paths on the kundaje lab cluster! 
 	
 4. scripts: contains relevant additional scripts to allow rules to run. 
