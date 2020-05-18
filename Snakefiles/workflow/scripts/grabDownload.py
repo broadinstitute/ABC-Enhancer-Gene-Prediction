@@ -34,9 +34,6 @@ def main():
 
 def assignFiltersToDataFrame(args):
    
-    # TODO: Filters work on current hg19 file
-    # Add filters to deal with paired end, single end
-    # Paired end flag in metadata doesn't seem to be informative 
     # open dataframes 
     print("Opening DHS and H3K27ac Experiment Files...")
     dhs_data = pd.read_csv(args.dhs, sep="\t")
@@ -64,15 +61,14 @@ def assignFiltersToDataFrame(args):
         intersected = pd.concat([copy, intersected_df])
     # filter for filtered file + released files 
     # fill columns that are filled with NAN
-    df = intersected.fillna(0.0)
+    df = intersected.fillna(0.0).iloc[:15, :]
     
     # grab entries with biological replicates 
     # grab celltypes with biological replicates 
     full_metadata, metadata_unique = obtainDuplicated(args, df)
     # grab entries with no biological repliates 
     # filter for mapped read lengths of usually 32.0 or 36.0
-    print(len(full_metadata))
-    print(len(metadata_unique))
+    
     # metadata_unique contains the combined accession numbers for experiments with technical/biological replicates 
     # full metadata contains every technical and biological replicate as its own single entry
     # save relevant columns into input data lookup for input into ABC code
@@ -93,16 +89,16 @@ def downloadFiles(args, df):
     outfile=os.path.join(args.outdir, "linkstodownload.txt")
     download_links[['download_links']].to_csv( outfile, sep="\t", index=False, header=None)
     
-    if not os.path.exists(args.data_outdir):
-        os.mkdir(args.data_outdir)
+#    if not os.path.exists(args.data_outdir):
+#        os.mkdir(args.data_outdir)
     
-    #if args.apply_pool:
-    #    with Pool(int(args.threads)) as p:
-    #        p.map(download_single_bam, zip(list(download_links['download_links']), itertools.repeat(args.data_outdir)))
-    #
-    #else:
-    #    for link in list(download_links['download_links']):
-    #        download_single_bam(link)
+#    if args.apply_pool:
+#        with Pool(int(args.threads)) as p:
+#            p.map(download_single_bam, zip(list(download_links['download_links']), itertools.repeat(args.data_outdir)))
+#   
+#    else:
+#        for link in list(download_links['download_links']):
+#            download_single_bam(link)
     return outfile 
 
 def save_paired_single_end_files(args, metadata):

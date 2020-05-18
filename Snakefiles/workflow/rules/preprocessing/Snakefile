@@ -1,3 +1,4 @@
+
 import yaml 
 
 endtype=["pairedend", "singleend"]
@@ -6,21 +7,21 @@ ASSAYS=["DHS", "H3K27ac", "ATAC"]
 
 ### specify PAIREDEND SAMPLES 
 ### Input files are obtained using the download Snakefile
-with open(workflow.workdir_init+config['download_dir']+"unique_pairedend_h3k27ac_dhs_files.tsv", "r") as f:
+with open(config['output_data_dir']+"/input_files/unique_pairedend_h3k27ac_dhs_files.tsv", "r") as f:
         PAIREDEND_SAMPLES = [line for line in f.read().splitlines()]
 f.close()
 
 ### obtain Accession numbers that can be combined into a final bam file
 ### These could be biological/technical replicates for samples
-with open(workflow.workdir_init+config['download_dir']+"Experiments_ToCombine.txt", "r") as file_a:
+with open(config['output_data_dir']+"/input_files/Experiments_ToCombine.txt", "r") as file_a:
 	FILES = [line.split("\t")[1] for line in file_a.readlines()]
 file_a.close()
 FILES_OUTPUT = [file.split("    ")[0].split(".")[0] for file in FILES]
 
 
 FINAL_FILES=[]
-FINAL_FILES.extend(expand(config['output_data_dir']+"{pooled_samples}.nodup.bam", pooled_samples=PAIREDEND_SAMPLES))
-FINAL_FILES.extend(expand(config['output_data_dir']+"{samples}_pooled.nodup.bam", samples=FILES_OUTPUT))
+FINAL_FILES.extend(expand(config['output_data_dir']+"/data/{pooled_samples}.nodup.bam", pooled_samples=PAIREDEND_SAMPLES))
+FINAL_FILES.extend(expand(config['output_data_dir']+"/data/{samples}_pooled.nodup.bam", samples=FILES_OUTPUT))
 
 ### Overall rule that runs rule remove_pe_dup_filter_bam and rule merge_pe_duplicates
 rule all:
@@ -36,7 +37,7 @@ ruleorder : remove_pe_dup_filter_bam > merge_pe_duplicates
 rule remove_pe_dup_filter_bam: 
 	input:
                 exe = workflow.workdir_init+config['workflow_scripts']+"encode_task_filter.py",
-                data = config['output_data_dir']+"/{pooled_samples}.bam"
+                data = config['output_data_dir']+"/data/{pooled_samples}.bam"
         
 	params:
                 outdir = config['output_data_dir'],
@@ -44,10 +45,10 @@ rule remove_pe_dup_filter_bam:
 		pool = config['pooling_param'],
 		threads = config['threads']
         
-	output: config['output_data_dir']+"{pooled_samples}.nodup.bam"
+	output: config['output_data_dir']+"/data/{pooled_samples}.nodup.bam"
         
 	shell:  """
-                python {input.exe} --bam {input.data} {params.paired} --out-dir {params.outdir}
+                python {input.exe} --bam {input.data} {params.paired} --out-dir {params.outdir}/data/
                 """
 
 ### This rule merges paireend duplicates that have either biological/technical replicates for samples
@@ -56,15 +57,15 @@ rule remove_pe_dup_filter_bam:
 rule merge_pe_duplicates:
         input:
                 exe = workflow.workdir_init+config['workflow_scripts']+"merge_dup.sh",
-                datafile =  workflow.workdir_init+config['download_dir']+"Experiments_ToCombine.txt",
+                datafile =  config['output_data_dir']+"/input_files/Experiments_ToCombine.txt",
 		
                 indir = config['output_data_dir']
 
 	params:	threads = config['threads']
 
-        output: expand(config['output_data_dir']+"{samples}_pooled.nodup.bam", samples=FILES_OUTPUT)
+        output: expand(config['output_data_dir']+"/data/{samples}_pooled.nodup.bam", samples=FILES_OUTPUT)
         
 	shell:
                 """
-		bash {input.exe} {input.indir} {input.indir} {input.datafile} {params.threads}
+		bash {input.exe} {input.indir}/data/ {input.indir}/data/ {input.datafile} {params.threads}
                 """ 

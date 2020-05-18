@@ -43,19 +43,26 @@ def grabUnique(outdir, filenames):
     # find common entries
     findFilterFiles(outfile, outfile2)
 
-
+def rename_bam_for_pairedend(metadata, col, paired):
+    indicies = metadata['File accession_'+str(col)].loc[metadata['Run type_'+str(col)]==str(paired)].index.astype('int')
+    metadata['File accession_'+str(col)+" bam"] = metadata['File accession_'+str(col)]+".bam"
+    accessibility_col = metadata.columns.get_loc('File accession_'+str(col)+" bam")
+    metadata.iloc[indicies, accessibility_col] = metadata.iloc[indicies, accessibility_col].astype('str') + ".nodup.bam"
+    return metadata
+    
 # This function prepares the lookup tables for input into ABC
 # Where each DHS, H3K27ac bam file is appended to its corresponding celltype
 def prepareLookup(args, metadata, title):
-    metadata['File accession_Accessibility bam'] = metadata['File accession_Accessibility'].astype('str') + ".nodup.bam"
-    metadata['File accession_H3K27ac bam'] = metadata['File accession_H3K27ac'].astype('str') + ".nodup.bam"
+# for pairedend data accession files, change name to *.nodup.bam since duplicates need to be removed from these files
+    metadata_tmp = rename_bam_for_pairedend(metadata, 'Accessibility', "paired-ended") 
+    metadata = rename_bam_for_pairedend(metadata_tmp, 'H3K27ac', "paired-ended")
     # process biosample term name 
     metadata['Biosample term name'] = [str(i).replace(",", "").replace(" ", "_") for i in metadata['Biosample term name']]
     celltypes = metadata['Biosample term name'].drop_duplicates()
     celltypes.to_csv(os.path.join(args.outdir, "cells.txt"), sep="\t", header=False, index=False)
     metadata[['Biosample term name', 'File accession_Accessibility bam', 'File accession_H3K27ac bam']].to_csv(os.path.join(args.outdir, str(title)+".tsv"), sep="\t", header=False, index=False)
     new_data = metadata.rename(index={key:value for key, value in zip(metadata.index, metadata['Biosample term name'])})
-    new_data[['File accession_Accessibility bam', 'File accession_H3K27ac bam']].to_json(os.path.join(args.outdir, "input_data_lookup.json"), orient='index')
+    new_data[['File accession_Accessibility bam', 'File accession_H3K27ac bam']].to_json(os.path.join(args.outdir, str(title)+".json"), orient='index')
     return metadata
 
 def mapExperimentToLength(dhs):

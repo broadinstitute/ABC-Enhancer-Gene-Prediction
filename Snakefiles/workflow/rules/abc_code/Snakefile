@@ -7,19 +7,18 @@ import os
 ### importing json file
 ### Input_data_lookup.json is generated from running Snakefile in download directory
 ### It is a lookup table that matches DHS and H3K27ac bamfile to respective samples
-with open(workflow.workdir_init+config['download_dir']+"input_data_lookup.json", "r") as handle:
+with open(config['output_data_dir']+"/input_files/"+"/input_data_lookup.json", "r") as handle:
 	sample_lookup = json.load(handle)
-print(type(sample_lookup))
-print(sample_lookup)
 
 ### Overall rule that runs the ABC pipeline from start to finish
 rule all:
-	input: expand("{config}/Peaks_{sample}/NA_peaks.narrowPeak.sorted.candidateRegions.bed", config=config['predictions_results_dir'], sample=list(sample_lookup.keys())), expand("{config}/Neighborhood_{sample}/GeneList.txt", config=config['predictions_results_dir'], sample=list(sample_lookup.keys())), expand("{config}/Neighborhood_{sample}/EnhancerList.txt", config=config['predictions_results_dir'], sample=list(sample_lookup.keys())), expand("{config}/Prediction_{sample}/EnhancerPredictionsAllPutative.txt.gz", config=config['predictions_results_dir'], sample=list(sample_lookup.keys()))
+	input: expand(["{config}/Neighborhood_{sample}/GeneList.txt", "{config}/Neighborhood_{sample}/EnhancerList.txt", "{config}/Prediction_{sample}/EnhancerPredictionsAllPutative.txt.gz"], config=config['predictions_results_dir'], sample=list(sample_lookup.keys()))	
+#input: expand(["{config}/Peaks_{sample}/NA_peaks.narrowPeak.sorted.candidateRegions.bed", "{config}/Neighborhood_{sample}/GeneList.txt", "{config}/Neighborhood_{sample}/EnhancerList.txt", "{config}/Prediction_{sample}/EnhancerPredictionsAllPutative.txt.gz"], config=config['predictions_results_dir'], sample=list(sample_lookup.keys()))
 
 ### This function generates DHS bam files for each sample for input into rule call_macs_peaks and rule call_candidate_regions
 def rule_input(wildcards):
 	""" Returns DNA bam file for specific sample """
-	return config['output_data_dir']+sample_lookup[wildcards.sample]['File accession_Accessibility bam']
+	return config['output_data_dir']+"/data/"+sample_lookup[wildcards.sample]['File accession_Accessibility bam']
 
 ### This rule runs macs callpeaks on DHS bam files for samples 
 ### Takes in DHS bam file and outputs NA_peaks.narrowPeak
@@ -27,7 +26,7 @@ def rule_input(wildcards):
 rule call_macs_peaks: 
 	input: 
 		data = rule_input,
-		input_dir = config['output_data_dir'],
+		input_dir = config['output_data_dir']+"/data/",
 		output_dir = config['predictions_results_dir']+"/Peaks_{sample}"
 	params:
 		pval = config['params_macs']['pval'],
@@ -50,10 +49,9 @@ rule call_candidate_regions:
 		bam_inputs = rule_input,
 		output_dir = config['predictions_results_dir']+"/Peaks_{sample}"
 	params:
-		code_dir = workflow.workdir_init+config['code'],
-		chrom_sizes = workflow.workdir_init+config['params_candidate']['chrom_sizes'],
-		regions_blacklist = workflow.workdir_init+config['params_candidate']['regions_blacklist'],
-		genome_tss = workflow.workdir_init+config['params_candidate']['genome_tss'],
+		chrom_sizes = config['params_candidate']['chrom_sizes'],
+		regions_blacklist = config['params_candidate']['regions_blacklist'],
+		genome_tss = config['params_candidate']['genome_tss'],
                 peakExtendFromSummit = config['params_candidate']['peakExtendFromSummit'],
 		nStrongestPeak = config['params_candidate']['nStrongestPeaks'],
 		threads = 10
@@ -67,7 +65,7 @@ rule call_candidate_regions:
 def rule_getbam(wildcards):
         """ Returns DHS and H3K27ac bam file for specific sample """
         files = [sample_lookup[wildcards.sample]['File accession_Accessibility bam'], sample_lookup[wildcards.sample]['File accession_H3K27ac bam']]
-	return_files = [config['output_data_dir']+str(file) for file in files]
+	return_files = [config['output_data_dir']+"/data/"+str(file) for file in files]
 	return return_files
 
 ### This rule runs ABC Neighborhoods script for samples 
@@ -82,10 +80,10 @@ rule call_neighborhoods:
 
         params:
                 code_dir = workflow.workdir_init+config['code'],
-                genes = workflow.workdir_init+config['params_neighborhoods']['genes'],
-                ubiquitous_genes = workflow.workdir_init+config['params_neighborhoods']['ubiquitous_genes'],
-                chrom_sizes = workflow.workdir_init+config['params_candidate']['chrom_sizes'],
-                qnorm = workflow.workdir_init+config['params_neighborhoods']['qnorm'],
+                genes = config['params_neighborhoods']['genes'],
+                ubiquitous_genes = config['params_neighborhoods']['ubiquitous_genes'],
+                chrom_sizes = config['params_candidate']['chrom_sizes'],
+                qnorm = config['params_neighborhoods']['qnorm'],
 		output_dir = config['predictions_results_dir']+"/Neighborhood_{sample}"
         
 	output: config['predictions_results_dir']+"/Neighborhood_{sample}/EnhancerList.txt",

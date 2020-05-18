@@ -2,11 +2,15 @@ import yaml
 import os
 
 
+# make directories 
+if not os.path.exists(config['output_data_dir']+"/input_files/"):
+	os.makedirs(config['output_data_dir']+"/input_files/")
+
 OUTPUT_FILES=[]
 
 ### List output files from rules from downloading metadata
-OUTPUT_FILES.extend(expand("{config}/bam_{genome_build}_{assay}.tsv", config=workflow.workdir_init+config['download_dir'], assay=config['params_download']['assays'], genome_build=config['params_download']['genome']))
-OUTPUT_FILES.extend(expand("{config}/unique_{endtype}_h3k27ac_dhs_files.tsv", config=workflow.workdir_init+config['download_dir'], endtype=config['params_download']['pairedness']))
+OUTPUT_FILES.extend(expand("{config}/input_files/bam_{genome_build}_{assay}.tsv", config=config['output_data_dir'], assay=config['params_download']['assays'], genome_build=config['params_download']['genome']))
+OUTPUT_FILES.extend(expand("{config}/input_files/unique_{endtype}_h3k27ac_dhs_files.tsv", config=config['output_data_dir'], endtype=config['params_download']['pairedness']))
 
 ### Overall rule that runs rule download_metadata and rule filter_metadata
 rule target:
@@ -17,13 +21,13 @@ rule target:
 rule download_metadata:
         input:
                 exe = workflow.workdir_init+config['workflow_scripts']+"download_log.sh",
-		outdir = workflow.workdir_init+config['download_dir']
+		outdir = config['output_data_dir']+"/input_files/"
 
         message: "Executing log bash files to download files"
         
 	params:	genome_build = config['params_download']['genome']
 
-	output:	files = expand("{config}/bam_{genome_build}_{assay}.tsv", config=workflow.workdir_init+config['download_dir'], assay=config['params_download']['assays'], genome_build=config['params_download']['genome'])		
+	output:	files = expand("{config}/input_files/bam_{genome_build}_{assay}.tsv", config=config['output_data_dir'], assay=config['params_download']['assays'], genome_build=config['params_download']['genome'])		
 	
 	shell: """
 		bash {input.exe}
@@ -37,17 +41,16 @@ rule download_metadata:
 rule filter_metadata:
         input:
                 exe = workflow.workdir_init+config['workflow_scripts']+"grabDownload.py",
-                dir = workflow.workdir_init+config['download_dir'],
 		data_dir = config['output_data_dir'],
-		data = expand(workflow.workdir_init+config['download_dir']+"/bam_{genome_build}_{assays}.tsv", assays=config['params_download']['assays'], genome_build=config['params_download']['genome'])
+		data = expand(config['output_data_dir']+"/input_files/bam_{genome_build}_{assays}.tsv", assays=config['params_download']['assays'], genome_build=config['params_download']['genome'])
 
 	params: pool = config['pooling_param'],
                 threads = config['threads']
 
-	output: expand("{config}/unique_{endtype}_h3k27ac_dhs_files.tsv", config=workflow.workdir_init+config['download_dir'], endtype=config['params_download']['pairedness'])
+	output: expand("{config}/input_files/unique_{endtype}_h3k27ac_dhs_files.tsv", config=config['output_data_dir'], endtype=config['params_download']['pairedness'])
 
         shell: """
-		python {input.exe} --dhs {input.data[0]} --h3k27ac {input.data[1]} --atac {input.data[2]} --genome_assembly hg19 --download_files {params.pool} --threads {params.threads} --outdir {input.dir} --data_outdir {input.data_dir} 
-		cat {input.dir}/Experiments_ToCombine.txt.tmp | sed 's/[][]//g' | sed s/"'"//g | sed "s/,/   /g" > {input.dir}/Experiments_ToCombine.txt
+		python {input.exe} --dhs {input.data[0]} --h3k27ac {input.data[1]} --atac {input.data[2]} --genome_assembly hg19 --download_files {params.pool} --threads {params.threads} --outdir {input.data_dir}/input_files/ --data_outdir {input.data_dir}/data/
+		cat {input.data_dir}/input_files/Experiments_ToCombine.txt.tmp | sed 's/[][]//g' | sed s/"'"//g | sed "s/,/   /g" > {input.data_dir}/input_files/Experiments_ToCombine.txt
 		"""
 
