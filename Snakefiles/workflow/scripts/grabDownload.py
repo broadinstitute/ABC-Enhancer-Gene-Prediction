@@ -61,7 +61,7 @@ def assignFiltersToDataFrame(args):
         intersected = pd.concat([copy, intersected_df])
     # filter for filtered file + released files 
     # fill columns that are filled with NAN
-    df = intersected.fillna(0.0).iloc[:15, :]
+    df = intersected.fillna(0.0)
     
     # grab entries with biological replicates 
     # grab celltypes with biological replicates 
