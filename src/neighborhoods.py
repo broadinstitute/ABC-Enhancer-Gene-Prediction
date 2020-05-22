@@ -70,7 +70,7 @@ def load_genes(file,
 
     return genes, genes_for_class_assignment
 
-
+# FIX THIS portion for ENSEMBL Genes 
 def annotate_genes_with_features(genes, 
            genome_sizes,
            skip_gene_counts=False,

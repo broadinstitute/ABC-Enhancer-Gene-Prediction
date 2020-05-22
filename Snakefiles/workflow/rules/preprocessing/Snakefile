@@ -63,7 +63,7 @@ rule merge_pe_duplicates:
 
 	params:	threads = config['threads']
 
-        output: expand(config['output_data_dir']+"/data/{samples}_pooled.nodup.bam", samples=FILES_OUTPUT)
+        output: expand(config['output_data_dir']+"/data/{samples}_pooled.bam", samples=FILES_OUTPUT)
         
 	shell:
                 """

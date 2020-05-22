@@ -13,9 +13,9 @@ do
 	BASENAME="${a[1]%%.*}"
 	if [ ${#a[@]} -gt 3 ]
 	then
-		samtools merge $outdir/${BASENAME}_pooled.nodup.bam $indir/${a[1]} $indir/${a[2]} $indir/${a[3]} --threads $threads
+		samtools merge $outdir/${BASENAME}_pooled.bam $indir/${a[1]} $indir/${a[2]} $indir/${a[3]} --threads $threads
 	else
-		samtools merge $outdir/${BASENAME}_pooled.nodup.bam $indir/${a[1]} $indir/${a[2]} --threads $threads
+		samtools merge $outdir/${BASENAME}_pooled.bam $indir/${a[1]} $indir/${a[2]} --threads $threads
 	fi
 done < 	$input_file
 
