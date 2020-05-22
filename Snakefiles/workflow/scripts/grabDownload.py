@@ -91,7 +91,6 @@ def downloadFiles(args, df):
     
     if not os.path.exists(args.data_outdir):
         os.mkdir(args.data_outdir)
-   
     if args.apply_pool:
         with Pool(int(args.threads)) as p:
             p.map(download_single_bam, zip(list(download_links['download_links']), itertools.repeat(args.data_outdir)))
