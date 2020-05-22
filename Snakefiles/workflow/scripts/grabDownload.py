@@ -89,16 +89,16 @@ def downloadFiles(args, df):
     outfile=os.path.join(args.outdir, "linkstodownload.txt")
     download_links[['download_links']].to_csv( outfile, sep="\t", index=False, header=None)
     
-#    if not os.path.exists(args.data_outdir):
-#        os.mkdir(args.data_outdir)
-    
-#    if args.apply_pool:
-#        with Pool(int(args.threads)) as p:
-#            p.map(download_single_bam, zip(list(download_links['download_links']), itertools.repeat(args.data_outdir)))
-#   
-#    else:
-#        for link in list(download_links['download_links']):
-#            download_single_bam(link)
+    if not os.path.exists(args.data_outdir):
+        os.mkdir(args.data_outdir)
+   
+    if args.apply_pool:
+        with Pool(int(args.threads)) as p:
+            p.map(download_single_bam, zip(list(download_links['download_links']), itertools.repeat(args.data_outdir)))
+   
+    else:
+        for link in list(download_links['download_links']):
+            download_single_bam(link)
     return outfile 
 
 def save_paired_single_end_files(args, metadata):
