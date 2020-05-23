@@ -46,8 +46,8 @@ def grabUnique(outdir, filenames):
 def rename_bam_for_pairedend(metadata, col, paired):
     indicies = metadata['File accession_'+str(col)].loc[metadata['Run type_'+str(col)]==str(paired)].index.astype('int')
     metadata['File accession_'+str(col)+" bam"] = metadata['File accession_'+str(col)]
-    accessibility_col = metadata.columns.get_loc('File accession_'+str(col)+" bam")
-    metadata.iloc[indicies, accessibility_col] = metadata.iloc[indicies, accessibility_col].astype('str') + ".nodup"
+#    accessibility_col = metadata.columns.get_loc('File accession_'+str(col)+" bam")
+    metadata.loc[indicies, 'File accession_'+str(col)+" bam"] = metadata.loc[indicies, 'File accession_'+str(col)+" bam"].astype('str') + ".nodup"
     return metadata
     
 # This function prepares the lookup tables for input into ABC
@@ -67,14 +67,14 @@ def prepareLookup(args, metadata, title):
     new_data[['File accession_Accessibility bam', 'File accession_H3K27ac bam']].to_json(os.path.join(args.outdir, str(title)+".json"), orient='index')
     return metadata
 
-def mapExperimentToLength(dhs):
-    dhs_lookup = dhs[['Experiment accession', 'Read length', 'Run type']].dropna(subset=['Run type']).drop_duplicates()
+def mapExperimentToLength(dhs, dhs_fastq):
+    dhs_lookup = dhs_fastq[['Experiment accession', 'Run type']].drop_duplicates()
     dhs_bam = dhs.loc[(dhs['File format']=='bam') & (dhs['Output type']=='unfiltered alignments')]
-    for name, length, paired in zip(dhs_lookup['Experiment accession'], dhs_lookup['Read length'], dhs_lookup['Run type']):
-        matched = dhs_bam.loc[dhs_bam['Experiment accession']==name]
-        indices = matched.index.astype('int')
-        dhs_bam.loc[indices, 'Mapped read length'] = length
-        dhs_bam.loc[indices, 'Run type'] = paired
+    paired_type = []
+    for name in dhs_bam['Experiment accession']:
+        matched = dhs_lookup['Run type'].loc[dhs_lookup['Experiment accession']==name].values[0]
+        paired_type.append(matched)
+    dhs_bam['Run type'] = paired_type
     return dhs_bam
         
 

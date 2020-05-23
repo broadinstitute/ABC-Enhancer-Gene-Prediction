@@ -27,7 +27,7 @@ rule download_metadata:
         
 	params:	genome_build = config['params_download']['genome']
 
-	output:	files = expand("{config}/input_files/bam_{genome_build}_{assay}.tsv", config=config['output_data_dir'], assay=config['params_download']['assays'], genome_build=config['params_download']['genome'])		
+	output:	files = expand(["{config}/input_files/bam_{genome_build}_{assay}.tsv", "{config}/input_files/fastq_{genome_build}_{assay}.tsv"], config=config['output_data_dir'], assay=config['params_download']['assays'], genome_build=config['params_download']['genome'])		
 	
 	shell: """
 		bash {input.exe}
@@ -35,14 +35,15 @@ rule download_metadata:
 		mv *38* {input.outdir}
 		""" 
 
-
+FILES = expand(["{config}/input_files/bam_{genome_build}_{assay}.tsv", "{config}/input_files/fastq_{genome_build}_{assay}.tsv"], config = config['output_data_dir'], assay=config['params_download']['assays'], genome_build=config['params_download']['genome'])
+print(FILES)
 # This rule filters the above metadata file and filters it on specific criterion, grabbing only files that are required for the ABC pipeline and for duplicate filtering in the preprocessing step of this pipeline
 ### Output input_data_lookup.json and other files that are necessary for the Snakefile in rule preprocessing as well as in the ABC Snakefile workflow. 
 rule filter_metadata:
         input:
                 exe = workflow.workdir_init+config['workflow_scripts']+"grabDownload.py",
 		data_dir = config['output_data_dir'],
-		data = expand(config['output_data_dir']+"/input_files/bam_{genome_build}_{assays}.tsv", assays=config['params_download']['assays'], genome_build=config['params_download']['genome'])
+		data = expand(["{config}/input_files/bam_{genome_build}_{assay}.tsv", "{config}/input_files/fastq_{genome_build}_{assay}.tsv"], config=config['output_data_dir'],  assay=config['params_download']['assays'], genome_build=config['params_download']['genome'])
 
 	params: pool = config['pooling_param'],
                 threads = config['threads']
@@ -50,7 +51,7 @@ rule filter_metadata:
 	output: expand("{config}/input_files/unique_{endtype}_h3k27ac_dhs_files.tsv", config=config['output_data_dir'], endtype=config['params_download']['pairedness'])
 
         shell: """
-		python {input.exe} --dhs {input.data[0]} --h3k27ac {input.data[1]} --atac {input.data[2]} --genome_assembly hg19 --download_files {params.pool} --threads {params.threads} --outdir {input.data_dir}/input_files/ --data_outdir {input.data_dir}/data/
+		python {input.exe} --dhs {input.data[0]} --h3k27ac {input.data[2]} --atac {input.data[4]} --dhs_fastq {input.data[1]} --h3k27ac_fastq {input.data[3]} --atac_fastq {input.data[5]} --genome_assembly hg19 --download_files {params.pool} --threads {params.threads} --outdir {input.data_dir}/input_files/ --data_outdir {input.data_dir}/data/
 		cat {input.data_dir}/input_files/Experiments_ToCombine.txt.tmp | sed 's/[][]//g' | sed s/"'"//g | sed "s/,/   /g" > {input.data_dir}/input_files/Experiments_ToCombine.txt
 		"""
 
