@@ -1,4 +1,6 @@
 
+comparison/example/input/log.sh
+comparison/example/input/K562.ExperimentalData.txt
 
 src/makeQnormReference.py
 run.example.sh*
