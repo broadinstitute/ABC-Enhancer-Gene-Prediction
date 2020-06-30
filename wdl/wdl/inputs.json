@@ -1,0 +1,31 @@
+{
+    "ABCpipeline.dhs_bam": "<GSREPLACE>.bam",
+    "ABCpipeline.dhs_bam_index": "<GSREPLACE>.bam.bai",
+
+    "ABCpipeline.new_neighborhoods_py": "gs://landerlab-encode4-abc/neighborhoods.py",
+
+    "ABCpipeline.macs_type": "BAM",
+    "ABCpipeline.pval_cutoff": 0.1,
+    "ABCpipeline.nStrongestPeaks": 175000,
+    "ABCpipeline.peakExtendFromSummit": 250,
+    "ABCpipeline.regions_blacklist": "gs://landerlab-encode4-abc/reference/hg38/ENCFF356LFX_hg38_blacklist.bed",
+    "ABCpipeline.regions_whitelist": "gs://landerlab-encode4-abc/reference/hg38/RefSeqCurated.190910.ConsensusGeneBounds.TSS500bp.bed",
+    "ABCpipeline.genes_bed": "gs://landerlab-encode4-abc/reference/hg38/RefSeqCurated.190910.ConsensusGeneBounds.bed",
+
+    "ABCpipeline.ubiq_genes": "gs://landerlab-cromwell-testing/reference/UbiquitouslyExpressedGenesHG19.txt",
+    "ABCpipeline.cellType": "<CELLTYPEREPLACE>",
+    
+    
+    "ABCpipeline.hic_gamma": 0.87,
+    "ABCpipeline.hic_gamma_reference": 0.87,
+    
+    "ABCpipeline.window": 5000000,
+    "ABCpipeline.threshold": 0.02,
+    "ABCpipeline.chrom_sizes": "gs://landerlab-encode4-abc/reference/hg38/new_sizes",
+    "ABCpipeline.scale_hic_using_powerlaw": true,
+
+
+    "ABCpipeline.docker_image": "quay.io/jnasser/abc-container",
+    "ABCpipeline.num_threads": 1,
+    "ABCpipeline.mem_size": "1 GB"
+}
