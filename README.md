@@ -268,6 +268,6 @@ Quantile normalization can be applied using ```--qnorm src/EnhancersQNormRef.K56
 * In our testing the ABC model typically predicts on average ~3 distal enhancers per expressed gene. If you run the model on a cell type and find a large deviation from this number (say <2 or >5) this may mean the ABC model is not well calibrated in the cell type. Typical remedies are to use quantile normalization, scale Hi-C or to lower/raise the cutoff on the ABC score.
 
 ## Contact
-Please submit a github issue with any questions or if you experience any issues/bugs. Or you may contact Joseph Nasser at jnasser@broadinstitute.org directly.
+Please submit a github issue with any questions or if you experience any issues/bugs. 
 
 
