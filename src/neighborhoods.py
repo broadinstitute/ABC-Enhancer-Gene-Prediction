@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from scipy import interpolate
+import pysam
 import os
 import os.path
 from subprocess import check_call, check_output, PIPE, Popen, getoutput, CalledProcessError
@@ -309,69 +310,14 @@ def run_count_reads(target, output, bed_file, genome_sizes, use_fast_count):
 
 
 def count_bam(bamfile, bed_file, output, genome_sizes, use_fast_count=True, verbose=True):
-    completed = True
-        
-    #Fast count:
-    #bamtobed uses a lot of memory. Instead reorder bed file to match ordering of bam file. Assumed .bam file is sorted in the chromosome order defined by its header.
-    #Then use bedtools coverage, then sort back to expected order
-    #Requires an faidx file with chr in the same order as the bam file.
-
-    # import pdb
-    # #pdb.Pdb(stdout=sys.__stdout__).set_trace()
-    # pdb.set_trace()
-
-    if use_fast_count:
-        temp_output = output + ".temp_sort_order"
-        faidx_command = "awk 'FNR==NR {{x2[$1] = $0; next}} $1 in x2 {{print x2[$1]}}' {genome_sizes} <(samtools view -H {bamfile} | grep SQ | cut -f 2 | cut -c 4- )  > {temp_output}".format(**locals())
-        command = "bedtools sort -faidx {temp_output} -i {bed_file} | bedtools coverage -g {temp_output} -counts -sorted -a stdin -b {bamfile} | awk '{{print $1 \"\\t\" $2 \"\\t\" $3 \"\\t\" $NF}}'  | bedtools sort -faidx {genome_sizes} -i stdin > {output}; rm {temp_output}".format(**locals()) #
-
-        #executable='/bin/bash' needed to parse < redirect in faidx_command
-        p = Popen(faidx_command, stdout=PIPE, stderr=PIPE, shell=True, executable='/bin/bash')
-        if verbose: print("Running: " + faidx_command)
-        (stdoutdata, stderrdata) = p.communicate()
-        err = str(stderrdata, 'utf-8')
-
-        p = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
-        if verbose: print("Running: " + command)
-        (stdoutdata, stderrdata) = p.communicate()
-        err = str(stderrdata, 'utf-8')
-
-        try:
-            data = pd.read_table(output, header=None).loc[:,3].values
-        except Exception as e:
-            print("Fast count method failed to count: " + str(bamfile) + "\n")
-            print(err)
-            print("Trying bamtobed method ...\n")
-            completed = False
-
-    #Alternate counting method. Slower and requires more memory.
-    # convert BAM to BED, filter to standard chromosomes, sort, then use the very fast bedtools coverage -sorted algorithm
-    # Note: This requires that bed_file is also sorted and in same chromosome order as genome_sizes (first do bedtools sort -i bed_file -faidx genome_sizes)
-    #         BEDTools will error out if files are not properly sorted
-    # Also requires that {genome_sizes} has a corresponding {genome_sizes}.bed file
-    if not use_fast_count or ("terminated"  in err) or ("Error" in err) or ("ERROR" in err) or not completed:
-        command = "bedtools bamtobed -i {bamfile} | cut -f 1-3 | bedtools intersect -wa -a stdin -b {genome_sizes}.bed | bedtools sort -i stdin -faidx {genome_sizes} | bedtools coverage -g {genome_sizes} -counts -sorted -a {bed_file} -b stdin | awk '{{print $1 \"\\t\" $2 \"\\t\" $3 \"\\t\" $NF}}' > {output}".format(**locals())
-        p = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
-        if verbose: print("Running: " + command)
-        (stdoutdata, stderrdata) = p.communicate()
-
-        try:
-            data = pd.read_table(output, header=None).loc[:,3].values
-        except Exception as e:
-            print(e)
-            print(stderrdata)
-            completed = False
-
-    # Check for successful finish -- BEDTools can run into memory problems
-    #import pdb; pdb.set_trace()
-    err = str(stderrdata, 'utf-8')
-    if ("terminated" not in err) and ("Error" not in err) and ("ERROR" not in err) and any(data):
-        print("BEDTools completed successfully. \n")
-        completed = True
-    else:
-        print("BEDTools failed to count file: " + str(bamfile) + "\n")
-        print(err)
-        completed = False
+    reads = pysam.AlignmentFile(bamfile)
+    read_chrs = set(reads.references)
+    bed_regions = pd.read_table(bed_file, header=None)
+    bed_regions = bed_regions[bed_regions.columns[:3]]
+    bed_regions.columns = "chr start end".split()
+    counts = [(reads.count(row.chr, row.start, row.end) if (row.chr in read_chrs) else 0) for _, row in bed_regions.iterrows()]
+    bed_regions['count'] = counts
+    bed_regions.to_csv(output, header=None, index=None, sep="\t")
 
 def count_tagalign(tagalign, bed_file, output, genome_sizes):
     command1 = "tabix -B {tagalign} {bed_file} | cut -f1-3".format(**locals())
