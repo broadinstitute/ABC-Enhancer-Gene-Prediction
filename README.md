@@ -154,12 +154,25 @@ python src/predict.py \
 --enhancers example_chr22/ABC_output/Neighborhoods/EnhancerList.txt \
 --genes example_chr22/ABC_output/Neighborhoods/GeneList.txt \
 --HiCdir example_chr22/input_data/HiC/raw/ \
+--chrom_sizes example_chr22/reference/chr22 \
 --hic_resolution 5000 \
 --scale_hic_using_powerlaw \
 --threshold .02 \
 --cellType K562 \
 --outdir example_chr22/ABC_output/Predictions/ \
 --make_all_putative
+```
+### Step 4. Get Prediction Files for Variant Overlap 
+
+Perform filtering strategies to prepare prediction files for downstream variant overlap analysis 
+- this step is already being performed in src/predict.py
+
+Sample Command:
+```
+python getVariantOverlap.py \
+--all_putative EnhancerPredictionsAllPutative.txt.gz \
+--chrom_sizes example_chr22/reference/chr22 \
+--outdir . 			
 ```
 
 The main output files are:
