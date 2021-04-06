@@ -80,6 +80,13 @@ Running the ABC model consists of the following steps:
 
 See 'Defining Candidate Enhancers' section below for more details.
 
+# Activate macs environment
+Activate via: 
+
+```
+conda env create -f macs.yml 
+```
+
 Sample commands:
 
 ```
@@ -95,7 +102,12 @@ macs2 callpeak \
 #Sort narrowPeak file
 bedtools sort -faidx example_chr22/reference/chr22 -i example_chr22/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak > example_chr22/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.sorted
 
-#May need to change virtual environments here
+# Activate abc environment 
+Activate via:
+
+```
+conda env create -f abcenv.yml
+```
 
 python src/makeCandidateRegions.py \
 --narrowPeak example_chr22/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.sorted \
