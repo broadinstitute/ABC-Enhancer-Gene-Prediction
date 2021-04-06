@@ -169,7 +169,7 @@ Perform filtering strategies to prepare prediction files for downstream variant 
 
 Sample Command:
 ```
-python getVariantOverlap.py \
+python src/getVariantOverlap.py \
 --all_putative EnhancerPredictionsAllPutative.txt.gz \
 --chrom_sizes example_chr22/reference/chr22 \
 --outdir . 			
