@@ -43,6 +43,7 @@ pyranges (0.0.55)
 numpy (1.15.2)
 pandas (0.23.4)
 scipy (0.18.1)
+pysam (0.15.1)
 pyBigWig (0.3.2) - Partial dependancy
 ```
 
