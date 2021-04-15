@@ -84,12 +84,21 @@ def add_hic_to_enh_gene_table(enh, genes, pred, hic_file, hic_norm_file, hic_is_
         #Overlap in one direction
         enh_hic1 = df_to_pyranges(enh, start_col = 'enh_midpoint', end_col = 'enh_midpoint', end_slop = 1).join(hic1).df
         genes_hic2 = df_to_pyranges(genes, start_col = 'TargetGeneTSS', end_col = 'TargetGeneTSS', end_slop = 1).join(hic2).df
-        ovl12 = enh_hic1[['enh_idx','hic_idx','hic_contact']].merge(genes_hic2[['gene_idx', 'hic_idx']], on = 'hic_idx')
+
+        if ((len(enh_hic1)) > 0 and (len(genes_hic2) > 0)):
+            ovl12 = enh_hic1[['enh_idx','hic_idx','hic_contact']].merge(genes_hic2[['gene_idx', 'hic_idx']], on = 'hic_idx')
+        else:
+            ovl12 = pd.DataFrame()
 
         #Overlap in the other direction
         enh_hic2 = df_to_pyranges(enh, start_col = 'enh_midpoint', end_col = 'enh_midpoint', end_slop = 1).join(hic2).df
         genes_hic1 = df_to_pyranges(genes, start_col = 'TargetGeneTSS', end_col = 'TargetGeneTSS', end_slop = 1).join(hic1).df
         ovl21 = enh_hic2[['enh_idx','hic_idx','hic_contact']].merge(genes_hic1[['gene_idx', 'hic_idx']], on = ['hic_idx'])
+
+        if ((len(enh_hic2) > 0) and (len(genes_hic1) > 0)):
+            ovl21 = enh_hic2[['enh_idx','hic_idx','hic_contact']].merge(genes_hic1[['gene_idx', 'hic_idx']], on = ['hic_idx'])
+        else:
+            ovl21 = pd.DataFrame()
 
         #Concatenate both directions and merge into preditions
         ovl = pd.concat([ovl12, ovl21]).drop_duplicates()
