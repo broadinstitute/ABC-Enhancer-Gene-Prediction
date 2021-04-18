@@ -75,7 +75,7 @@ Running the ABC model consists of the following steps:
 
  1. Count DNase-seq reads in each peak and retain the top N peaks with the most read counts
  2. Resize each of these N peaks to be a fixed number of base pairs centered on the peak summit
- 3. Remove any blacklisted regions and include any whitelisted regions
+ 3. Remove any regions listed in the 'blocklist' and include any regions listed in the 'includelist'
  4. Merge any overlapping regions
 
 See 'Defining Candidate Enhancers' section below for more details.
@@ -116,8 +116,8 @@ python src/makeCandidateRegions.py \
 --bam example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam \
 --outDir example_chr22/ABC_output/Peaks/ \
 --chrom_sizes example_chr22/reference/chr22 \
---regions_blacklist reference/wgEncodeHg19ConsensusSignalArtifactRegions.bed \
---regions_whitelist example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS500bp.chr22.bed \
+--regions_blocklist reference/wgEncodeHg19ConsensusSignalArtifactRegions.bed \
+--regions_includelist example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS500bp.chr22.bed \
 --peakExtendFromSummit 250 \
 --nStrongestPeaks 3000 
 ```
@@ -206,7 +206,9 @@ The default threshold of 0.02 corresponds to approximately 70% recall and 60% pr
 
 Given that the ABC score uses absolute counts of Dnase-seq reads in each region, ```makeCandidateRegions.py ``` selects the strongest peaks as measured by absolute read counts (not by pvalue). In order to do this, we first call peaks using a lenient significance threshold (.1 in the above example) and then consider the peaks with the most read counts. This procedure implicitly assumes that the active karyotype of the cell type is constant.
 
-We recommend removing elements overlapping regions of the genome that have been observed to accumulate anomalous number of reads in epigenetic sequencing experiments (‘blacklisted regions’). For convenience, we provide the list of blackedlisted regions available from <https://sites.google.com/site/anshulkundaje/projects/blacklists>.
+We recommend removing elements overlapping regions of the genome that have been observed to accumulate anomalous number of reads in epigenetic sequencing experiments (‘block-listed regions’). For convenience, we provide the list of block-listed regions available from <https://sites.google.com/site/anshulkundaje/projects/blacklists>.
+
+We also force the candidate enhancer regions to include gene promoters, even if the promoter is not among the candidate elements with the strongest signals genome-wide in a cell type, by specifying `--region_includelist`. 
 
 ## Contact and Hi-C
 Given that cell-type specific Hi-C data is more difficult to generate than ATAC-seq or ChIP-seq, we have explored alternatives to using cell-type specific Hi-C data. It has been shown that Hi-C contact frequencies generally follow a powerlaw relationship (with respect to genomic distance) and that many TADs, loops and other structural features of the 3D genome are **not** cell-type specific (Sanborn et al 2015, Rao et al 2014). 
