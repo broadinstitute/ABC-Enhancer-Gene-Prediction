@@ -2,7 +2,8 @@
 # working directory where ABC repo is located 
 working_dir: "/oak/stanford/groups/engreitz/Users/sheth/"
 # directory to output DHS/H3k27ac bam files and other output metadata files
-# output_data_dir: "/oak/stanford/groups/engreitz/Users/kmualim/ENCODEData/bamfiles"
+output_data_dir: "/oak/stanford/groups/engreitz/Users/kmualim/ENCODEData/bamfiles"
+
 # directory to output ABC Predictions
 predictions_results_dir: "/oak/stanford/groups/engreitz/Users/sheth/2021_0606_ABC_newTSS"
 hic_dir: "/oak/stanford/groups/engreitz/Users/sheth/ReferenceFiles/average_hic"
@@ -18,6 +19,19 @@ use_altTSS: False
 # leave blank if not applicable 
 pooling_param: "--apply_pool"
 threads: 10
+
+params_download:
+        genome: "hg19"
+        assays:
+                - "DHS"
+                - "H3K27ac"
+                - "ATAC"
+        pairedness:
+                - "pairedend"
+                - "singleend"
+params_macs:
+        pval: 0.1
+        threads: 10
 
 params_macs:
         pval: 0.1
