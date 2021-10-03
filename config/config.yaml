@@ -5,7 +5,7 @@ working_dir: "/oak/stanford/groups/engreitz/Users/sheth/"
 output_data_dir: "/oak/stanford/groups/engreitz/Users/kmualim/ENCODEData/bamfiles"
 
 # directory to output ABC Predictions
-predictions_results_dir: "/oak/stanford/groups/engreitz/Users/sheth/2021_0606_ABC_newTSS"
+predictions_results_dir: "/oak/stanford/groups/engreitz/Users/sheth/2021_1003_mergedABCtest"
 hic_dir: "/oak/stanford/groups/engreitz/Users/sheth/ReferenceFiles/average_hic"
 envs_dir: "/oak/stanford/groups/engreitz/Users/sheth/ABC-Enhancer-Gene-Prediction/workflow/envs"
 code_dir: "/oak/stanford/groups/engreitz/Users/sheth/ABC-Enhancer-Gene-Prediction/workflow/scripts"
@@ -13,7 +13,7 @@ input_dir: "/oak/stanford/groups/engreitz/Projects/ABC/ABC_inputs"
 biosamplesTable: "/oak/stanford/groups/engreitz/Users/sheth/ABC-Enhancer-Gene-Prediction/config/config-biosamples.tsv"
 
 # if input data is provided, generate and use cell-type specific TSS annotations 
-use_altTSS: False
+use_altTSS: FALSE
 
 # parameters to determine whether to apply pooling + number of threads 
 # leave blank if not applicable 
@@ -40,9 +40,9 @@ params_macs:
 # These parameters are used to run the Run Candidate Regions portion of the abc code 
 params_candidate:
         DHS: False
-        chrom_sizes: "/oak/stanford/groups/engreitz/Users/sheth/ABC-Enhancer-Gene-Prediction/resources/chr_sizes"
+        chrom_sizes: "/oak/stanford/groups/engreitz/Users/sheth/hg38_resources/hg38.chrom.sizes"
         regions_blocklist: "/oak/stanford/groups/engreitz/Users/sheth/ABC-Enhancer-Gene-Prediction/resources/wgEncodeHg19ConsensusSignalArtifactRegions.bed"
-        genome_tss: "/oak/stanford/groups/engreitz/Users/sheth/ABC-Enhancer-Gene-Prediction/resources/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.bed"
+        genome_tss: "/oak/stanford/groups/engreitz/Users/sheth/hg38_resources/GENCODEv29/gencode.v29.transcripts.level12.basic.protein_coding.TSS500bp.bed"
         alt_tss_dir: "/oak/stanford/groups/engreitz/Users/kmualim/ENCODEData/genome_tss/refseq_data"
         peakExtendFromSummit: 250
         nStrongestPeaks: 150000
@@ -51,7 +51,7 @@ params_candidate:
 params_neighborhoods:
         ubiquitous_genes: "/oak/stanford/groups/engreitz/Users/sheth/ABC-Enhancer-Gene-Prediction/resources/UbiquitouslyExpressedGenesHG19.txt"
         qnorm: "/oak/stanford/groups/engreitz/Users/sheth/ABC-Enhancer-Gene-Prediction/workflow/scripts/EnhancersQNormRef.K562.txt"
-        genes: "/oak/stanford/groups/engreitz/Users/sheth/ABC-Enhancer-Gene-Prediction/resources/RefSeqCurated.170308.bed.CollapsedGeneBounds.bed"
+        genes: "/oak/stanford/groups/engreitz/Users/sheth/hg38_resources/GENCODEv29/gencode.v29.transcripts.level12.basic.protein_coding.bed"
 
 # These parameters are used to run the Predictions portion of the abc code
 params_predict:
