@@ -1,6 +1,8 @@
 # Changelog
 ## [Unreleased]
 - Include cell type tss selection as part of ABC / include it as an option
+- Include documentation for `--score_column powerlaw.Score` for predictions that do not use HiC
+- Look into how ABC Score is calculated for alt_tss and see if anything needs to be changed.
 
 ## [0.2.0] - 2021-10-10
 
