@@ -172,11 +172,25 @@ python src/predict.py \
 --make_all_putative
 ```
 
+### Step 4. Get Prediction Files for Variant Overlap 
+
+Perform filtering strategies to prepare prediction files for downstream variant overlap analysis 
+- this step is already being performed in src/predict.py but has a standalone script
+
+Sample Command:
+```
+python src/getVariantOverlap.py \
+--all_putative EnhancerPredictionsAllPutative.txt.gz \
+--chrom_sizes example_chr22/reference/chr22 \
+--outdir . 			
+```
+
 The main output files are:
 
 * **EnhancerPredictions.txt**: all element-gene pairs with scores above the provided threshold. Only includes expressed genes and does not include promoter elements. This file defines the set of 'positive' predictions of the ABC model.
 * **EnhancerPredictions.bedpe**: Same as above in .bedpe format. Can be loaded into IGV.
 * **EnhancerPredictionsAllPutative.txt.gz**: ABC scores for all element-gene pairs. Includes promoter elements and pairs with scores below the threshold. Only includes expressed genes. This file includes both the 'positive' and 'negative' predictions of the model. (use ```--make_all_putative``` to generate this file). 
+* **EnhancerPredictionsAllPutative.ForVariantOverlap.shrunk150bp.txt.gz**: Similar to EnhancerPredictionsAllPutative.txt.gz, but enhancer regions are shrunk to 250bp for downstream variant analysis. (can be generated using Step 4)
 * **EnhancerPredictionsAllPutativeNonExpressedGenes.txt.gz**: Same as above for non-expressed genes. This file is provided for completeness but we generally do not recommend using these predictions.
 
 * **EnhancerPredictionsFull.txt**: same as above but includes more columns. See <https://docs.google.com/spreadsheets/d/1UfoVXoCxUpMNPfGypvIum1-RvS07928grsieiaPX67I/edit?usp=sharing> for column definitions
