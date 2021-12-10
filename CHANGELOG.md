@@ -22,6 +22,7 @@ Many changes. Introduced multiple features to improve speed and functionality of
 - Introduced pyranges as a way to perform intersections to improve speed of calculating predictions
 - If multiple DHS, H3K27ac files are introduced, code will take the average counts of the multiple input files
 - To allow for multiple TSS, adjusted `--fail_on_nonunique==False` flag in `process_gene_bed` function in src/neighborhoods.py 
+- Updated `src/getGenomeTSS.py` code for speed up + annotations updated to use gencode v26 annotations as INPUT
 
 ## [0.1.0]
 ### Added
