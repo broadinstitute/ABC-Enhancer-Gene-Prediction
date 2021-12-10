@@ -13,16 +13,17 @@ Many changes. Introduced multiple features to improve speed and functionality of
 - both makeCandidateRegions.py and run.neighborhoods.py can now take in multiple DHS, H3K27ac files 
 - Added alternative TSS code to pick celltype specific TSS 
 - Introduced snakemake wrapper for downloading and processing input files from ENCODE and to fully run ABC code
-- Introduced `metrics.py` script to automatically calculate metrics from predictions file 
-- Introduced `src/getVariantOverlap.py` script to generate prediction file for downstream variant overlap analysis
+- Introduced `Snakefiles/workflow/scripts/metrics.py` script to automatically calculate metrics from predictions file 
+- Introduced `Snakefiles/workflow/scripts/getVariantOverlap.py` script to generate prediction file for downstream variant overlap analysis
 - Introduced .yml files for calling macs2 peaks and running ABC code
+- Added hg38 resource files and documentation for running altTSS
 
 ### Changed
-- Modified `make_predictions` function in src/predictor.py to improve speed of calculating predictions
+- Modified `make_predictions` function in Snakefiles/workflow/scripts/predictor.py to improve speed of calculating predictions
 - Introduced pyranges as a way to perform intersections to improve speed of calculating predictions
 - If multiple DHS, H3K27ac files are introduced, code will take the average counts of the multiple input files
-- To allow for multiple TSS, adjusted `--fail_on_nonunique==False` flag in `process_gene_bed` function in src/neighborhoods.py 
-- Updated `src/getGenomeTSS.py` code for speed up + annotations updated to use gencode v26 annotations as INPUT
+- To allow for multiple TSS, adjusted `--fail_on_nonunique==False` flag in `process_gene_bed` function in Snakefiles/workflow/scripts/neighborhoods.py 
+- Updated `Snakefiles/workflow/scripts/getGenomeTSS.py` code for speed up + annotations updated to use gencode v26 annotations as INPUT
 
 ## [0.1.0]
 ### Added

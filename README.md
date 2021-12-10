@@ -60,6 +60,19 @@ Running the ABC model consists of the following steps:
  2. Quantify enhancer activity
  3. Compute ABC Scores
 
+As part of the ABC model, we've also included ```Snakefiles/workflow/scripts/getGenomeTSS.py``` which helps select the top 2 promoters for each gene. This allows for selection of celltype-specific TSS.
+
+```
+python Snakefiles/workflow/scripts/getGenomeTSS.py --tss_file reference/hg38/gencode.v29.transcripts.level12.basic.protein_coding.alttssINPUT.bed --dhs example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam --h3k27ac example_chr22/input_data/Chromatin/ENCFF384ZZM.chr22.bam --chrom_sizes reference/chr_sizes --gene_outf K562_Gene.txt --genetss_outf K562_GeneTSS.txt --outDir altTSS_testDir --celltype K562 --default_accessibility "DHS"
+```
+
+### Snakemake Pipeline 
+The ABC model can be ran using the snakemake pipeline. We've also included a series of steps if each individual step needs to be run. 
+
+```
+Snakemake -s "$CODEDIR/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/rules/abc_code/Snakefile --configfile $CODEDIR/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/envs/wd.yaml --directory $CODEDIR/ &> logs/abc_code.out
+```
+
 ### Step 1. Define candidate elemets
 
 'Candidate elements' are the set of putative enhancer elements for which ABC Scores will be computed. A typical way to define candidate elements is by calling peaks on a DNase-Seq or ATAC-Seq bam file. In this implementation we first call peaks using MACS2 and then process these peaks using ```makeCandidateRegions.py```. 
