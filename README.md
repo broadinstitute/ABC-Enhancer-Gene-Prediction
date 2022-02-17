@@ -60,10 +60,11 @@ Running the ABC model consists of the following steps:
  2. Quantify enhancer activity
  3. Compute ABC Scores
 
+## Generating cell-type specific TSS annotations
 As part of the ABC model, we've also included ```Snakefiles/workflow/scripts/getGenomeTSS.py``` which helps select the top 2 promoters for each gene. This allows for selection of celltype-specific TSS.
 
 ```
-python Snakefiles/workflow/scripts/getGenomeTSS.py --tss_file reference/hg38/gencode.v29.transcripts.level12.basic.protein_coding.alttssINPUT.bed --dhs example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam --h3k27ac example_chr22/input_data/Chromatin/ENCFF384ZZM.chr22.bam --chrom_sizes reference/chr_sizes --gene_outf K562_Gene.txt --genetss_outf K562_GeneTSS.txt --outDir altTSS_testDir --celltype K562 --default_accessibility "DHS"
+python Snakefiles/workflow/scripts/getGenomeTSS.py --tss_file reference/hg38/gencode.v29.transcripts.level12.basic.protein_coding.alttssINPUT.bed --dhs example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam --h3k27ac example_chr22/input_data/Chromatin/ENCFF384ZZM.chr22.bam --chrom_sizes reference/chr_sizes --gene_outf K562_Gene.txt --genetss_outf K562_GeneTSS.txt --outDir example_chr22/alttss_annotations/ --celltype K562 --default_accessibility "DHS"
 ```
 
 ### Snakemake Pipeline 
@@ -89,6 +90,9 @@ See 'Defining Candidate Enhancers' section below for more details.
 Sample commands:
 
 ```
+conda create -n macs-py2.7 -f Snakefiles/workflow/envs/macs.yml 
+conda activate macs-py2.7
+
 macs2 callpeak \
 -t example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam \
 -n wgEncodeUwDnaseK562AlnRep1.chr22.macs2 \
@@ -102,6 +106,9 @@ macs2 callpeak \
 bedtools sort -faidx example_chr22/reference/chr22 -i example_chr22/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak > example_chr22/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.sorted
 
 #May need to change virtual environments
+
+conda create -n final-abc-env -f Snakefiles/workflow/envs/abcenv.yml
+conda activate final-abc-env
 
 python Snakefiles/workflow/scripts/makeCandidateRegions.py \
 --narrowPeak example_chr22/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.sorted \
@@ -135,6 +142,7 @@ Main output metric files:
 ```run.neighborhoods.py``` will count DNase-seq (or ATAC-seq) and H3K27ac ChIP-seq reads in candidate enhancer regions. It also makes GeneList.txt, which includes data about genes and their promoters.
 
 Replicate epigenetic experiments should be included as comma delimited list of files. Read counts in replicate experiments will be averaged when computing enhancer Activity.
+The `--qnorm` flag is highly suggested, quantile normalizing the DHS and H3K27ac count values will ensure that ABC scores remain comparable across all biosamples. We've found that using the `reference/EnhancersQNormRef.K562.txt` for quantile normalization is sufficient (i.e there is no need to generate a specific EnhancersQNormRef for the biosample you are running. This file works across hg19 and hg38 (this has been tested), and should work across other genome builds as well.)
 
 Sample Command:
 
@@ -148,6 +156,7 @@ python Snakefiles/workflow/scripts/run.neighborhoods.py \
 --chrom_sizes example_chr22/reference/chr22 \
 --ubiquitously_expressed_genes reference/UbiquitouslyExpressedGenesHG19.txt \
 --cellType K562 \
+--qnorm reference/EnhancersQNormRef.K562.txt \
 --outdir example_chr22/ABC_output/Neighborhoods/  
 ```
 
