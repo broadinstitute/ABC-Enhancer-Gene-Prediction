@@ -71,7 +71,7 @@ python Snakefiles/workflow/scripts/getGenomeTSS.py --tss_file reference/hg38/gen
 The ABC model can be ran using the snakemake pipeline. We've also included a series of steps if each individual step needs to be run. 
 
 ```
-Snakemake -s "$CODEDIR/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/rules/abc_code/Snakefile --configfile $CODEDIR/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/envs/wd.yaml --directory $CODEDIR/ &> logs/abc_code.out
+Snakemake -s $CODEDIR/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/rules/abc_code/Snakefile --configfile $CODEDIR/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/envs/wd.yaml --directory $CODEDIR/ &> logs/abc_code.out
 ```
 
 ### Step 1. Define candidate elemets
@@ -90,7 +90,7 @@ See 'Defining Candidate Enhancers' section below for more details.
 Sample commands:
 
 ```
-conda create -n macs-py2.7 -f Snakefiles/workflow/envs/macs.yml 
+conda env create -n macs-py2.7 -f Snakefiles/workflow/envs/macs.yml 
 conda activate macs-py2.7
 
 macs2 callpeak \
@@ -107,7 +107,7 @@ bedtools sort -faidx example_chr22/reference/chr22 -i example_chr22/ABC_output/P
 
 #May need to change virtual environments
 
-conda create -n final-abc-env -f Snakefiles/workflow/envs/abcenv.yml
+conda env create -n final-abc-env -f Snakefiles/workflow/envs/abcenv.yml
 conda activate final-abc-env
 
 python Snakefiles/workflow/scripts/makeCandidateRegions.py \
