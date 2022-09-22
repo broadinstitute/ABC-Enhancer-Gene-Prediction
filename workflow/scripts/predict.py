@@ -144,7 +144,7 @@ def main():
             all_putative.loc[all_putative.TargetGeneIsExpressed,:].to_hdf(all_pred_file_expressed, key='predictions', complevel=9, mode='w')
             all_putative.loc[~all_putative.TargetGeneIsExpressed,:].to_hdf(all_pred_file_nonexpressed, key='predictions', complevel=9, mode='w')
    
-    test_variant_overlap(args, all_putative)
+    test_variant_overlap(args, all_putative.loc[all_putative.TargetGeneIsExpressed,:])
 
     print("Done.")
     
