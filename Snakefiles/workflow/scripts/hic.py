@@ -5,9 +5,8 @@ import time, os
 
 def get_hic_file(chromosome, hic_dir, allow_vc=True, hic_type="juicebox"):
     if hic_type == "juicebox":
-        hic_file = os.path.join(hic_dir, chromosome, chromosome + ".KRobserved.gz")
-        hic_norm = os.path.join(hic_dir, chromosome, chromosome + ".KRnorm.gz")
-
+        hic_file = os.path.join(hic_dir, chromosome, chromosome + ".INTERSCALEobserved.gz")
+        hic_norm = os.path.join(hic_dir, chromosome, chromosome + ".INTERSCALEnorm.gz")
         is_vc = False
         if allow_vc and not hic_exists(hic_file):
             hic_file = os.path.join(hic_dir, chromosome, chromosome + ".VCobserved.gz")
@@ -23,7 +22,9 @@ def get_hic_file(chromosome, hic_dir, allow_vc=True, hic_type="juicebox"):
         return hic_file, hic_norm, is_vc
     elif hic_type == "bedpe":
         hic_file = os.path.join(hic_dir, chromosome, chromosome + ".bedpe.gz")
-
+        return hic_file, None, None
+    elif hic_type == "avg":
+        hic_file = os.path.join(hic_dir, chromosome, chromosome + ".bed.gz")
         return hic_file, None, None
 
 def hic_exists(file):
@@ -35,8 +36,9 @@ def hic_exists(file):
     else:
         return (os.path.getsize(file) > 0)
 
-def load_hic(hic_file, hic_norm_file, hic_is_vc, hic_type, hic_resolution, tss_hic_contribution, window, min_window, gamma, interpolate_nan=True, apply_diagonal_bin_correction=True):
+def load_hic(hic_file, hic_norm_file, hic_is_vc, hic_type, hic_resolution, tss_hic_contribution, window, min_window, gamma, scale=None, interpolate_nan=True, apply_diagonal_bin_correction=True):
     print("Loading HiC")
+
     if hic_type == 'juicebox':
         HiC_sparse_mat = hic_to_sparse(hic_file, hic_norm_file, hic_resolution)
         HiC = process_hic(hic_mat = HiC_sparse_mat, 
@@ -48,10 +50,15 @@ def load_hic(hic_file, hic_norm_file, hic_is_vc, hic_type, hic_resolution, tss_h
                             min_window = min_window, 
                             gamma = gamma,
                             interpolate_nan = interpolate_nan,
-                            apply_diagonal_bin_correction = apply_diagonal_bin_correction)
+                            apply_diagonal_bin_correction = apply_diagonal_bin_correction,
+                            scale = scale)
         #HiC = juicebox_to_bedpe(HiC, chromosome, args)
     elif hic_type == 'bedpe':
         HiC = pd.read_csv(hic_file, sep="\t", names = ['chr1','x1','x2','chr2','y1','y2','name','hic_contact'])
+    elif hic_type == 'avg':
+        HiC = pd.read_csv(hic_file, sep="\t", names = ['x1', 'x2', 'hic_contact'])
+        HiC['bin1'] = np.floor(HiC['x1'] / hic_resolution).astype(int)
+        HiC['bin2'] = np.floor(HiC['x2'] / hic_resolution).astype(int)
 
     return HiC
 
@@ -64,7 +71,7 @@ def load_hic(hic_file, hic_norm_file, hic_is_vc, hic_type, hic_resolution, tss_h
 
 #     return(hic)
 
-def process_hic(hic_mat, hic_norm_file, hic_is_vc, resolution, tss_hic_contribution, window, min_window=0, hic_is_doubly_stochastic=False, apply_diagonal_bin_correction=True, interpolate_nan=True, gamma=None, kr_cutoff = .25):
+def process_hic(hic_mat, hic_norm_file, hic_is_vc, resolution, tss_hic_contribution, window, min_window=0, hic_is_doubly_stochastic=False, apply_diagonal_bin_correction=True, interpolate_nan=True, gamma=None, kr_cutoff = .25, scale=None):
     #Make doubly stochastic.
     #Juicer produces a matrix with constant row/column sums. But sum is not 1 and is variable across chromosomes
     t = time.time()
@@ -76,7 +83,7 @@ def process_hic(hic_mat, hic_norm_file, hic_is_vc, resolution, tss_hic_contribut
         temp.data = np.nan_to_num(temp.data, copy=False)
         sums = temp.sum(axis = 0)
         sums = sums[~np.isnan(sums)]
-        assert(np.max(sums[sums > 0])/np.min(sums[sums > 0]) < 1.001)
+        #assert(np.max(sums[sums > 0])/np.min(sums[sums > 0]) < 1.001)
         mean_sum = np.mean(sums[sums > 0])
 
         if abs(mean_sum - 1) < .001:
@@ -118,13 +125,14 @@ def process_hic(hic_mat, hic_norm_file, hic_is_vc, resolution, tss_hic_contribut
     hic_df = hic_df.loc[np.logical_and(abs(hic_df['bin1'] - hic_df['bin2']) <= window/resolution, abs(hic_df['bin1'] - hic_df['bin2']) >= min_window/resolution)]
     print("HiC has {} rows after windowing between {} and {}".format(hic_df.shape[0], min_window, window))
 
+    hic_df['juicebox_contact_values'] = hic_df['hic_contact']
     #Fill NaN
     #NaN in the KR normalized matrix are not zeros. They are entries where the KR algorithm did not converge (or low KR norm)
     #So need to fill these. Use powerlaw. 
     #Not ideal obviously but the scipy interpolation algos are either very slow or don't work since the nan structure implies that not all nans are interpolated
     if interpolate_nan:
         nan_loc = np.isnan(hic_df['hic_contact'])
-        hic_df.loc[nan_loc,'hic_contact'] = get_powerlaw_at_distance(abs(hic_df.loc[nan_loc,'bin1'] - hic_df.loc[nan_loc,'bin2']) * resolution, gamma)
+        hic_df.loc[nan_loc,'hic_contact'] = get_powerlaw_at_distance(abs(hic_df.loc[nan_loc,'bin1'] - hic_df.loc[nan_loc,'bin2']) * resolution, gamma, min_distance=resolution, scale=scale)
 
     print('process.hic: Elapsed time: {}'.format(time.time() - t))
 
@@ -135,7 +143,6 @@ def apply_kr_threshold(hic_mat, hic_norm_file, kr_cutoff):
     #Convert all entries in the hic matrix corresponding to low kr norm entries to NaN
     #Note that in scipy sparse matrix multiplication 0*nan = 0
     #So this doesn't convert 0's to nan only nonzero to nan
-
     norms = np.loadtxt(hic_norm_file)
     norms[norms < kr_cutoff] = np.nan
     norms[norms >= kr_cutoff] = 1
@@ -178,6 +185,7 @@ def hic_to_sparse(filename, norm_file, resolution, hic_is_doubly_stochastic=Fals
         dat = np.hstack((dat, dat2))
 
     print('hic.to.sparse: Elapsed time: {}'.format(time.time() - t))
+
     return ssp.csr_matrix((dat, (row, col)), (hic_size, hic_size))
 
 def get_powerlaw_at_distance(distances, gamma, min_distance=5000, scale=None):
