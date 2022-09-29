@@ -24,7 +24,6 @@ def make_predictions(chromosome, enhancers, genes, args):
 def make_pred_table(chromosome, enh, genes, args):
     print('Making putative predictions table...')
     t = time.time()
- 
     enh['enh_midpoint'] = (enh['start'] + enh['end'])/2
     enh['enh_idx'] = enh.index
     genes['gene_idx'] = genes.index
@@ -63,7 +62,8 @@ def add_hic_to_enh_gene_table(enh, genes, pred, hic_file, hic_norm_file, hic_is_
                     tss_hic_contribution = args.tss_hic_contribution, 
                     window = args.window, 
                     min_window = 0, 
-                    gamma = args.hic_gamma)
+                    gamma = args.hic_gamma,
+                    scale = args.hic_scale)
 
     #Add hic to pred table
     #At this point we have a table where each row is an enhancer/gene pair. 
@@ -95,7 +95,7 @@ def add_hic_to_enh_gene_table(enh, genes, pred, hic_file, hic_norm_file, hic_is_
         ovl = pd.concat([ovl12, ovl21]).drop_duplicates()
         pred = pred.merge(ovl, on = ['enh_idx', 'gene_idx'], how = 'left')
         pred.fillna(value={'hic_contact' : 0}, inplace=True)
-    elif args.hic_type == "juicebox":
+    elif args.hic_type == "juicebox" or args.hic_type == "avg" :
         #Merge directly using indices
         #Could also do this by indexing into the sparse matrix (instead of merge) but this seems to be slower
         #Index into sparse matrix
@@ -123,7 +123,6 @@ def add_hic_to_enh_gene_table(enh, genes, pred, hic_file, hic_norm_file, hic_is_
     pred.drop(['x1','x2','y1','y2','bin1','bin2','enh_idx','gene_idx','hic_idx','enh_midpoint','tss_bin','enh_bin'], inplace=True, axis = 1, errors='ignore')
         
     print('HiC added to predictions table. Elapsed time: {}'.format(time.time() - t))
-
     # Add powerlaw scaling
     pred = scale_hic_with_powerlaw(pred, args)
 
@@ -139,6 +138,8 @@ def scale_hic_with_powerlaw(pred, args):
     #Scale hic values to reference powerlaw
 
     if not args.scale_hic_using_powerlaw:
+#        values = pred.loc[pred['hic_contact']==0].index.astype('int')
+#        pred.loc[values, 'hic_contact'] = pred.loc[values, 'powerlaw_contact']
         pred['hic_contact_pl_scaled'] = pred['hic_contact']
     else:
         pred['hic_contact_pl_scaled'] = pred['hic_contact'] * (pred['powerlaw_contact_reference'] / pred['powerlaw_contact'])
@@ -146,8 +147,8 @@ def scale_hic_with_powerlaw(pred, args):
     return(pred)
 
 def add_powerlaw_to_predictions(pred, args):
-    pred['powerlaw_contact'] = get_powerlaw_at_distance(pred['distance'].values, args.hic_gamma)
-    pred['powerlaw_contact_reference'] = get_powerlaw_at_distance(pred['distance'].values, args.hic_gamma_reference)
+    pred['powerlaw_contact'] = get_powerlaw_at_distance(pred['distance'].values, args.hic_gamma, args.hic_scale)
+    pred['powerlaw_contact_reference'] = get_powerlaw_at_distance(pred['distance'].values, args.hic_gamma_reference, args.hic_scale)
 
     return pred
 
@@ -178,7 +179,7 @@ def compute_score(enhancers, product_terms, prefix):
     scores = np.column_stack(product_terms).prod(axis = 1)
 
     enhancers[prefix + '.Score.Numerator'] = scores
-    enhancers[prefix + '.Score'] = enhancers[prefix + '.Score.Numerator'] / enhancers.groupby('TargetGene')[prefix + '.Score.Numerator'].transform('sum')
+    enhancers[prefix + '.Score'] = enhancers[prefix + '.Score.Numerator'] / enhancers.groupby(['TargetGene','TargetGeneTSS'])[prefix + '.Score.Numerator'].transform('sum')
 
     return(enhancers)
 
