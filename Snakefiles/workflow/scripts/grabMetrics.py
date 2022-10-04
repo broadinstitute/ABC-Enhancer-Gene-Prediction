@@ -8,10 +8,10 @@ import pickle
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--peaks_outdir", help="File containing peaks directory")
-    parser.add_argument("--macs_peaks", help="narrowPeak file output by macs2. Must include summits (--call-summits)")
-    parser.add_argument("--neighborhood_outdir", help="File containing neighborhood directory")
-    parser.add_argument("--preds_outdir", help="File containing predictions directory")
+    parser.add_argument("--peaks_outdir", help="Peaks Directory")
+    parser.add_argument("--macs_peaks", help="narrowPeak file output by macs2. (eg. /users/kmualim/K562/macs2_peaks.narrowPeak)")
+    parser.add_argument("--neighborhood_outdir", help="Neighborhood Directory")
+    parser.add_argument("--preds_outdir", help="Predictions Directory")
     args = parser.parse_args()
     return args 
     
