@@ -53,6 +53,7 @@ def get_model_argument_parser():
     parser.add_argument('--tss_slop', type=int, default=500, help="Distance from tss to search for self-promoters")
     parser.add_argument('--chromosomes', default="all", help="chromosomes to make predictions for. Defaults to intersection of all chromosomes in --genes and --enhancers")
     parser.add_argument('--include_chrY', '-y', action='store_true', help="Make predictions on Y chromosome")
+    parser.add_argument('--include_self_promoter', action='store_true', help="Include self-promoter elements as enhancers ")
 
     return parser
 
@@ -123,6 +124,11 @@ def main():
         all_positive = all_putative.iloc[np.logical_and.reduce((all_putative[args.score_column] > args.threshold, ~(all_putative['class'] == "promoter"))),:]
     else:
         all_positive = all_putative.iloc[np.logical_and.reduce((all_putative.TargetGeneIsExpressed, all_putative[args.score_column] > args.threshold, ~(all_putative['class'] == "promoter"))),:]
+
+    
+    if args.include_self_promoter:
+        self_promoter = all_putative.loc[all_putative['isSelfPromoter'],:]
+        all_positive = pd.concat([all_positive, self_promoter]).drop_duplicates()
 
     all_positive.to_csv(pred_file_full, sep="\t", index=False, header=True, float_format="%.6f")
     all_positive[slim_cols].to_csv(pred_file_slim, sep="\t", index=False, header=True, float_format="%.6f")
