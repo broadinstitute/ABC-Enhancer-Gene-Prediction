@@ -18,8 +18,8 @@ For each cell-type, the inputs to the ABC model are:
  	* bam file for Dnase-Seq or ATAC-Seq (indexed and sorted)
  	* bam file for H3K27ac ChIP-Seq (indexed and sorted)
  * Optional Inputs
- 	* Hi-C data (see the Hi-C section below)
- 	* A measure of gene expression (see gene expression section)
+ 	* Hi-C data (see the [Hi-C section](#contact-and-hi-c) below)
+ 	* A measure of gene expression (see [gene expression section](#gene-expression-in-abc))
 
 In addition the following (non-cell-type specific) genome annotation files are required
 
