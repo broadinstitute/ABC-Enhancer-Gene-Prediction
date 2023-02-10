@@ -19,9 +19,9 @@ def get_model_argument_parser():
     parser.add_argument('--enhancers', required=True, help="Candidate enhancer regions. Formatted as the EnhancerList.txt file produced by run.neighborhoods.py")
     parser.add_argument('--genes', required=True, help="Genes to make predictions for. Formatted as the GeneList.txt file produced by run.neighborhoods.py")
     parser.add_argument('--outdir', required=True, help="output directory")
-    parser.add_argument('--window', type=int, default=5000000, help="Make predictions for all candidate elements within this distance of the gene's TSS")
+    parser.add_argument('--window', type=int, default=5000000, help="Consider all candidate elements within this distance of the gene's TSS when computing ABC scores. This was a parameter optimized during development of ABC and should not typically be changed.")
     parser.add_argument('--score_column', default='ABC.Score', help="Column name of score to use for thresholding")
-    parser.add_argument('--threshold', type=float, required=True, default=.022, help="Threshold on ABC Score (--score_column) to call a predicted positive")
+    parser.add_argument('--threshold', type=float, required=True, default=.022, help="Threshold on ABC Score (--score_column) to call a predicted positive. Note that the threshold will need to be adjusted based on the combination of input datasets used.")
     parser.add_argument('--cellType', help="Name of cell type")
     parser.add_argument('--chrom_sizes', help="Chromosome sizes file")
 
@@ -29,25 +29,28 @@ def get_model_argument_parser():
     #To do: validate params
     parser.add_argument('--HiCdir', default=None, help="HiC directory")
     parser.add_argument('--hic_resolution', type=int, help="HiC resolution")
-    parser.add_argument('--tss_hic_contribution', type=float, default=100, help="Weighting of diagonal bin of hic matrix as a percentage of the maximum of its neighboring bins")
     parser.add_argument('--hic_pseudocount_distance', type=int, default=1e6, help="A pseudocount is added equal to the powerlaw fit at this distance")
     parser.add_argument('--hic_type', default = 'juicebox', choices=['juicebox','bedpe', 'avg'], help="format of hic files")
-    parser.add_argument('--hic_is_doubly_stochastic', action='store_true', help="If hic matrix is already DS, can skip this step")
+    parser.add_argument('--hic_is_doubly_stochastic', action='store_true', help="If hic matrix is already doubly stochastic, can skip this step")
 
     #Power law
-    parser.add_argument('--scale_hic_using_powerlaw', action="store_true", help="Scale Hi-C values using powerlaw relationship")
-    parser.add_argument('--hic_gamma', type=float, default=.87, help="powerlaw exponent of hic data. Must be positive")
-    parser.add_argument('--hic_scale', type=float, help="scale of hic data. Must be positive")
-    parser.add_argument('--hic_gamma_reference', type=float, default=.87, help="powerlaw exponent to scale to. Must be positive")
+    parser.add_argument('--scale_hic_using_powerlaw', action="store_true", help="Quantile normalize Hi-C values using powerlaw relationship. This parameter will rescale Hi-C contacts from the input Hi-C data (specified by --hic_gamma and --hic_scale) to match the power-law relationship of a reference cell type (specified by --hic_gamma_reference)")
+    parser.add_argument('--hic_gamma', type=float, default=.87, help="powerlaw exponent (gamma) of hic data. Must be positive")
+    parser.add_argument('--hic_scale', type=float, help="scale parameter for powerlaw of hic data. Must be positive")
+    parser.add_argument('--hic_gamma_reference', type=float, default=.87, help="Powerlaw exponent (gamma) to scale to. Must be positive")
 
     #Genes to run through model
-    parser.add_argument('--run_all_genes', action='store_true', help="Do not check for gene expression, make predictions for all genes")
-    parser.add_argument('--expression_cutoff', type=float, default=1, help="Make predictions for genes with expression higher than this value")
+    parser.add_argument('--run_all_genes', action='store_true', help="Do not check for gene expression, make predictions for all genes. Use of this parameter is not recommended.")
+    parser.add_argument('--expression_cutoff', type=float, default=1, help="Make predictions for genes with expression higher than this value. Use of this parameter is not recommended.")
     parser.add_argument('--promoter_activity_quantile_cutoff', type=float, default=.4, help="Quantile cutoff on promoter activity. Used to consider a gene 'expressed' in the absence of expression data")
 
     #Output formatting
     parser.add_argument('--make_all_putative', action="store_true", help="Make big file with concatenation of all genes file")
     parser.add_argument('--use_hdf5', action="store_true", help="Write AllPutative file in hdf5 format instead of tab-delimited")
+
+    #Parameters used in development of ABC model that should not be changed for most use cases
+    parser.add_argument('--window', type=int, default=5000000, help="Consider all candidate elements within this distance of the gene's TSS when computing ABC scores. This was a parameter optimized during development of ABC and should not typically be changed.")
+    parser.add_argument('--tss_hic_contribution', type=float, default=100, help="Diagonal bin of Hi-C matrix is set to this percentage of the maximum of its neighboring bins. Default value (100%) means that the diagonal bin of the Hi-C matrix will be set exactly to the maximum of its two neighboring bins. This is a parameter used in development of the ABC model that should not typically be changed, unless experimenting with using different types of input 3D contact data that require different handling of the diagonal bin.")
 
     #Other
     parser.add_argument('--tss_slop', type=int, default=500, help="Distance from tss to search for self-promoters")
