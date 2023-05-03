@@ -19,7 +19,6 @@ filename_enh = "/oak/stanford/groups/akundaje/kmualim/{}/{}/Predictions/Enhancer
 
 # Read in input prediction file
 subset = pd.read_csv(enhancerlist, sep="\t", usecols=['chr', 'start', 'end', 'name'])
-print(len(subset))
 ##### columns in input prediction file: chr	start	end	name	class	activity_base	TargetGene	TargetGeneTSS	TargetGeneExpression	TargetGenePromoterActivityQuantile	TargetGeneIsExpressed	distance	isSelfPromoter	powerlaw_contact	powerlaw_contact_reference	hic_contact	hic_contact_pl_scaled	hic_pseudocount	hic_contact_pl_scaled_adj	ABC.Score.Numerator	ABC.Score	powerlaw.Score.Numerator	powerlaw.Score	CellType
 #### subsetting data to just columns required
 #subset = data[['chr', 'start', 'end', 'name', 'class', 'activity_base', 'TargetGene', 'TargetGeneTSS', 'TargetGeneExpression', 'TargetGenePromoterActivityQuantile', 'TargetGeneIsExpressed', 'distance', 'hic_contact', 'powerlaw_contact', 'hic_contact_pl_scaled', 'ABC.Score.Numerator', 'ABC.Score', 'CellType']]
