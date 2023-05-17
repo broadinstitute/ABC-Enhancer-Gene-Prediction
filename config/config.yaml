@@ -3,13 +3,17 @@
 working_dir: "/oak/stanford/groups/engreitz/Users/sheth/"
 # directory to output DHS/H3k27ac bam files and other output metadata files
 # output_data_dir: "/oak/stanford/groups/engreitz/Users/kmualim/ENCODEData/bamfiles"
+
 # directory to output ABC Predictions
 predictions_results_dir: "/oak/stanford/groups/engreitz/Users/sheth/2021_0606_ABC_newTSS"
+# directory to average hic Predictions
 hic_dir: "/oak/stanford/groups/engreitz/Users/sheth/ReferenceFiles/average_hic"
+# directory with environments 
 envs_dir: "/oak/stanford/groups/engreitz/Users/sheth/ABC-Enhancer-Gene-Prediction/workflow/envs"
+# directory with code
 code_dir: "/oak/stanford/groups/engreitz/Users/sheth/ABC-Enhancer-Gene-Prediction/workflow/scripts"
 input_dir: "/oak/stanford/groups/engreitz/Projects/ABC/ABC_inputs"
-biosamplesTable: "/oak/stanford/groups/engreitz/Users/sheth/ABC-Enhancer-Gene-Prediction/config/config-biosamples.tsv"
+biosamplesTable: "/oak/stanford/groups/engreitz/Projects/ABC/ReferenceFiles/config-biosamples.tsv"
 
 # if input data is provided, generate and use cell-type specific TSS annotations 
 use_altTSS: False
@@ -26,18 +30,18 @@ params_macs:
 # These parameters are used to run the Run Candidate Regions portion of the abc code 
 params_candidate:
         DHS: False
-        chrom_sizes: "/oak/stanford/groups/engreitz/Users/sheth/ABC-Enhancer-Gene-Prediction/resources/chr_sizes"
-        regions_blocklist: "/oak/stanford/groups/engreitz/Users/sheth/ABC-Enhancer-Gene-Prediction/resources/wgEncodeHg19ConsensusSignalArtifactRegions.bed"
-        genome_tss: "/oak/stanford/groups/engreitz/Users/sheth/ABC-Enhancer-Gene-Prediction/resources/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.bed"
+        chrom_sizes: "/oak/stanford/groups/engreitz/Projects/ABC/ReferenceFiles/chr_sizes"
+        regions_blocklist: "/oak/stanford/groups/engreitz/Projects/ABC/ReferenceFiles/wgEncodeHg19ConsensusSignalArtifactRegions.bed"
+        genome_tss: "/oak/stanford/groups/engreitz/Projects/ABC/ReferenceFiles/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.bed"
         alt_tss_dir: "/oak/stanford/groups/engreitz/Users/kmualim/ENCODEData/genome_tss/refseq_data"
         peakExtendFromSummit: 250
         nStrongestPeaks: 150000
 
 # These parameters are used to run the Run Neighborhoods portion of the abc code
 params_neighborhoods:
-        ubiquitous_genes: "/oak/stanford/groups/engreitz/Users/sheth/ABC-Enhancer-Gene-Prediction/resources/UbiquitouslyExpressedGenesHG19.txt"
-        qnorm: "/oak/stanford/groups/engreitz/Users/sheth/ABC-Enhancer-Gene-Prediction/workflow/scripts/EnhancersQNormRef.K562.txt"
-        genes: "/oak/stanford/groups/engreitz/Users/sheth/ABC-Enhancer-Gene-Prediction/resources/RefSeqCurated.170308.bed.CollapsedGeneBounds.bed"
+        ubiquitous_genes: "/oak/stanford/groups/engreitz/Projects/ABC/ReferenceFiles/UbiquitouslyExpressedGenesHG19.txt"
+        qnorm: "/oak/stanford/groups/engreitz/Projects/ABC/ReferenceFiles/EnhancersQNormRef.K562.txt"
+        genes: "/oak/stanford/groups/engreitz/Projects/ABC/ReferenceFiles/RefSeqCurated.170308.bed.CollapsedGeneBounds.bed"
 
 # These parameters are used to run the Predictions portion of the abc code
 params_predict:
