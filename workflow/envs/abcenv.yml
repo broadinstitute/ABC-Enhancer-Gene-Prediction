@@ -55,7 +55,6 @@ dependencies:
   - python_abi=3.7=1_cp37m
   - pytz=2021.1=pyhd8ed1ab_0
   - readline=7.0=hf8c457e_1001
-  - samtools=1.7=1
   - scipy=1.6.2=py37h29e03ee_0
   - seaborn=0.11.0=py_0
   - setuptools=49.6.0=py37h89c1867_3
