@@ -86,8 +86,8 @@ def main():
     enhancers = enhancers_full.loc[:,['chr','start','end','name','class','activity_base','normalized_dhs' ]]
     enhancers['activity_base_squared'] = enhancers['activity_base']**2
     #Initialize Prediction files
-    pred_file_full = os.path.join(args.outdir, "EnhancerPredictionsFull.txt")
-    pred_file_slim = os.path.join(args.outdir, "EnhancerPredictions.txt")
+    pred_file_full = os.path.join(args.outdir, "EnhancerPredictionsFull.csv")
+    pred_file_slim = os.path.join(args.outdir, "EnhancerPredictions.csv")
     pred_file_bedpe = os.path.join(args.outdir, "EnhancerPredictions.bedpe")
     all_pred_file_expressed = os.path.join(args.outdir, "EnhancerPredictionsAllPutative.txt.gz")
     all_pred_file_nonexpressed = os.path.join(args.outdir, "EnhancerPredictionsAllPutativeNonExpressedGenes.txt.gz")

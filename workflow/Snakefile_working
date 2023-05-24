@@ -28,6 +28,8 @@ for x in all_biosamples:
 biosamples_config["TSS"] = TSS_files
 biosamples_config["genes"] = gene_files
 
+CONDA_ENV = config['envs_dir']+"/abcenv.yml"
+
 ## overall rule to run pipeline
 rule all:
 	input:
@@ -36,7 +38,7 @@ rule all:
 	    biosample=all_biosamples),
 		enhancerLists = expand(os.path.join(config['predictions_results_dir'], "{biosample}", "Neighborhoods", "EnhancerList.txt"),  biosample=all_biosamples),
 		allPutative = expand(os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.txt.gz"), biosample=all_biosamples),
-		enhPredictions = expand(os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions", "EnhancerPredictions.txt"), biosample=all_biosamples),
+		enhPredictions = expand(os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions", "EnhancerPredictions.csv"), biosample=all_biosamples),
 		allPred = os.path.join(config['predictions_results_dir'],"AllPredictions.txt.gz"),
 		altTSS = TSS_files,
 		metricsDirectory = directory(expand(os.path.join(config['predictions_results_dir'], "{biosample}", "Metrics"), biosample=all_biosamples))
@@ -50,6 +52,8 @@ rule call_macs_peaks:
 	params:
 		pval = config['params_macs']['pval'],
 		out_dir = config["predictions_results_dir"]
+	conda:
+		CONDA_ENV
 	output: 
 		narrowPeak = os.path.join(config['predictions_results_dir'], "{biosample}", "Peaks", "macs2_peaks.narrowPeak")
 	shell: 
@@ -63,6 +67,8 @@ rule sort_narrowpeaks:
 		narrowPeak = lambda wildcards: os.path.join(config['predictions_results_dir'], wildcards.biosample, "Peaks", "macs2_peaks.narrowPeak")
 	params:
 		chrom_sizes = config['params_candidate']['chrom_sizes']
+	conda:
+		CONDA_ENV
 	output:
 		narrowPeakSorted = os.path.join(config['predictions_results_dir'], "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted")
 	shell:
@@ -85,6 +91,8 @@ rule call_candidate_regions:
 		nStrongestPeak = config['params_candidate']['nStrongestPeaks'],
 		threads = 10,
 		output_dir = config['predictions_results_dir']
+	conda:
+		CONDA_ENV
 	output: 
 		candidateRegions = os.path.join(config['predictions_results_dir'], "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed")
 	shell: 
@@ -155,10 +163,12 @@ rule run_predictions:
 		threshold = config['params_predict']['threshold'],
 		make_all_putative = config['params_predict']['all_putative'],
 		self_promoter = config['params_predict']['self_promoter'],
+	conda:
+		CONDA_ENV
 	output: 
 		allPutative = os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.txt.gz"),
-		enhPredictions = os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions", "EnhancerPredictions.txt"),
-		enhPredictionsFull = os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions", "EnhancerPredictionsFull.txt"),
+		enhPredictions = os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions", "EnhancerPredictions.csv"),
+		enhPredictionsFull = os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions", "EnhancerPredictionsFull.csv"),
 	shell:
 		"""
 		python {params.code_dir}/predict.py \
@@ -178,9 +188,11 @@ rule run_predictions:
 ### generate AllPredictions file
 rule make_all_predictions:
 	input: 
-		predLists = expand(os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions", "EnhancerPredictions.txt"), biosample=all_biosamples)
+		predLists = expand(os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions", "EnhancerPredictions.csv"), biosample=all_biosamples)
 	params:
 		output_dir = config['predictions_results_dir']
+	conda:
+		CONDA_ENV
 	output:
 		allPred = os.path.join(config['predictions_results_dir'],"AllPredictions.txt.gz")
 	shell:
@@ -199,10 +211,12 @@ rule gen_qc_plots:
 	input: 
 		candidateRegions = os.path.join(config['predictions_results_dir'], "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed"),
 		neighborhoodDirectory = directory(os.path.join(config['predictions_results_dir'], "{biosample}", "Neighborhoods")),
-		enhPredictionsFull = os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions", "EnhancerPredictionsFull.txt")
+		enhPredictionsFull = os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions", "EnhancerPredictionsFull.csv")
 	params:
 		code_dir = config['code_dir'],
 		output_dir = os.path.join(config['predictions_results_dir'], "{biosample}", "Metrics")
+	conda:
+		CONDA_ENV
 	output:
 		metricsDirectory = directory(os.path.join(config['predictions_results_dir'], "{biosample}", "Metrics"))
 	shell:
