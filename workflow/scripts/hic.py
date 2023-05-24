@@ -5,15 +5,15 @@ import time, os
 
 def get_hic_file(chromosome, hic_dir, allow_vc=True, hic_type="juicebox"):
     if hic_type == "juicebox":
-        hic_file = os.path.join(hic_dir, chromosome, chromosome + ".INTERSCALEobserved.gz")
-        hic_norm = os.path.join(hic_dir, chromosome, chromosome + ".INTERSCALEnorm.gz")
+        hic_file = os.path.join(hic_dir, chromosome, chromosome + ".KRobserved.gz")
+        hic_norm = os.path.join(hic_dir, chromosome, chromosome + ".KRnorm.gz")
         is_vc = False
         if allow_vc and not hic_exists(hic_file):
             hic_file = os.path.join(hic_dir, chromosome, chromosome + ".VCobserved.gz")
             hic_norm = os.path.join(hic_dir, chromosome, chromosome + ".VCnorm.gz")
 
             if not hic_exists(hic_file):
-                RuntimeError("Could not find KR or VC normalized hic files")
+                raise RuntimeError("Could not find KR or VC normalized hic files")
             else:
                 print("Could not find KR normalized hic file. Using VC normalized hic file")
                 is_vc = True
