@@ -564,7 +564,8 @@ def run_qnorm(df, qnorm, qnorm_method = "rank", separate_promoters = True):
         nRegions = df.shape[0] 
         col_dict = {'DHS.RPM' : 'normalized_dhs', 'ATAC.RPM' : 'normalized_atac', 'H3K27ac.RPM' : 'normalized_h3K27ac'}
 
-        for col in set(df.columns & col_dict.keys()):
+        # & operator doesn't work in newer versions https://pastebin.com/8d2Ra9L1
+        for col in set(df.columns.intersection(col_dict.keys())): 
             #if there is no ATAC.RPM in the qnorm file, but there is ATAC.RPM in enhancers, then qnorm ATAC to DHS
             if col == 'ATAC.RPM' and 'ATAC.RPM' not in qnorm.columns:
                 qnorm['ATAC.RPM'] = qnorm['DHS.RPM']

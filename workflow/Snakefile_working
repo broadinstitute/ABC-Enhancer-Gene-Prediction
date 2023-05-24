@@ -38,7 +38,9 @@ rule all:
 		allPutative = expand(os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.txt.gz"), biosample=all_biosamples),
 		enhPredictions = expand(os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions", "EnhancerPredictions.txt"), biosample=all_biosamples),
 		allPred = os.path.join(config['predictions_results_dir'],"AllPredictions.txt.gz"),
-		altTSS = TSS_files
+		altTSS = TSS_files,
+		metricsDirectory = directory(expand(os.path.join(config['predictions_results_dir'], "{biosample}", "Metrics"), biosample=all_biosamples))
+
 	
 ## call macs2 -- if multiple accessibility inputs for one biosample, will aggregate into one output
 rule call_macs_peaks: 
@@ -47,11 +49,7 @@ rule call_macs_peaks:
 		accessibility = lambda wildcards: list(str.split(biosamples_config.loc[wildcards.biosample, biosamples_config.loc[wildcards.biosample, 'default_accessibility_feature']], ","))
 	params:
 		pval = config['params_macs']['pval'],
-		threads = config['params_macs']['threads'],
-		chrom_sizes = config['params_candidate']['chrom_sizes'],
 		out_dir = config["predictions_results_dir"]
-	conda: 
-		config['envs_dir']+"/macs.yml"
 	output: 
 		narrowPeak = os.path.join(config['predictions_results_dir'], "{biosample}", "Peaks", "macs2_peaks.narrowPeak")
 	shell: 
@@ -67,11 +65,9 @@ rule sort_narrowpeaks:
 		chrom_sizes = config['params_candidate']['chrom_sizes']
 	output:
 		narrowPeakSorted = os.path.join(config['predictions_results_dir'], "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted")
-	conda: 
-		config['envs_dir']+"/abcenv.yml"
 	shell:
 		"""
-		grep -v "_" {input.narrowPeak} | bedtools sort -faidx {params.chrom_sizes} -i stdin > {output.narrowPeakSorted}
+		grep -v -E "^\w+_.*" {input.narrowPeak} | bedtools sort -faidx {params.chrom_sizes} -i stdin > {output.narrowPeakSorted}
 		"""
 
 ## call candidate regions
@@ -89,8 +85,6 @@ rule call_candidate_regions:
 		nStrongestPeak = config['params_candidate']['nStrongestPeaks'],
 		threads = 10,
 		output_dir = config['predictions_results_dir']
-	conda: 
-		config['envs_dir']+"/abcenv.yml"
 	output: 
 		candidateRegions = os.path.join(config['predictions_results_dir'], "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed")
 	shell: 
@@ -121,12 +115,12 @@ rule call_neighborhoods:
 		ubiquitous_genes = config['params_neighborhoods']['ubiquitous_genes'],
 		chrom_sizes = config['params_candidate']['chrom_sizes'],
 		qnorm = config['params_neighborhoods']['qnorm'],
-		output_dir = os.path.join(config['predictions_results_dir'], "{biosample}", "Neighborhoods")
-	conda: 
-		config['envs_dir']+"/abcenv.yml"
+	conda:
+		CONDA_ENV
 	output: 
 		enhList = os.path.join(config['predictions_results_dir'], "{biosample}", "Neighborhoods", "EnhancerList.txt"),
-		geneList = os.path.join(config['predictions_results_dir'], "{biosample}", "Neighborhoods", "GeneList.txt")
+		geneList = os.path.join(config['predictions_results_dir'], "{biosample}", "Neighborhoods", "GeneList.txt"),
+		neighborhoodDirectory = directory(os.path.join(config['predictions_results_dir'], "{biosample}", "Neighborhoods"))
 	shell:
 		"""
 		# get sorted & unique gene list
@@ -138,7 +132,7 @@ rule call_neighborhoods:
 			--ATAC {params.ATAC} \
 			--default_accessibility_feature {params.default} \
 			--chrom_sizes {params.chrom_sizes} \
-			--outdir {params.output_dir} \
+			--outdir {output.neighborhoodDirectory} \
 			--genes {params.genes}.sorted.uniq \
 			--ubiquitously_expressed_genes {params.ubiquitous_genes} \
 			--qnorm {params.qnorm} \
@@ -155,21 +149,23 @@ rule run_predictions:
 		output_dir = os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions"),
 		code_dir = config['code_dir'], 
 		hic_dir = config['hic_dir'],
+		chrom_sizes = config['params_candidate']['chrom_sizes'],
 		hic_resolution = config['params_predict']['hic_resolution'],
 		scale_hic_using_powerlaw = config['params_predict']['scale_hic'],
 		threshold = config['params_predict']['threshold'],
 		make_all_putative = config['params_predict']['all_putative'],
 		self_promoter = config['params_predict']['self_promoter'],
-	conda: config['envs_dir']+"/abcenv.yml"
 	output: 
 		allPutative = os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.txt.gz"),
 		enhPredictions = os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions", "EnhancerPredictions.txt"),
+		enhPredictionsFull = os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions", "EnhancerPredictionsFull.txt"),
 	shell:
 		"""
 		python {params.code_dir}/predict.py \
 			--enhancers {input.enhancers} \
 			--outdir {params.output_dir} \
 			--HiCdir {params.hic_dir} \
+			--chrom_sizes {params.chrom_sizes} \
 			--hic_resolution {params.hic_resolution} \
 			--scale_hic_using_powerlaw {params.scale_hic_using_powerlaw} \
 			--threshold {params.threshold} \
@@ -187,7 +183,6 @@ rule make_all_predictions:
 		output_dir = config['predictions_results_dir']
 	output:
 		allPred = os.path.join(config['predictions_results_dir'],"AllPredictions.txt.gz")
-	conda: config['envs_dir']+"/abcenv.yml"
 	shell:
 		"""			
 		set +o pipefail;
@@ -198,4 +193,25 @@ rule make_all_predictions:
 			cat $sample | sed 1d >> {params.output_dir}/AllPredictions.txt
 		done
 		gzip {params.output_dir}/AllPredictions.txt
+		"""
+
+rule gen_qc_plots:
+	input: 
+		candidateRegions = os.path.join(config['predictions_results_dir'], "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed"),
+		neighborhoodDirectory = directory(os.path.join(config['predictions_results_dir'], "{biosample}", "Neighborhoods")),
+		enhPredictionsFull = os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions", "EnhancerPredictionsFull.txt")
+	params:
+		code_dir = config['code_dir'],
+		output_dir = os.path.join(config['predictions_results_dir'], "{biosample}", "Metrics")
+	output:
+		metricsDirectory = directory(os.path.join(config['predictions_results_dir'], "{biosample}", "Metrics"))
+	shell:
+		"""
+		mkdir -p {output.metricsDirectory}
+
+		python {params.code_dir}/grabMetrics.py \
+			--outdir {params.output_dir} \
+			--macs_peaks {input.candidateRegions} \
+			--neighborhood_outdir {input.neighborhoodDirectory} \
+			--preds_file {input.enhPredictionsFull}
 		"""
