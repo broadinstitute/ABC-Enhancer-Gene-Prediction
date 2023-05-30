@@ -3,7 +3,12 @@ import pandas as pd
 import seaborn as sns
 import glob
 import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats
 from subprocess import check_call, check_output, PIPE, Popen, getoutput, CalledProcessError
+
+GAMMA = .87
+SCALE = -4.80 + 11.63 * GAMMA
 
 def grabStatistics(arr_values):
     mean = arr_values.mean()
@@ -44,6 +49,9 @@ def GrabQCMetrics(prediction_df, outdir):
     PlotDistribution(enhancergeneperchrom, "EnhancersPerChromosome", outdir)
     PlotDistribution(distance, "EnhancerGeneDistance", outdir)
 
+    # Plot Distance-HiC Powerlaw
+    PlotPowerLawRelationship(prediction_df, "distance", "hic_contact", "Distance_HiC Powerlaw", outdir)
+
     pred_metrics={}
     pred_metrics['MedianEnhPerGene'] = GeneMedian
     pred_metrics['StdEnhPerGene'] = GeneStdev
@@ -79,6 +87,7 @@ def PlotQuantilePlot(EnhancerList, title, outdir):
     fig = ax.get_figure()
     outfile = os.path.join(outdir, i+str(title)+".pdf")
     fig.savefig(outfile, format='pdf')
+    plt.clf()
 
 def NeighborhoodFileQC(pred_metrics, neighborhood_dir, outdir, feature):
     x = glob.glob(os.path.join(neighborhood_dir, "Enhancers.{}.*CountReads.bedgraph".format(feature)))
@@ -137,3 +146,38 @@ def PlotDistribution(array, title, outdir):
     fig = ax.get_figure()
     outfile = os.path.join(outdir, str(title)+".pdf")
     fig.savefig(outfile, format='pdf')
+    plt.clf()
+
+def precomputed_powerlaw_fit(x_vals):
+    return SCALE + -1*GAMMA*x_vals
+
+def current_data_fit(x_vals, y_vals):
+    results = stats.linregress(x_vals, y_vals)
+    gamma = results.slope
+    scale = results.intercept
+    return scale + gamma*x_vals
+
+def PlotPowerLawRelationship(df, x_axis_col, y_axis_col, title, outdir):
+    # filter out zeros
+    df = df[df[x_axis_col] > 0]
+    df = df[df[y_axis_col] > 0]
+    max_samples = 10000
+    df = df[:min(max_samples, len(df))]
+
+    log_x_axis_label = f"log_{x_axis_col}"
+    log_y_axis_label = f"log_{y_axis_col}"
+    log_x_vals = np.log(df[x_axis_col])
+    log_y_vals = np.log(df[y_axis_col])
+    
+    values = np.vstack([log_x_vals, log_y_vals])
+    kernel = stats.gaussian_kde(values)(values) 
+    ax = sns.scatterplot(x=log_x_vals, y=log_y_vals, c=kernel, cmap="viridis")
+    sns.lineplot(x=log_x_vals, y=current_data_fit(log_x_vals, log_y_vals), color='red', label='Current Data Fit')
+    sns.lineplot(x=log_x_vals, y=precomputed_powerlaw_fit(log_x_vals), color='blue', label='Precomputed Powerlaw fit')
+    ax.set(title=title)
+    ax.set_xlabel(log_x_axis_label)
+    ax.set_ylabel(log_y_axis_label)
+    
+    outfile = os.path.join(outdir, str(title)+".pdf")
+    ax.get_figure().savefig(outfile, format='pdf')
+    plt.clf()
