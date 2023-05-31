@@ -1,19 +1,19 @@
 
 # working directory where ABC repo is located 
-working_dir: "/oak/stanford/groups/engreitz/Users/sheth/"
+working_dir: "/oak/stanford/groups/engreitz/Users/atan5133/"
 # directory to output DHS/H3k27ac bam files and other output metadata files
 # output_data_dir: "/oak/stanford/groups/engreitz/Users/kmualim/ENCODEData/bamfiles"
 
 # directory to output ABC Predictions
-predictions_results_dir: "/oak/stanford/groups/engreitz/Users/sheth/2021_0606_ABC_newTSS"
+predictions_results_dir: "/oak/stanford/groups/engreitz/Users/atan5133/2021_0606_ABC_newTSS"
 # directory to average hic Predictions
-hic_dir: "/oak/stanford/groups/engreitz/Users/sheth/ReferenceFiles/average_hic"
+hic_dir: "/oak/stanford/groups/engreitz/Users/atan5133/ABC-Enhancer-Gene-Prediction/example_chr22/input_data/HiC/raw/"
 # directory with environments 
-envs_dir: "/oak/stanford/groups/engreitz/Users/sheth/ABC-Enhancer-Gene-Prediction/workflow/envs"
+envs_dir: "/oak/stanford/groups/engreitz/Users/atan5133/ABC-Enhancer-Gene-Prediction/workflow/envs"
 # directory with code
-code_dir: "/oak/stanford/groups/engreitz/Users/sheth/ABC-Enhancer-Gene-Prediction/workflow/scripts"
+code_dir: "/oak/stanford/groups/engreitz/Users/atan5133/ABC-Enhancer-Gene-Prediction/workflow/scripts"
 input_dir: "/oak/stanford/groups/engreitz/Projects/ABC/ABC_inputs"
-biosamplesTable: "/oak/stanford/groups/engreitz/Projects/ABC/ReferenceFiles/config-biosamples.tsv"
+biosamplesTable: "/oak/stanford/groups/engreitz/Users/atan5133/ABC-Enhancer-Gene-Prediction/config/config-biosamples-chr22.tsv"
 
 # if input data is provided, generate and use cell-type specific TSS annotations 
 use_altTSS: False
@@ -30,7 +30,7 @@ params_macs:
 # These parameters are used to run the Run Candidate Regions portion of the abc code 
 params_candidate:
         DHS: False
-        chrom_sizes: "/oak/stanford/groups/engreitz/Projects/ABC/ReferenceFiles/chr_sizes"
+        chrom_sizes: "/oak/stanford/groups/engreitz/Users/atan5133/ABC-Enhancer-Gene-Prediction/example_chr22/reference/chr22"
         regions_blocklist: "/oak/stanford/groups/engreitz/Projects/ABC/ReferenceFiles/wgEncodeHg19ConsensusSignalArtifactRegions.bed"
         genome_tss: "/oak/stanford/groups/engreitz/Projects/ABC/ReferenceFiles/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.bed"
         alt_tss_dir: "/oak/stanford/groups/engreitz/Users/kmualim/ENCODEData/genome_tss/refseq_data"
@@ -41,7 +41,7 @@ params_candidate:
 params_neighborhoods:
         ubiquitous_genes: "/oak/stanford/groups/engreitz/Projects/ABC/ReferenceFiles/UbiquitouslyExpressedGenesHG19.txt"
         qnorm: "/oak/stanford/groups/engreitz/Projects/ABC/ReferenceFiles/EnhancersQNormRef.K562.txt"
-        genes: "/oak/stanford/groups/engreitz/Projects/ABC/ReferenceFiles/RefSeqCurated.170308.bed.CollapsedGeneBounds.bed"
+        genes: "/oak/stanford/groups/engreitz/Users/atan5133/ABC-Enhancer-Gene-Prediction/example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.bed"
 
 # These parameters are used to run the Predictions portion of the abc code
 params_predict:

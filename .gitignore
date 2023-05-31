@@ -1,5 +1,4 @@
-
-
+*.snakemake/
 src/makeQnormReference.py
 run.example.sh*
 
