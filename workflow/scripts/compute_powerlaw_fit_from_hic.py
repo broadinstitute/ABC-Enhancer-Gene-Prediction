@@ -42,9 +42,9 @@ def main():
 
     #print
     res = pandas.DataFrame({'resolution' : [args.resolution], 'maxWindow' : [args.maxWindow], 'minWindow' : [args.minWindow] ,'pl_gamma' : [slope], 'pl_scale' : [intercept] })
-    res.to_csv(os.path.join(args.outDir, 'hic.powerlaw.txt'), sep='\t', index=False, header=True)
+    res.to_csv(os.path.join(args.outDir, 'hic.powerlaw.csv'), sep='\t', index=False, header=True)
 
-    hic_mean_var.to_csv(os.path.join(args.outDir, 'hic.mean_var.txt'), sep='\t', index=True, header=True)
+    hic_mean_var.to_csv(os.path.join(args.outDir, 'hic.mean_var.csv'), sep='\t', index=True, header=True)
 
 def load_hic_for_powerlaw(args):
     if args.chr == 'all':

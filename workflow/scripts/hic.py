@@ -5,7 +5,6 @@ import time, os
 
 def get_hic_file(chromosome, hic_dir, allow_vc=True, hic_type="juicebox"):
     if hic_type == "juicebox":
-        is_vc = False
         filetypes = ["KR", "INTERSCALE"]
         for filetype in filetypes:
             hic_file = os.path.join(hic_dir, chromosome, chromosome + f".{filetype}observed.gz")

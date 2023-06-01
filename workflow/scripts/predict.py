@@ -35,10 +35,11 @@ def get_model_argument_parser():
     parser.add_argument('--hic_is_doubly_stochastic', action='store_true', help="If hic matrix is already DS, can skip this step")
 
     #Power law
+    parser.add_argument('--hic_powerlaw_fit', help="hic.powerlaw.csv file generated from compute_powerlaw_fit_from_hic.py")
     parser.add_argument('--scale_hic_using_powerlaw', action="store_true", help="Scale Hi-C values using powerlaw relationship")
-    parser.add_argument('--hic_gamma', type=float, default=.87, help="powerlaw exponent of hic data. Must be positive")
-    parser.add_argument('--hic_scale', type=float, help="scale of hic data. Must be positive")
-    parser.add_argument('--hic_gamma_reference', type=float, default=.87, help="powerlaw exponent to scale to. Must be positive")
+    parser.add_argument('--hic_gamma', type=float, default=.87, help="powerlaw exponent of hic data. Must be positive. Used if hic_powerlaw_fit not provided")
+    parser.add_argument('--hic_scale', type=float, help="scale of hic data. Must be positive. Used if hic_powerlaw_fit not provided")
+    parser.add_argument('--hic_gamma_reference', type=float, default=.87, help="powerlaw exponent to scale to. Must be positive. Used if hic_powerlaw_fit not provided")
 
     #Genes to run through model
     parser.add_argument('--run_all_genes', action='store_true', help="Do not check for gene expression, make predictions for all genes")
@@ -93,6 +94,15 @@ def main():
     all_pred_file_nonexpressed = os.path.join(args.outdir, "EnhancerPredictionsAllPutativeNonExpressedGenes.txt.gz")
     variant_overlap_file = os.path.join(args.outdir, "EnhancerPredictionsAllPutative.ForVariantOverlap.shrunk150bp.txt.gz")
     all_putative_list = []
+
+    # Set powerlaw vals
+    chr_to_powerlaw_vals = {}
+    if args.hic_powerlaw_fit:
+        powerlaw_fit = pd.read_csv(args.hic_powerlaw_fit, sep="\t")
+        gamma = -1 * powerlaw_fit["pl_gamma"][0]
+        scale = powerlaw_fit["pl_scale"][0]
+        args.hic_gamma = gamma
+        args.hic_scale = scale
 
     #Make predictions
     if args.chromosomes == "all":
@@ -157,7 +167,7 @@ def validate_args(args):
 
     if not args.HiCdir:
         print("WARNING: Hi-C directory not provided. Model will only compute ABC score using powerlaw!")
-
+    
 if __name__ == '__main__':
     main()
     

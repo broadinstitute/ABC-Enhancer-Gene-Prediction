@@ -49,4 +49,4 @@ params_predict:
         scale_hic: "--scale_hic_using_powerlaw"
         threshold: 0.02
         all_putative: "--make_all_putative"
-        self_promoter: "--include_self_promoter"
+        self_promoter: "--include_self_promoter"        

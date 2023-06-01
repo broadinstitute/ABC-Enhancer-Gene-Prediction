@@ -37,6 +37,7 @@ rule all:
 		candidateRegions = expand(os.path.join(config['predictions_results_dir'], "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed"),
 	    biosample=all_biosamples),
 		enhancerLists = expand(os.path.join(config['predictions_results_dir'], "{biosample}", "Neighborhoods", "EnhancerList.txt"),  biosample=all_biosamples),
+		powerlaw_csv = expand(os.path.join(config['predictions_results_dir'], "{biosample}", "Powerlaw", "hic.powerlaw.csv"), biosample=all_biosamples),
 		allPutative = expand(os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.txt.gz"), biosample=all_biosamples),
 		enhPredictions = expand(os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions", "EnhancerPredictions.csv"), biosample=all_biosamples),
 		allPred = os.path.join(config['predictions_results_dir'],"AllPredictions.txt.gz"),
@@ -52,8 +53,6 @@ rule call_macs_peaks:
 	params:
 		pval = config['params_macs']['pval'],
 		out_dir = config["predictions_results_dir"]
-	conda:
-		CONDA_ENV
 	output: 
 		narrowPeak = os.path.join(config['predictions_results_dir'], "{biosample}", "Peaks", "macs2_peaks.narrowPeak")
 	shell: 
@@ -67,8 +66,6 @@ rule sort_narrowpeaks:
 		narrowPeak = lambda wildcards: os.path.join(config['predictions_results_dir'], wildcards.biosample, "Peaks", "macs2_peaks.narrowPeak")
 	params:
 		chrom_sizes = config['params_candidate']['chrom_sizes']
-	conda:
-		CONDA_ENV
 	output:
 		narrowPeakSorted = os.path.join(config['predictions_results_dir'], "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted")
 	shell:
@@ -91,8 +88,6 @@ rule call_candidate_regions:
 		nStrongestPeak = config['params_candidate']['nStrongestPeaks'],
 		threads = 10,
 		output_dir = config['predictions_results_dir']
-	conda:
-		CONDA_ENV
 	output: 
 		candidateRegions = os.path.join(config['predictions_results_dir'], "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed")
 	shell: 
@@ -123,8 +118,6 @@ rule call_neighborhoods:
 		ubiquitous_genes = config['params_neighborhoods']['ubiquitous_genes'],
 		chrom_sizes = config['params_candidate']['chrom_sizes'],
 		qnorm = config['params_neighborhoods']['qnorm'],
-	conda:
-		CONDA_ENV
 	output: 
 		enhList = os.path.join(config['predictions_results_dir'], "{biosample}", "Neighborhoods", "EnhancerList.txt"),
 		geneList = os.path.join(config['predictions_results_dir'], "{biosample}", "Neighborhoods", "GeneList.txt"),
@@ -146,12 +139,30 @@ rule call_neighborhoods:
 			--qnorm {params.qnorm} \
 			--H3K27ac {params.H3K27ac}
 		"""
+
+rule fit_hic_to_powerlaw:
+	input:
+		hic_dir = config['hic_dir'],
+	params:
+		code_dir = config['code_dir'], 
+		output_dir = os.path.join(config['predictions_results_dir'], "{biosample}", "Powerlaw"),
+		hic_resolution = config['params_predict']['hic_resolution'],
+	output:
+		powerlaw_csv = os.path.join(config['predictions_results_dir'], "{biosample}", "Powerlaw", "hic.powerlaw.csv")
+	shell:
+		"""
+		python {params.code_dir}/compute_powerlaw_fit_from_hic.py \
+			--hicDir {input.hic_dir} \
+			--outDir {params.output_dir} \
+			--resolution {params.hic_resolution} \
+		"""
 		
 ### run predictions: takes in EnhancerList.txt and GeneList.txt generated from rule call_neighborhoods above and generates Enhancer-Gene Predictions and links
 rule run_predictions:
 	input:
 		enhancers = os.path.join(config['predictions_results_dir'], "{biosample}", "Neighborhoods", "EnhancerList.txt"),
-		genes = os.path.join(config['predictions_results_dir'], "{biosample}", "Neighborhoods", "GeneList.txt")
+		genes = os.path.join(config['predictions_results_dir'], "{biosample}", "Neighborhoods", "GeneList.txt"),
+		powerlaw_csv = os.path.join(config['predictions_results_dir'], "{biosample}", "Powerlaw", "hic.powerlaw.csv"),
 	params:
 		cellType = "{biosample}", 
 		output_dir = os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions"),
@@ -163,8 +174,6 @@ rule run_predictions:
 		threshold = config['params_predict']['threshold'],
 		make_all_putative = config['params_predict']['all_putative'],
 		self_promoter = config['params_predict']['self_promoter'],
-	conda:
-		CONDA_ENV
 	output: 
 		allPutative = os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.txt.gz"),
 		enhPredictions = os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions", "EnhancerPredictions.csv"),
@@ -175,6 +184,7 @@ rule run_predictions:
 			--enhancers {input.enhancers} \
 			--outdir {params.output_dir} \
 			--HiCdir {params.hic_dir} \
+			--hic_powerlaw_fit {input.powerlaw_csv} \
 			--chrom_sizes {params.chrom_sizes} \
 			--hic_resolution {params.hic_resolution} \
 			--scale_hic_using_powerlaw {params.scale_hic_using_powerlaw} \
@@ -191,8 +201,6 @@ rule make_all_predictions:
 		predLists = expand(os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions", "EnhancerPredictions.csv"), biosample=all_biosamples)
 	params:
 		output_dir = config['predictions_results_dir']
-	conda:
-		CONDA_ENV
 	output:
 		allPred = os.path.join(config['predictions_results_dir'],"AllPredictions.txt.gz")
 	shell:
@@ -211,12 +219,12 @@ rule gen_qc_plots:
 	input: 
 		candidateRegions = os.path.join(config['predictions_results_dir'], "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed"),
 		neighborhoodDirectory = directory(os.path.join(config['predictions_results_dir'], "{biosample}", "Neighborhoods")),
-		enhPredictionsFull = os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions", "EnhancerPredictionsFull.csv")
+		enhPredictionsFull = os.path.join(config['predictions_results_dir'], "{biosample}", "Predictions", "EnhancerPredictionsFull.csv"),
+		hic_dir = config['hic_dir'],
+		powerlaw_csv = os.path.join(config['predictions_results_dir'], "{biosample}", "Powerlaw", "hic.powerlaw.csv"),
 	params:
 		code_dir = config['code_dir'],
 		output_dir = os.path.join(config['predictions_results_dir'], "{biosample}", "Metrics")
-	conda:
-		CONDA_ENV
 	output:
 		metricsDirectory = directory(os.path.join(config['predictions_results_dir'], "{biosample}", "Metrics"))
 	shell:
@@ -227,5 +235,7 @@ rule gen_qc_plots:
 			--outdir {params.output_dir} \
 			--macs_peaks {input.candidateRegions} \
 			--neighborhood_outdir {input.neighborhoodDirectory} \
-			--preds_file {input.enhPredictionsFull}
+			--preds_file {input.enhPredictionsFull} \
+			--hicDir {input.hic_dir} \
+			--hic_powerlaw_fit {input.powerlaw_csv}
 		"""
