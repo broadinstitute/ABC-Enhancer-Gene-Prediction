@@ -5,21 +5,24 @@ import time, os
 
 def get_hic_file(chromosome, hic_dir, allow_vc=True, hic_type="juicebox"):
     if hic_type == "juicebox":
-        hic_file = os.path.join(hic_dir, chromosome, chromosome + ".KRobserved.gz")
-        hic_norm = os.path.join(hic_dir, chromosome, chromosome + ".KRnorm.gz")
         is_vc = False
-        if allow_vc and not hic_exists(hic_file):
+        filetypes = ["KR", "INTERSCALE"]
+        for filetype in filetypes:
+            hic_file = os.path.join(hic_dir, chromosome, chromosome + f".{filetype}observed.gz")
+            hic_norm = os.path.join(hic_dir, chromosome, chromosome + f".{filetype}norm.gz")
+            if hic_exists(hic_file):
+                print("Using: " + hic_file)
+                return hic_file, hic_norm, False
+            
+        if allow_vc:
             hic_file = os.path.join(hic_dir, chromosome, chromosome + ".VCobserved.gz")
             hic_norm = os.path.join(hic_dir, chromosome, chromosome + ".VCnorm.gz")
+            if hic_exists(hic_file):
+                print(f"Could not find KR normalized hic file. Using VC normalized hic file: {hic_file}")
+                return hic_file, hic_norm, True
 
-            if not hic_exists(hic_file):
-                raise RuntimeError("Could not find KR or VC normalized hic files")
-            else:
-                print("Could not find KR normalized hic file. Using VC normalized hic file")
-                is_vc = True
-
-        print("Using: " + hic_file)
-        return hic_file, hic_norm, is_vc
+        raise RuntimeError("Could not find KR or VC normalized hic files")
+    
     elif hic_type == "bedpe":
         hic_file = os.path.join(hic_dir, chromosome, chromosome + ".bedpe.gz")
         return hic_file, None, None
