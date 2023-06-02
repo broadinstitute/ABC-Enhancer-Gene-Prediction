@@ -1,6 +1,7 @@
 *.snakemake/
-src/makeQnormReference.py
-run.example.sh*
+*makeQnormReference.py
+output/*
+!output/.gitkeep 
 
 example_chr22/ABC_output/Predictions_bedpe/*
 
