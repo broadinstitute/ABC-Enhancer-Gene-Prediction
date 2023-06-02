@@ -21,7 +21,7 @@ def get_hic_file(chromosome, hic_dir, allow_vc=True, hic_type="juicebox"):
                 print(f"Could not find KR normalized hic file. Using VC normalized hic file: {hic_file}")
                 return hic_file, hic_norm, True
 
-        raise RuntimeError("Could not find KR or VC normalized hic files")
+        raise RuntimeError(f"Could not find {', '.join(filetypes)} or VC normalized hic files")
     
     elif hic_type == "bedpe":
         hic_file = os.path.join(hic_dir, chromosome, chromosome + ".bedpe.gz")
