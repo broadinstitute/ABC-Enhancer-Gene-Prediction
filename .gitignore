@@ -1,6 +1,5 @@
 *.snakemake/
-results/*
-!results/.gitkeep 
+results/
 
 example_chr22/ABC_output/Predictions_bedpe/*
 
