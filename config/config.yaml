@@ -3,8 +3,6 @@
 ### INPUT DATA
 # Add your inputs here
 biosamplesTable: "config/config-biosamples-chr22.tsv"  # replace your own config/config-biosamples.tsv
-hic_dir: "/oak/stanford/groups/engreitz/Projects/ABC/HiC/K562"
-hic_type: "juicebox"
 
 ### OUTPUT DATA
 predictions_results_dir: "results/"
@@ -17,20 +15,22 @@ params_macs:
 # These parameters are used to run the Run Candidate Regions portion of the abc code 
 params_candidate:
         DHS: False
-        chrom_sizes: "reference/chr_sizes"
-        regions_blocklist: "reference/wgEncodeHg19ConsensusSignalArtifactRegions.bed"
-        genome_tss: "reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.bed"
+        chrom_sizes: "reference/hg19/chr_sizes"
+        regions_blocklist: "reference/hg19/wgEncodeHg19ConsensusSignalArtifactRegions.bed"
+        genome_tss: "reference/hg19/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.bed"
         peakExtendFromSummit: 250
         nStrongestPeaks: 150000
 
 # These parameters are used to run the Run Neighborhoods portion of the abc code
 params_neighborhoods:
-        ubiquitous_genes: "reference/UbiquitouslyExpressedGenesHG19.txt"
+        ubiquitous_genes: "reference/hg19/UbiquitouslyExpressedGenesHG19.txt"
         qnorm: "reference/EnhancersQNormRef.K562.txt"
-        genes: "reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.bed"
+        genes: "reference/hg19/RefSeqCurated.170308.bed.CollapsedGeneBounds.bed"
 
 # These parameters are used to run the Predictions portion of the abc code
 params_predict:
         hic_resolution: 5000
         flags: "--scale_hic_using_powerlaw --make_all_putative --include_self_promoter"
         threshold: 0.02
+        hic_gamma: 5.522049023040861
+        hic_scale: 1.0044322152129264

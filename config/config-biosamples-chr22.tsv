@@ -1,2 +1,2 @@
-biosample	DHS	ATAC	H3K27ac	default_accessibility_feature	TSS	genes
-K562	example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam		example_chr22/input_data/Chromatin/ENCFF384ZZM.chr22.bam	DHS	example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS500bp.chr22.bed	example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.bed
+biosample	DHS	ATAC	H3K27ac	default_accessibility_feature	HiC_dir	HiC_type	TSS	genes
+K562	example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam		example_chr22/input_data/Chromatin/ENCFF384ZZM.chr22.bam	DHS	example_chr22/input_data/HiC/raw	juicebox	example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS500bp.chr22.bed	example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.bed

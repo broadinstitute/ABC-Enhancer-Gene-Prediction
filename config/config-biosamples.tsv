@@ -1,2 +1,2 @@
-biosample	DHS	ATAC	H3K27ac	default_accessibility_feature	TSS	genes
-K562	/oak/stanford/groups/engreitz/Projects/Benchmarking/Predictors/K562_ABC/ENCFF860XAE.sorted.se.bam		/oak/stanford/groups/engreitz/Projects/Benchmarking/Predictors/K562_ABC/ENCFF790GFL.sorted.se.bam	DHS
+biosample	DHS	ATAC	H3K27ac	default_accessibility_feature	HiC_dir	HiC_type	TSS	genes
+K562	/oak/stanford/groups/engreitz/Projects/Benchmarking/Predictors/K562_ABC/ENCFF860XAE.sorted.se.bam		/oak/stanford/groups/engreitz/Projects/Benchmarking/Predictors/K562_ABC/ENCFF790GFL.sorted.se.bam	DHS		
