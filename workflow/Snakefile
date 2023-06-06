@@ -24,13 +24,16 @@ for x in all_biosamples:
 		gene_file = biosamples_config.loc[x, 'genes']
 	TSS_files.append(tss_file)
 	gene_files.append(gene_file)
-		
-		
-# print(gene_files)
+				
 biosamples_config["TSS"] = TSS_files
 biosamples_config["genes"] = gene_files
 
+
 RESULTS_DIR = config['predictions_results_dir']
+
+def get_accessibility_file(wildcards):
+	default_accessibility_feature = biosamples_config.loc[wildcards.biosample, 'default_accessibility_feature']
+	return biosamples_config.loc[wildcards.biosample, default_accessibility_feature]
 
 ## overall rule to run pipeline
 rule all:
@@ -49,7 +52,7 @@ rule all:
 ## call macs2 -- if multiple accessibility inputs for one biosample, will aggregate into one output
 rule call_macs_peaks: 
 	input:
-		accessibility = lambda wildcards: list(str.split(biosamples_config.loc[wildcards.biosample, biosamples_config.loc[wildcards.biosample, 'default_accessibility_feature']], ","))
+		accessibility = get_accessibility_file
 	params:
 		pval = config['params_macs']['pval'],
 		out_dir = config["predictions_results_dir"]
@@ -65,7 +68,7 @@ rule call_macs_peaks:
 ## sort narrowPeaks
 rule sort_narrowpeaks:
 	input:
-		narrowPeak = lambda wildcards: os.path.join(RESULTS_DIR, wildcards.biosample, "Peaks", "macs2_peaks.narrowPeak")
+		narrowPeak = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak")
 	params:
 		chrom_sizes = config['params_candidate']['chrom_sizes']
 	conda:
@@ -80,10 +83,9 @@ rule sort_narrowpeaks:
 ## call candidate regions
 rule call_candidate_regions:
 	input:
-		narrowPeak = lambda wildcards: os.path.join(RESULTS_DIR, wildcards.biosample, "Peaks", "macs2_peaks.narrowPeak.sorted"),
+		narrowPeak = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted"),
 	params:
-		#DHS = lambda wildcards: biosamples_config.loc[wildcards.biosample, 'DHS'],
-		accessibility = lambda wildcards: biosamples_config.loc[wildcards.biosample, biosamples_config.loc[wildcards.biosample, 'default_accessibility_feature']],
+		accessibility = get_accessibility_file,
 		TSS = lambda wildcards: biosamples_config.loc[wildcards.biosample, 'TSS'],
 		chrom_sizes = config['params_candidate']['chrom_sizes'],
 		regions_blocklist = config['params_candidate']['regions_blocklist'],
@@ -111,9 +113,8 @@ rule call_candidate_regions:
 ## call neighborhoods
 rule call_neighborhoods:
 	input:		
-		candidateRegions = lambda wildcards: os.path.join(RESULTS_DIR, wildcards.biosample, "Peaks", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed"),
+		candidateRegions = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed"),
 	params:
-		#DHS = lambda wildcards: biosamples_config.loc[wildcards.biosample, 'DHS'],
 		DHS = lambda wildcards: biosamples_config.loc[wildcards.biosample, 'DHS'] if not biosamples_config.loc[wildcards.biosample, 'DHS']=='None' else '',
 		ATAC = lambda wildcards: biosamples_config.loc[wildcards.biosample, 'ATAC'] if not biosamples_config.loc[wildcards.biosample, 'ATAC']=='None' else '',
 		default = lambda wildcards: biosamples_config.loc[wildcards.biosample, 'default_accessibility_feature'],
@@ -152,14 +153,16 @@ rule run_predictions:
 		enhancers = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "EnhancerList.txt"),
 		genes = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "GeneList.txt")
 	params:
-		cellType = "{biosample}", 
-		output_dir = os.path.join(RESULTS_DIR, "{biosample}", "Predictions"),
-		hic_dir = config['hic_dir'],
-		hic_type = config['hic_type'],
+		cellType = lambda wildcards: wildcards.biosample, 
+		output_dir = lambda wildcards: os.path.join(RESULTS_DIR, wildcards.biosample, "Predictions"),
+		hic_dir = lambda wildcards: biosamples_config.loc[wildcards.biosample, "HiC_dir"],
+		hic_type = lambda wildcards: biosamples_config.loc[wildcards.biosample, "HiC_type"],
 		chrom_sizes = config['params_candidate']['chrom_sizes'],
 		hic_resolution = config['params_predict']['hic_resolution'],
 		threshold = config['params_predict']['threshold'],
-		flags = config['params_predict']['flags']
+		flags = config['params_predict']['flags'],
+		gamma = config['params_predict']['hic_gamma'],
+		scale = config['params_predict']['hic_scale']
 	conda:
 		"envs/abcenv.yml"
 	output: 
@@ -173,6 +176,8 @@ rule run_predictions:
 			--outdir {params.output_dir} \
 			--HiCdir {params.hic_dir} \
 			--hic_type {params.hic_type} \
+			--hic_gamma {params.gamma} \
+			--hic_scale {params.scale} \
 			--chrom_sizes {params.chrom_sizes} \
 			--hic_resolution {params.hic_resolution} \
 			--threshold {params.threshold} \
