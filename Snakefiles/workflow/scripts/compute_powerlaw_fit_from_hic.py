@@ -22,7 +22,7 @@ def parseargs():
     readable = argparse.FileType('r')
     parser.add_argument('--hicDir', help="Directory containing observed HiC KR normalized matrices. File naming and structure should be: hicDir/chr*/chr*.KRobserved")
     parser.add_argument('--outDir', help="Output directory")
-    parser.add_argument('--hic_type', default = 'juicebox', choices=['juicebox','bedpe', 'avg'], help="format of hic files")
+    parser.add_argument('--hic_type', default = 'juicebox', choices=['juicebox','bedpe'], help="format of hic files")
     parser.add_argument('--resolution', default=5000, type=int, help="For Juicebox: resolution of hic dataset (in bp). For bedpe: distances will be binned to this resolution for powerlaw fit")
     parser.add_argument('--minWindow', default=5000, type=int, help="Minimum distance between bins to include in powerlaw fit (bp). Recommended to be at least >= resolution to avoid using the diagonal of the HiC Matrix")
     parser.add_argument('--maxWindow', default=1000000, type=int, help="Maximum distance between bins to include in powerlaw fit (bp)")
@@ -38,7 +38,7 @@ def main():
     HiC = load_hic_for_powerlaw(args)
 
     #Run 
-    slope, intercept, hic_mean_var = do_powerlaw_fit(HiC, args.resolution)
+    slope, intercept, hic_mean_var = do_powerlaw_fit(HiC)
 
     #print
     res = pandas.DataFrame({'resolution' : [args.resolution], 'maxWindow' : [args.maxWindow], 'minWindow' : [args.minWindow] ,'pl_gamma' : [slope], 'pl_scale' : [intercept] })
@@ -66,8 +66,7 @@ def load_hic_for_powerlaw(args):
                     tss_hic_contribution = 100, 
                     window = args.maxWindow, 
                     min_window = args.minWindow, 
-                    gamma = np.nan,
-                    scale = np.nan,
+                    gamma = np.nan, 
                     interpolate_nan=False)
                 this_data['dist_for_fit'] = abs(this_data['bin1'] - this_data['bin2']) * args.resolution
                 all_data_list.append(this_data)
@@ -91,21 +90,6 @@ def load_hic_for_powerlaw(args):
                 this_data['dist_for_fit'] = (rawdist // args.resolution) * args.resolution
                 this_data = this_data.loc[np.logical_and(this_data['dist_for_fit'] >= args.minWindow, this_data['dist_for_fit'] <= args.maxWindow)]
                 all_data_list.append(this_data)
-            elif args.hic_type == "avg":
-                hic_file, hic_norm_file, hic_is_vc = get_hic_file(chrom, args.hicDir, hic_type='avg')
-                print("Working on {}".format(hic_file))
-                this_data = load_hic(hic_file = hic_file,
-                                     hic_type = 'avg',
-                                     hic_norm_file = None,
-                                     hic_is_vc = None,
-                                     hic_resolution = None,
-                                     tss_hic_contribution = None,
-                                     window = None,
-                                     min_window = None,
-                                     gamma = None)
-                this_data['dist_for_fit'] = abs((this_data['bin1'] - this_data['bin2'])/args.resolution) * args.resolution
-                this_data['dist_for_fit'] = this_data['dist_for_fit'].astype('int')
-                all_data_list.append(this_data)
             else:
                 error('invalid --hic_type')
 
@@ -117,22 +101,14 @@ def load_hic_for_powerlaw(args):
 
     return(all_data)
 
-def do_powerlaw_fit(HiC, resolution):
+def do_powerlaw_fit(HiC):
     print("Running regression")
 
     #TO DO:
     #Print out mean/var plot of powerlaw relationship
-    # Juicebox output is in sparse matrix format. This is an attempt to get a "mean" hic_contact for each distance bin since we don't have the total # of bins available.
     HiC_summary = HiC.groupby('dist_for_fit').agg({'hic_contact' : 'sum'})
-    #HiC_summary['hic_contact'] = HiC_summary.hic_contact / HiC_summary.hic_contact.sum() #technically this normalization should be over the entire genome (not just to maxWindow). Will only affect intercept though
-    # get a better approximation of the total # of bins .
-    total_num_bins = len(HiC.loc[HiC['dist_for_fit']==resolution])
-    print(total_num_bins)
-#    idx = np.isfinite(HiC_summary['hic_contact']) & np.isfinite(HiC_summary.index)
-    HiC_summary['hic_contact'] = HiC_summary.hic_contact / total_num_bins
-    pseudocount = 0.000001
-#    pseudocount = 0
-    res = stats.linregress(np.log(HiC_summary.index+pseudocount), np.log(HiC_summary['hic_contact']+pseudocount))
+    HiC_summary['hic_contact'] = HiC_summary.hic_contact / HiC_summary.hic_contact.sum() #technically this normalization should be over the entire genome (not just to maxWindow). Will only affect intercept though..
+    res = stats.linregress(np.log(HiC_summary.index), np.log(HiC_summary['hic_contact']))
 
     hic_mean_var = HiC.groupby('dist_for_fit').agg({'hic_contact' : ['mean','var']})
     hic_mean_var.columns = ['mean', 'var']

@@ -1,0 +1,21 @@
+name: final-abc-env
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+  - anaconda
+dependencies:
+  - blas=1.0=openblas
+  - bedtools=2.26.0
+  - macs2
+  - matplotlib
+  - numpy
+  - pandas
+  - pip
+  - pyranges
+  - pysam
+  - python=3*
+  - samtools>=1.9  # to avoid open ssl issue: https://github.com/merenlab/anvio/issues/1479
+  - scipy
+  - seaborn
+  - snakemake
