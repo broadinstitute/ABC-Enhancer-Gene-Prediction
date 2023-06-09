@@ -1,6 +1,6 @@
 *.snakemake/
 results/
-
+tests/test_output
 example_chr22/ABC_output/Predictions_bedpe/*
 
 # emacs backups
