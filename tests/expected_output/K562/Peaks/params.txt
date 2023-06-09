@@ -1,0 +1,10 @@
+narrowPeak results/K562/Peaks/macs2_peaks.narrowPeak.sorted
+bam example_chr22/input_data/Chromatin/ENCFF860XAE.chr22.sorted.se.bam
+chrom_sizes reference/hg38/chr_sizes
+outDir results/K562/Peaks
+nStrongestPeaks 150000
+peakExtendFromSummit 250
+ignoreSummits False
+minPeakWidth 500
+regions_includelist example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.hg38.TSS500bp.bed
+regions_blocklist reference/hg38/hg38.blacklist.bed

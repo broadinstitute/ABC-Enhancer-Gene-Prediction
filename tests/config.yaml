@@ -1,0 +1,36 @@
+# working directory is ABC-Enhancer-Gene-Prediction 
+
+### INPUT DATA
+# Add your inputs here
+biosamplesTable: "config/config-biosamples-chr22.tsv"  # replace with your own config/config-biosamples.tsv
+
+### OUTPUT DATA
+predictions_results_dir: "tests/test_output"
+
+### PARAMS
+params_macs:
+        pval: 0.1
+        threads: 10
+
+# These parameters are used to run the Run Candidate Regions portion of the abc code 
+params_candidate:
+        DHS: False
+        chrom_sizes: "reference/hg38/chr_sizes"
+        regions_blocklist: "reference/hg38/hg38.blacklist.bed"
+        genome_tss: "reference/hg38/RefSeqCurated.170308.bed.CollapsedGeneBounds.hg38.TSS500bp.bed"
+        peakExtendFromSummit: 250
+        nStrongestPeaks: 150000
+
+# These parameters are used to run the Run Neighborhoods portion of the abc code
+params_neighborhoods:
+        ubiquitous_genes: "reference/hg19/UbiquitouslyExpressedGenesHG19.txt"
+        qnorm: "reference/EnhancersQNormRef.K562.txt"
+        genes: "reference/hg38/RefSeqCurated.170308.bed.CollapsedGeneBounds.hg38.bed"
+
+# These parameters are used to run the Predictions portion of the abc code
+params_predict:
+        hic_resolution: 5000
+        flags: "--scale_hic_using_powerlaw --make_all_putative --include_self_promoter"
+        threshold: 0.02
+        hic_gamma: 5.522049023040861
+        hic_scale: 1.0044322152129264
