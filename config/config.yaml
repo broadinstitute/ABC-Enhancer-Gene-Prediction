@@ -2,10 +2,10 @@
 
 ### INPUT DATA
 # Add your inputs here
-biosamplesTable: "config/config-biosamples-chr22.tsv"  # replace your own config/config-biosamples.tsv
+biosamplesTable: "config/config-biosamples.tsv"  # replace with your own config/config-biosamples.tsv
 
 ### OUTPUT DATA
-predictions_results_dir: "results/"
+predictions_results_dir: "results"
 
 ### PARAMS
 params_macs:
@@ -15,9 +15,9 @@ params_macs:
 # These parameters are used to run the Run Candidate Regions portion of the abc code 
 params_candidate:
         DHS: False
-        chrom_sizes: "reference/hg19/chr_sizes"
-        regions_blocklist: "reference/hg19/wgEncodeHg19ConsensusSignalArtifactRegions.bed"
-        genome_tss: "reference/hg19/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.bed"
+        chrom_sizes: "reference/hg38/chr_sizes"
+        regions_blocklist: "reference/hg38/hg38.blacklist.bed"
+        genome_tss: "reference/hg38/RefSeqCurated.170308.bed.CollapsedGeneBounds.hg38.TSS500bp.bed"
         peakExtendFromSummit: 250
         nStrongestPeaks: 150000
 
@@ -25,7 +25,7 @@ params_candidate:
 params_neighborhoods:
         ubiquitous_genes: "reference/hg19/UbiquitouslyExpressedGenesHG19.txt"
         qnorm: "reference/EnhancersQNormRef.K562.txt"
-        genes: "reference/hg19/RefSeqCurated.170308.bed.CollapsedGeneBounds.bed"
+        genes: "reference/hg38/RefSeqCurated.170308.bed.CollapsedGeneBounds.hg38.bed"
 
 # These parameters are used to run the Predictions portion of the abc code
 params_predict:

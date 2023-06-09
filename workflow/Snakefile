@@ -77,7 +77,9 @@ rule sort_narrowpeaks:
 		narrowPeakSorted = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted")
 	shell:
 		"""
-		grep -v -E "^\w+_.*" {input.narrowPeak} | bedtools sort -faidx {params.chrom_sizes} -i stdin > {output.narrowPeakSorted}
+		# intersect first to remove alternate chromosomes
+		bedtools intersect -u -a {input.narrowPeak} -b {params.chrom_sizes}.bed | \
+		bedtools sort -faidx {params.chrom_sizes} -i stdin > {output.narrowPeakSorted}
 		"""
 
 ## call candidate regions
@@ -132,7 +134,10 @@ rule call_neighborhoods:
 	shell:
 		"""
 		# get sorted & unique gene list
-		bedtools sort -faidx {params.chrom_sizes} -i {params.genes} | uniq > {params.genes}.sorted.uniq
+		# intersect first to remove alternate chromosomes
+		bedtools intersect -u -a {params.genes} -b {params.chrom_sizes}.bed | \
+		bedtools sort -faidx {params.chrom_sizes} -i stdin | \
+		uniq > {params.genes}.sorted.uniq
 						
 		python workflow/scripts/run.neighborhoods.py \
 			--candidate_enhancer_regions {input.candidateRegions} \
