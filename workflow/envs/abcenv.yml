@@ -1,7 +1,7 @@
-name: final-abc-env
+name: abc-env
 channels:
-  - conda-forge
   - bioconda
+  - conda-forge
   - defaults
   - anaconda
 dependencies:
@@ -11,11 +11,10 @@ dependencies:
   - matplotlib
   - numpy
   - pandas
-  - pip
   - pyranges
   - pysam
-  - python=3*
+  - python>=3.6
   - samtools>=1.9  # to avoid open ssl issue: https://github.com/merenlab/anvio/issues/1479
   - scipy
   - seaborn
-  - snakemake
+  - snakemake>=6.0
