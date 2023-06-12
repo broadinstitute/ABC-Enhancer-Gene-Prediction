@@ -1,9 +1,10 @@
-import yaml 
-import json
 import os
 import pandas as pd
+from snakemake.utils import min_version
+min_version("6.0")
 
 configfile: "config/config.yaml"
+conda: "mamba"
 
 ## load biosamples config file
 biosamples_config_file = config["biosamplesTable"]
