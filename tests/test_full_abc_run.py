@@ -2,6 +2,7 @@ import gzip
 import logging
 import os
 import subprocess
+import time
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -52,8 +53,10 @@ def run_cmd(cmd: str, raise_ex: bool = True) -> bool:
 
 class TestFullABCRun(unittest.TestCase):
     def test_full_abc_run(self):
+        start = time.time()
         cmd = f"snakemake -j1 -F --configfile {CONFIG_FILE}"
         run_cmd(cmd)
+        time_taken = time.time() - start
         
         # compare intermediate files       
         for file in INTERMEDIATE_FILES:
@@ -65,6 +68,11 @@ class TestFullABCRun(unittest.TestCase):
         test_file = os.path.join(TEST_OUTPUT_DIR, PREDICTION_FILE)
         expected_file = os.path.join(EXPECTED_OUTPUT_DIR, PREDICTION_FILE)
         pd.testing.assert_frame_equal(get_filtered_dataframe(test_file), get_filtered_dataframe(expected_file))
+
+        # Make sure the test doesn't take > 3 min
+        max_time = 60 * 3  # 3 min
+        self.assertLessEqual(time_taken, max_time)
+
         
         
 if __name__ == '__main__':
