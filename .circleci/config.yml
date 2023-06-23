@@ -26,11 +26,14 @@ jobs:
       - checkout
       - run:
           name: Install basic OS pkgs
-          command: apt-get update && apt-get -y install curl vim
+          command: apt-get update && apt-get -y install curl vim black
       - run:
           name: Install abc-env
           command: |
             mamba env create -f workflow/envs/abcenv.yml
+      - run:
+          name: Run Linter (python black)
+          command: black . --check
       - run:
           name: Run tests
           command: |
