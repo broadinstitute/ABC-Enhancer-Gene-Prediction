@@ -37,13 +37,13 @@ jobs:
             conda run -n abc-env pytest
       - slack/notify:
           branch_pattern: dev,master 
-          channel: abc_ci 
+          channel: abc_circleci
           event: fail 
           ignore_errors: true
           template: basic_fail_1 
       - slack/notify:
           branch_pattern: dev,master 
-          channel: abc_ci 
+          channel: abc_circleci 
           event: pass 
           ignore_errors: true 
           template: success_tagged_deploy_1
