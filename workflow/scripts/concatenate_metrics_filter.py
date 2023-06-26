@@ -12,17 +12,28 @@ import pickle
 features = pd.read_csv(sys.argv[1], sep="\t")
 biosamples = features["biosample"]
 # have the outdir point to where all your predictions file lie
-outdir=sys.argv[3]
-summary_loc=sys.argv[4]
-threshold=sys.argv[5]
+outdir = sys.argv[3]
+summary_loc = sys.argv[4]
+threshold = sys.argv[5]
 concatenated = None
 for biosample in biosamples:
     print(biosample)
-    if os.path.exists("{}/{}/Predictions_ABC_threshold{}/QCSummary.p".format(summary_loc, biosample, threshold)):
-        filename = pickle.load(open("{}/{}/Predictions_ABC_threshold{}/QCSummary.p".format(summary_loc,biosample, threshold), "rb"))
-        data = pd.DataFrame.from_dict(filename, orient='index')
+    if os.path.exists(
+        "{}/{}/Predictions_ABC_threshold{}/QCSummary.p".format(
+            summary_loc, biosample, threshold
+        )
+    ):
+        filename = pickle.load(
+            open(
+                "{}/{}/Predictions_ABC_threshold{}/QCSummary.p".format(
+                    summary_loc, biosample, threshold
+                ),
+                "rb",
+            )
+        )
+        data = pd.DataFrame.from_dict(filename, orient="index")
         dataT = data.T
-        dataT['biosample'] = biosample
+        dataT["biosample"] = biosample
         if concatenated is None:
             concatenated = dataT
         else:
