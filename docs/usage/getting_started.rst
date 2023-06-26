@@ -5,7 +5,7 @@ Installation
 ------------
 
 #. Download the repo locally from github
-	- https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction
+	- ``git clone git@github.com:broadinstitute/ABC-Enhancer-Gene-Prediction.git``
 	- Utilize the **dev** branch: ``git checkout dev``
 #. Make sure you have conda & mamba installed
 	- `<https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_
@@ -63,16 +63,17 @@ biosamples config is a tsv separate file with the following columns
 	- DNAse-seq BAM file (indexed and sorted)
 #. ATAC
 	- ATAC-seq BAM file (indexed and sorted)
-#. H3K27ac
+#. H3K27ac (Optional)
 	- H3K27ac ChIP seq BAM file
 #. default_accessibility_feature
 	- Either DHS or ATAC
-#. HiC_dir
-#. HiC_type
-#. TSS
-	- TSS reference file 
-#. genes
-	- Gene bound reference file
+#. HiC_dir (optional)
+	- HiC directory for the biosample cell type. If not provided, uses avg hi-c
+#. HiC_type (optional)
+#. alt_TSS (optional)
+	- Alternative TSS reference file 
+#. alt_genes (optional)
+	- Alternative Gene bound reference file
 
 Required columns
 
