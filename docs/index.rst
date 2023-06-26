@@ -6,15 +6,22 @@
 Welcome to ABC-Enhancer-Gene-Prediction's documentation!
 ========================================================
 
+The Activity-by-Contact (ABC) model predicts which enhancers regulate which genes 
+on a cell type specific basis.
+
+
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :hidden:
+   :caption: Usage
+
+   usage/usage
 
 
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+   :caption: Developers
 
-Indices and tables
-==================
+   developers/developers
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
