@@ -19,10 +19,10 @@ gene_files = []
 for x in all_biosamples:
 	tss_file = config['params_candidate']['genome_tss']
 	gene_file = config['params_neighborhoods']['genes']
-	if biosamples_config.loc[x, "TSS"] != "None":
-		tss_file = biosamples_config.loc[x, 'TSS']
-	if biosamples_config.loc[x, "genes"] != "None":
-		gene_file = biosamples_config.loc[x, 'genes']
+	if biosamples_config.loc[x, "alt_TSS"] != "None":
+		tss_file = biosamples_config.loc[x, 'alt_TSS']
+	if biosamples_config.loc[x, "alt_genes"] != "None":
+		gene_file = biosamples_config.loc[x, 'alt_genes']
 	TSS_files.append(tss_file)
 	gene_files.append(gene_file)
 				
