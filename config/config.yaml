@@ -23,7 +23,7 @@ params_candidate:
 
 # These parameters are used to run the Run Neighborhoods portion of the abc code
 params_neighborhoods:
-        ubiquitous_genes: "reference/hg19/UbiquitouslyExpressedGenesHG19.txt"
+        ubiquitous_genes: "reference/UbiquitouslyExpressedGenes.txt"
         qnorm: "reference/EnhancersQNormRef.K562.txt"
         genes: "reference/hg38/RefSeqCurated.170308.bed.CollapsedGeneBounds.hg38.bed"
 
