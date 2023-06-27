@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 from snakemake.utils import min_version
-min_version("6.0")
+min_version("7.0")
 
 configfile: "config/config.yaml"
 conda: "mamba"
@@ -151,11 +151,14 @@ rule call_neighborhoods:
 			--ubiquitously_expressed_genes {params.ubiquitous_genes} \
 			--qnorm {params.qnorm} \
 			--H3K27ac {params.H3K27ac}
+		# This command is to make sure the command above has finished running. If the job does not finish within the slurm job time limit, snakemake would still think the job has completed because the output files exist. 
+		ls {output.enhList} > {output.output_check}
 		"""
 		
 ### run predictions: takes in EnhancerList.txt and GeneList.txt generated from rule call_neighborhoods above and generates Enhancer-Gene Predictions and links
 rule run_predictions:
 	input:
+		output_check =  os.path.join(config['predictions_results_dir'], "{biosample}", "Neighborhoods", "OutputCheck.txt"),
 		enhancers = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "EnhancerList.txt"),
 		genes = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "GeneList.txt")
 	params:
