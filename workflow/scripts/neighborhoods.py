@@ -460,7 +460,7 @@ def count_tagalign(tagalign, bed_file, output, genome_sizes):
     # command2 = 'bedtools sort -faidx {genome_sizes} -i {tagalign} | bedtools coverage -counts -b stdin -a {bed_file} -sorted -g {genome_sizes} | awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\''.format(
     #     **locals()
     # )
-    
+
     command2 = 'bedtools coverage -counts -b {tagalign} -a {bed_file} | awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\' '.format(
         **locals()
     )
