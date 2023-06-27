@@ -1,6 +1,9 @@
 Developers
 ==========
 
+Contributing
+------------
+
 To start contributing to the codebase, request Anthony or Jesse to be added as 
 a collaborator in the github repo.
 
