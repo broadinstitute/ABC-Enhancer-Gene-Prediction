@@ -131,7 +131,8 @@ rule call_neighborhoods:
 	output: 
 		enhList = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "EnhancerList.txt"),
 		geneList = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "GeneList.txt"),
-		neighborhoodDirectory = directory(os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods"))
+		neighborhoodDirectory = directory(os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods")),
+		output_check =  os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "OutputCheck.txt")
 	shell:
 		"""
 		# get sorted & unique gene list
