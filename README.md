@@ -1,3 +1,5 @@
+Check out [Read The Docs](https://abc-enhancer-gene-prediction.readthedocs.io/en/latest/) for the most up to date information
+
 # Activity by Contact Model of Enhancer-Gene Specificity
 
 The Activity-by-Contact (ABC) model predicts which enhancers regulate which genes on a cell type specific basis. This repository contains the code needed to run the ABC model as well as small sample data files, example commands, and some general tips and suggestions. We provide a brief description of the model below, see Fulco, Nasser et al [1] for a full description.
