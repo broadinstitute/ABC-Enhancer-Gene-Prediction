@@ -299,22 +299,22 @@ def load_enhancers(
     enhancers = run_qnorm(enhancers, qnorm)
     enhancers = compute_activity(enhancers, default_accessibility_feature)
 
+    enhancers[["chr", "start", "end", "name"]].to_csv(
+        os.path.join(outdir, "EnhancerList.bed"),
+        sep="\t",
+        index=False,
+        header=False,
+    )
     enhancers.to_csv(
-        os.path.join(outdir, "EnhancerList.txt"),
+        os.path.join(outdir, "EnhancerList.txt.tmp"),
         sep="\t",
         index=False,
         header=True,
         float_format="%.6f",
     )
-    enhancers[["chr", "start", "end", "name"]].to_csv(
-        os.path.join(outdir, "EnhancerList.bed.tmp"),
-        sep="\t",
-        index=False,
-        header=False,
-    )
     os.rename(
-        os.path.join(outdir, "EnhancerList.bed.tmp"),
-        os.path.join(outdir, "EnhancerList.bed"),
+        os.path.join(outdir, "EnhancerList.txt.tmp"),
+        os.path.join(outdir, "EnhancerList.txt"),
     )
 
 
