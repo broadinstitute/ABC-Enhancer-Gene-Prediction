@@ -307,7 +307,14 @@ def load_enhancers(
         float_format="%.6f",
     )
     enhancers[["chr", "start", "end", "name"]].to_csv(
-        os.path.join(outdir, "EnhancerList.bed"), sep="\t", index=False, header=False
+        os.path.join(outdir, "EnhancerList.bed.tmp"),
+        sep="\t",
+        index=False,
+        header=False,
+    )
+    os.rename(
+        os.path.join(outdir, "EnhancerList.bed.tmp"),
+        os.path.join(outdir, "EnhancerList.bed"),
     )
 
 
