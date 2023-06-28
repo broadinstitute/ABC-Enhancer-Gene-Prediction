@@ -42,7 +42,7 @@ rule all:
 		narrowPeaks_sorted = expand(os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted"), biosample=all_biosamples),
 		candidateRegions = expand(os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed"),
 	    biosample=all_biosamples),
-		enhancerLists = expand(os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "EnhancerList.bed"),  biosample=all_biosamples),
+		enhancerLists = expand(os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "EnhancerList.txt"),  biosample=all_biosamples),
 		allPutative = expand(os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.txt.gz"), biosample=all_biosamples),
 		enhPredictions = expand(os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictions.csv"), biosample=all_biosamples),
 		allPred = os.path.join(RESULTS_DIR,"AllPredictions.txt.gz"),
@@ -129,7 +129,7 @@ rule call_neighborhoods:
 	conda:
 		"envs/abcenv.yml"
 	output: 
-		enhList = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "EnhancerList.bed"),
+		enhList = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "EnhancerList.txt"),
 		geneList = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "GeneList.txt"),
 		neighborhoodDirectory = directory(os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods")),
 	shell:
@@ -153,10 +153,10 @@ rule call_neighborhoods:
 			--H3K27ac {params.H3K27ac}
 		"""
 		
-### run predictions: takes in EnhancerList.bed and GeneList.txt generated from rule call_neighborhoods above and generates Enhancer-Gene Predictions and links
+### run predictions: takes in EnhancerList.txt and GeneList.txt generated from rule call_neighborhoods above and generates Enhancer-Gene Predictions and links
 rule run_predictions:
 	input:
-		enhancers = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "EnhancerList.bed"),
+		enhancers = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "EnhancerList.txt"),
 		genes = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "GeneList.txt")
 	params:
 		cellType = lambda wildcards: wildcards.biosample, 
