@@ -17,4 +17,4 @@ dependencies:
   - samtools>=1.9  # to avoid open ssl issue: https://github.com/merenlab/anvio/issues/1479
   - scipy
   - seaborn
-  - snakemake>=6.0
+  - snakemake>=7.0

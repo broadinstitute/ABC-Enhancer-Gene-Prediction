@@ -5,6 +5,7 @@ from tools import *
 import glob
 import argparse
 import pickle
+import os.path
 
 
 def parse_args():
@@ -29,12 +30,45 @@ def generateQCMetrics(args):
     # Generate PeakFileQCSummary.txt in Peaks Directory#
     pred_metrics = PeakFileQC(pred_metrics, args.macs_peaks, args.outdir)
     # Appends Percentage Counts in Promoters into PeakFileQCSummary.txt
-    pred_metrics = NeighborhoodFileQC(
-        pred_metrics, args.neighborhood_outdir, args.outdir, "DHS"
-    )
-    pred_metrics = NeighborhoodFileQC(
-        pred_metrics, args.neighborhood_outdir, args.outdir, "H3K27ac"
-    )
+    if (
+        len(
+            glob.glob(
+                os.path.join(
+                    args.neighborhood_outdir, "Enhancers.DHS.*CountReads.bedgraph"
+                )
+            )
+        )
+        > 0
+    ):
+        pred_metrics = NeighborhoodFileQC(
+            pred_metrics, args.neighborhood_outdir, args.outdir, "DHS"
+        )
+    if (
+        len(
+            glob.glob(
+                os.path.join(
+                    args.neighborhood_outdir, "Enhancers.H3K27ac.*CountReads.bedgraph"
+                )
+            )
+        )
+        > 0
+    ):
+        pred_metrics = NeighborhoodFileQC(
+            pred_metrics, args.neighborhood_outdir, args.outdir, "H3K27ac"
+        )
+    if (
+        len(
+            glob.glob(
+                os.path.join(
+                    args.neighborhood_outdir, "Enhancers.ATAC.*CountReads.bedgraph"
+                )
+            )
+        )
+        > 0
+    ):
+        pred_metrics = NeighborhoodFileQC(
+            pred_metrics, args.neighborhood_outdir, args.outdir, "ATAC"
+        )
 
     with open("{}/QCSummary.p".format(args.outdir), "wb") as f:
         pickle.dump(pred_metrics, f)
