@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 from snakemake.utils import min_version
-min_version("6.0")
+min_version("7.0")
 
 configfile: "config/config.yaml"
 conda: "mamba"
@@ -131,7 +131,7 @@ rule call_neighborhoods:
 	output: 
 		enhList = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "EnhancerList.txt"),
 		geneList = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "GeneList.txt"),
-		neighborhoodDirectory = directory(os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods"))
+		neighborhoodDirectory = directory(os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods")),
 	shell:
 		"""
 		# get sorted & unique gene list

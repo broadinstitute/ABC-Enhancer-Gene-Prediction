@@ -299,15 +299,22 @@ def load_enhancers(
     enhancers = run_qnorm(enhancers, qnorm)
     enhancers = compute_activity(enhancers, default_accessibility_feature)
 
+    enhancers[["chr", "start", "end", "name"]].to_csv(
+        os.path.join(outdir, "EnhancerList.bed"),
+        sep="\t",
+        index=False,
+        header=False,
+    )
     enhancers.to_csv(
-        os.path.join(outdir, "EnhancerList.txt"),
+        os.path.join(outdir, "EnhancerList.txt.tmp"),
         sep="\t",
         index=False,
         header=True,
         float_format="%.6f",
     )
-    enhancers[["chr", "start", "end", "name"]].to_csv(
-        os.path.join(outdir, "EnhancerList.bed"), sep="\t", index=False, header=False
+    os.rename(
+        os.path.join(outdir, "EnhancerList.txt.tmp"),
+        os.path.join(outdir, "EnhancerList.txt"),
     )
 
 
@@ -457,9 +464,14 @@ def count_tagalign(tagalign, bed_file, output, genome_sizes):
     else:
         command1 = "tabix -p bed {tagalign} | cut -f1-3".format(**locals())
     # command2 = "bedtools coverage -counts -b stdin -a {bed_file} | awk '{{print $1 \"\\t\" $2 \"\\t\" $3 \"\\t\" $NF}}' ".format(**locals())
-    command2 = 'bedtools sort -faidx {genome_sizes} -i {tagalign} | bedtools coverage -counts -b stdin -a {bed_file} -sorted -g {genome_sizes} | awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\''.format(
+    # command2 = 'bedtools sort -faidx {genome_sizes} -i {tagalign} | bedtools coverage -counts -b stdin -a {bed_file} -sorted -g {genome_sizes} | awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\''.format(
+    #     **locals()
+    # )
+
+    command2 = 'bedtools coverage -counts -b {tagalign} -a {bed_file} | awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\' '.format(
         **locals()
     )
+
     p1 = Popen(command1, stdout=PIPE, shell=True)
     with open(output, "wb") as outfp:
         p2 = check_call(command2, stdin=p1.stdout, stdout=outfp, shell=True)
