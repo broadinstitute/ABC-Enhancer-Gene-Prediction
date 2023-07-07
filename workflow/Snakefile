@@ -168,7 +168,8 @@ rule run_predictions:
 		threshold = config['params_predict']['threshold'],
 		flags = config['params_predict']['flags'],
 		gamma = config['params_predict']['hic_gamma'],
-		scale = config['params_predict']['hic_scale']
+		scale = config['params_predict']['hic_scale'],
+		default = lambda wildcards: biosamples_config.loc[wildcards.biosample, 'default_accessibility_feature']
 	conda:
 		"envs/abcenv.yml"
 	output: 
@@ -188,6 +189,7 @@ rule run_predictions:
 			--hic_resolution {params.hic_resolution} \
 			--threshold {params.threshold} \
 			--cellType {params.cellType} \
+			--default_accessibility_feature {params.default} \
 			--genes {input.genes} \
 			{params.flags}
 		"""
