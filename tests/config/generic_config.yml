@@ -1,11 +1,12 @@
-# working directory is ABC-Enhancer-Gene-Prediction 
+# TESTING ONLY
+TEST_CONFIG_NAME: "generic"
 
 ### INPUT DATA
 # Add your inputs here
-biosamplesTable: "config/config-biosamples-chr22.tsv"  # replace with your own config/config-biosamples.tsv
+biosamplesTable: "tests/config/test_biosamples.tsv"  # replace with your own config/config-biosamples.tsv
 
 ### OUTPUT DATA
-predictions_results_dir: "tests/test_output"
+predictions_results_dir: "tests/test_output/generic"
 
 ### PARAMS
 params_macs:
