@@ -35,5 +35,8 @@ v0.2 is the recommended version for the majority of users. There are some minor 
    :hidden:
    :caption: Developers
 
-   developers/developers
+   developers/contributing
+   developers/testing
+   developers/updating_docs
+   developers/internal_docs
 
