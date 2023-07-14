@@ -366,7 +366,7 @@ def main():
                 all_pred_file_nonexpressed, key="predictions", complevel=9, mode="w"
             )
 
-    #test_variant_overlap(args, all_putative)
+    # test_variant_overlap(args, all_putative)
     test_variant_overlap(args, all_putative.loc[all_putative.TargetGeneIsExpressed, :])
     print("Done.")
 
