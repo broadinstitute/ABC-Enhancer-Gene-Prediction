@@ -189,54 +189,31 @@ def main():
     genes = determine_expressed_genes(
         genes, args.expression_cutoff, args.promoter_activity_quantile_cutoff
     )
-    genes = genes.loc[
-        :,
-        [
-            "chr",
-            "symbol",
-            "tss",
-            "Expression",
-            "PromoterActivityQuantile",
-            "isExpressed",
-            args.default_accessibility_feature + ".RPKM.quantile.TSS1Kb",
-        ],
+    genes_columns_to_subset = [
+        "chr",
+        "symbol",
+        "tss",
+        "Expression",
+        "PromoterActivityQuantile",
+        "isExpressed",
     ]
+    genes_column_names = [
+        "chr",
+        "TargetGene",
+        "TargetGeneTSS",
+        "TargetGeneExpression",
+        "TargetGenePromoterActivityQuantile",
+        "TargetGeneIsExpressed",
+    ]
+    enhancers_column_names = ["chr", "start", "end", "name", "class", "activity_base"]
     if args.default_accessibility_feature == "ATAC":
-        genes.columns = [
-            "chr",
-            "TargetGene",
-            "TargetGeneTSS",
-            "TargetGeneExpression",
-            "TargetGenePromoterActivityQuantile",
-            "TargetGeneIsExpressed",
-            "normalized_atac",
-        ]
-        enhancers = enhancers_full.loc[
-            :,
-            [
-                "chr",
-                "start",
-                "end",
-                "name",
-                "class",
-                "activity_base",
-                "normalized_atac",
-            ],
-        ]
+        genes = genes.loc[: genes_columns_to_subset + ["ATAC.RPKM.quantile.TSS1Kb"]]
+        genes.columns = genes_column_names + ["normalized_atac"]
+        enhancers = enhancers_full.loc[:, enhancers_column_names + ["normalized_atac"]]
     elif args.default_accessibility_feature == "DHS":
-        genes.columns = [
-            "chr",
-            "TargetGene",
-            "TargetGeneTSS",
-            "TargetGeneExpression",
-            "TargetGenePromoterActivityQuantile",
-            "TargetGeneIsExpressed",
-            "normalized_dhs",
-        ]
-        enhancers = enhancers_full.loc[
-            :,
-            ["chr", "start", "end", "name", "class", "activity_base", "normalized_dhs"],
-        ]
+        genes = genes.loc[: genes_columns_to_subset + ["DHS.RPKM.quantile.TSS1Kb"]]
+        genes.columns = genes_column_names + ["normalized_dhs"]
+        enhancers = enhancers_full.loc[:, enhancers_column_names + ["normalized_dhs"]]
 
     # TO DO
     # Think about which columns to include

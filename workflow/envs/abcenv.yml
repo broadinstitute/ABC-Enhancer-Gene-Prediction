@@ -7,7 +7,7 @@ channels:
 dependencies:
   - blas=1.0=openblas
   - bedtools=2.26.0
-  - macs2=2.2.6
+  - macs2
   - matplotlib=3.2.2
   - numpy=1.19.1
   - pandas=1.1.3
