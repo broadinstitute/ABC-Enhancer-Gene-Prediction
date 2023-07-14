@@ -45,7 +45,6 @@ def make_pred_table(chromosome, enh, genes, args):
         start_slop=args.window,
         end_slop=args.window,
     )
-
     pred = enh_pr.join(genes_pr).df.drop(
         ["Start_b", "End_b", "chr_b", "Chromosome", "Start", "End"], axis=1
     )

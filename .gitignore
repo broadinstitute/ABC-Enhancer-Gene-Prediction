@@ -3,6 +3,7 @@ results/
 tests/test_output
 example_chr22/ABC_output/Predictions_bedpe/*
 docs/_build/*
+logs/
 
 # emacs backups
 *~

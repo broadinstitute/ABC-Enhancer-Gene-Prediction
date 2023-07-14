@@ -49,6 +49,12 @@ def get_model_argument_parser():
         default=0.022,
         help="Threshold on ABC Score (--score_column) to call a predicted positive",
     )
+    parser.add_argument(
+        "--default_accessibility_feature",
+        default=None,
+        nargs="?",
+        help="If both ATAC and DHS are provided, this flag must be set to either 'DHS' or 'ATAC' signifying which datatype to use in computing activity",
+    )
     parser.add_argument("--cellType", help="Name of cell type")
     parser.add_argument("--chrom_sizes", help="Chromosome sizes file")
 
@@ -178,6 +184,8 @@ def main():
 
     print("reading genes")
     genes = pd.read_csv(args.genes, sep="\t")
+    print("reading enhancers")
+    enhancers_full = pd.read_csv(args.enhancers, sep="\t")
     genes = determine_expressed_genes(
         genes, args.expression_cutoff, args.promoter_activity_quantile_cutoff
     )
@@ -190,30 +198,52 @@ def main():
             "Expression",
             "PromoterActivityQuantile",
             "isExpressed",
-            "DHS.RPKM.quantile.TSS1Kb",
+            args.default_accessibility_feature + ".RPKM.quantile.TSS1Kb",
         ],
     ]
-    genes.columns = [
-        "chr",
-        "TargetGene",
-        "TargetGeneTSS",
-        "TargetGeneExpression",
-        "TargetGenePromoterActivityQuantile",
-        "TargetGeneIsExpressed",
-        "normalized_dhs",
-    ]
+    if args.default_accessibility_feature == "ATAC":
+        genes.columns = [
+            "chr",
+            "TargetGene",
+            "TargetGeneTSS",
+            "TargetGeneExpression",
+            "TargetGenePromoterActivityQuantile",
+            "TargetGeneIsExpressed",
+            "normalized_atac",
+        ]
+        enhancers = enhancers_full.loc[
+            :,
+            [
+                "chr",
+                "start",
+                "end",
+                "name",
+                "class",
+                "activity_base",
+                "normalized_atac",
+            ],
+        ]
+    elif args.default_accessibility_feature == "DHS":
+        genes.columns = [
+            "chr",
+            "TargetGene",
+            "TargetGeneTSS",
+            "TargetGeneExpression",
+            "TargetGenePromoterActivityQuantile",
+            "TargetGeneIsExpressed",
+            "normalized_dhs",
+        ]
+        enhancers = enhancers_full.loc[
+            :,
+            ["chr", "start", "end", "name", "class", "activity_base", "normalized_dhs"],
+        ]
 
-    print("reading enhancers")
-    enhancers_full = pd.read_csv(args.enhancers, sep="\t")
     # TO DO
     # Think about which columns to include
-    enhancers = enhancers_full.loc[
-        :, ["chr", "start", "end", "name", "class", "activity_base", "normalized_dhs"]
-    ]
     enhancers["activity_base_squared"] = enhancers["activity_base"] ** 2
     # Initialize Prediction files
-    pred_file_full = os.path.join(args.outdir, "EnhancerPredictionsFull.csv")
-    pred_file_slim = os.path.join(args.outdir, "EnhancerPredictions.csv")
+    pred_file_full = os.path.join(args.outdir, "EnhancerPredictionsFull.txt")
+    pred_file_slim = os.path.join(args.outdir, "EnhancerPredictions.txt")
     pred_file_bedpe = os.path.join(args.outdir, "EnhancerPredictions.bedpe")
     all_pred_file_expressed = os.path.join(
         args.outdir, "EnhancerPredictionsAllPutative.txt.gz"
@@ -336,8 +366,8 @@ def main():
                 all_pred_file_nonexpressed, key="predictions", complevel=9, mode="w"
             )
 
-    test_variant_overlap(args, all_putative)
-
+    #test_variant_overlap(args, all_putative)
+    test_variant_overlap(args, all_putative.loc[all_putative.TargetGeneIsExpressed, :])
     print("Done.")
 
 
