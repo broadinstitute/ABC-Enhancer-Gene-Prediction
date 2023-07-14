@@ -207,13 +207,19 @@ def main():
     ]
     enhancers_column_names = ["chr", "start", "end", "name", "class", "activity_base"]
     if args.default_accessibility_feature == "ATAC":
-        genes = genes.loc[: genes_columns_to_subset + ["ATAC.RPKM.quantile.TSS1Kb"]]
+        subset_columns = genes_columns_to_subset + ["ATAC.RPKM.quantile.TSS1Kb"]
+        genes = genes.loc[:, subset_columns]
         genes.columns = genes_column_names + ["normalized_atac"]
-        enhancers = enhancers_full.loc[:, enhancers_column_names + ["normalized_atac"]]
+        subset_columns = enhancers_column_names + ["normalized_atac"]
+        enhancers = enhancers_full.loc[:, subset_columns]
     elif args.default_accessibility_feature == "DHS":
-        genes = genes.loc[: genes_columns_to_subset + ["DHS.RPKM.quantile.TSS1Kb"]]
+        subset_columns = genes_columns_to_subset + ["ATAC.RPKM.quantile.TSS1Kb"]
+        genes = genes.loc[:, subset_columns]
         genes.columns = genes_column_names + ["normalized_dhs"]
-        enhancers = enhancers_full.loc[:, enhancers_column_names + ["normalized_dhs"]]
+        subset_columns = enhancers_column_names + ["normalized_dhs"]
+        enhancers = enhancers_full.loc[:, subset_columns]
+    else:
+        print("The feature does not exist!")
 
     # TO DO
     # Think about which columns to include
