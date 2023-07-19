@@ -5,9 +5,8 @@ from typing import Dict
 
 import numpy as np
 import pandas as pd
-import pyranges as pr
-from hic import *
-from tools import *
+from hic import get_hic_file, get_powerlaw_at_distance, load_hic
+from tools import df_to_pyranges
 
 
 def make_predictions(chromosome, enhancers, genes, args, chrom_sizes_map):
@@ -278,9 +277,11 @@ def add_powerlaw_to_predictions(pred, args):
 def add_hic_pseudocount(pred, args):
     # Add a pseudocount based on the powerlaw expected count at a given distance
 
-    powerlaw_fit = get_powerlaw_at_distance(pred["distance"].values, args.hic_gamma)
+    powerlaw_fit = get_powerlaw_at_distance(
+        pred["distance"].values, args.hic_gamma, args.hic_scale
+    )
     powerlaw_fit_at_ref = get_powerlaw_at_distance(
-        args.hic_pseudocount_distance, args.hic_gamma
+        args.hic_pseudocount_distance, args.hic_gamma, args.hic_scale
     )
 
     pseudocount = np.amin(

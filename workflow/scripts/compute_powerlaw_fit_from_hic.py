@@ -1,11 +1,13 @@
-import numpy as np
-import sys, traceback
-import pandas
-from scipy import stats
 import argparse
 import glob
 import os
+import sys
+import traceback
+
+import numpy as np
+import pandas
 from hic import *
+from scipy import stats
 
 # To do:
 # 1. Use MLE to estimate exponent?
@@ -79,19 +81,19 @@ def main():
             "resolution": [args.resolution],
             "maxWindow": [args.maxWindow],
             "minWindow": [args.minWindow],
-            "pl_gamma": [slope],
+            "pl_gamma": [slope * -1],  # gamma defined as neg slope
             "pl_scale": [intercept],
         }
     )
     res.to_csv(
-        os.path.join(args.outDir, "hic.powerlaw.txt"),
+        os.path.join(args.outDir, "hic.powerlaw.tsv"),
         sep="\t",
         index=False,
         header=True,
     )
 
     hic_mean_var.to_csv(
-        os.path.join(args.outDir, "hic.mean_var.txt"), sep="\t", index=True, header=True
+        os.path.join(args.outDir, "hic.mean_var.tsv"), sep="\t", index=True, header=True
     )
 
 

@@ -1,7 +1,9 @@
+import os
+import time
+
 import numpy as np
-import scipy.sparse as ssp
 import pandas as pd
-import time, os
+import scipy.sparse as ssp
 
 
 def get_hic_file(chromosome, hic_dir, allow_vc=True, hic_type="juicebox"):
@@ -213,8 +215,8 @@ def process_hic(
         hic_df.loc[nan_loc, "hic_contact"] = get_powerlaw_at_distance(
             abs(hic_df.loc[nan_loc, "bin1"] - hic_df.loc[nan_loc, "bin2"]) * resolution,
             gamma,
+            scale,
             min_distance=resolution,
-            scale=scale,
         )
 
     print("process.hic: Elapsed time: {}".format(time.time() - t))
@@ -278,8 +280,9 @@ def hic_to_sparse(filename, norm_file, resolution, hic_is_doubly_stochastic=Fals
     return ssp.csr_matrix((dat, (row, col)), (hic_size, hic_size))
 
 
-def get_powerlaw_at_distance(distances, gamma, min_distance=5000, scale=None):
+def get_powerlaw_at_distance(distances, gamma, scale, min_distance=5000):
     assert gamma > 0
+    assert scale > 0
 
     # The powerlaw is computed for distances > 5kb. We don't know what the contact freq looks like at < 5kb.
     # So just assume that everything at < 5kb is equal to 5kb.
@@ -287,21 +290,7 @@ def get_powerlaw_at_distance(distances, gamma, min_distance=5000, scale=None):
     distances = np.clip(distances, min_distance, np.Inf)
     log_dists = np.log(distances + 1)
 
-    # Determine scale parameter
-    # A powerlaw distribution has two parameters: the exponent and the minimum domain value
-    # In our case, the minimum domain value is always constant (equal to 1 HiC bin) so there should only be 1 parameter
-    # The current fitting approach does a linear regression in log-log space which produces both a slope (gamma) and a intercept (scale)
-    # Empirically there is a linear relationship between these parameters (which makes sense since we expect only a single parameter distribution)
-    # It should be possible to analytically solve for scale using gamma. But this doesn't quite work since the hic data does not actually follow a power-law
-    # So could pass in the scale parameter explicity here. Or just kludge it as I'm doing now
-    # TO DO: Eventually the pseudocount should be replaced with a more appropriate smoothing procedure.
-
-    # 4.80 and 11.63 come from a linear regression of scale on gamma across 20 hic cell types at 5kb resolution. Do the params change across resolutions?
-    if scale is None:
-        scale = -4.80 + 11.63 * gamma
-
     powerlaw_contact = np.exp(scale + -1 * gamma * log_dists)
-
     return powerlaw_contact
 
 

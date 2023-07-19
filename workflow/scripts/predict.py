@@ -86,24 +86,31 @@ def get_model_argument_parser():
 
     # Power law
     parser.add_argument(
+        "--hic_powerlaw_fit",
+        help="tsv file describing scale/gamma to use for powerlaw. Generated from compute_powerlaw_fit_from_hic.py",
+    )
+    parser.add_argument(
         "--scale_hic_using_powerlaw",
         action="store_true",
-        help="Scale Hi-C values using powerlaw relationship",
+        help="Scale Hi-C values using powerlaw relationship. Used if hic_powerlaw_fit not provided",
     )
     parser.add_argument(
         "--hic_gamma",
         type=float,
         default=0.87,
-        help="powerlaw exponent of hic data. Must be positive",
+        help="powerlaw exponent of hic data. Must be positive. Used if hic_powerlaw_fit not provided",
     )
     parser.add_argument(
-        "--hic_scale", type=float, help="scale of hic data. Must be positive"
+        "--hic_scale",
+        type=float,
+        default=5.32,
+        help="scale of hic data. Must be positive",
     )
     parser.add_argument(
         "--hic_gamma_reference",
         type=float,
         default=0.87,
-        help="powerlaw exponent to scale to. Must be positive",
+        help="powerlaw exponent to scale to. Must be positive. Used if hic_powerlaw_fit not provided",
     )
 
     # Genes to run through model
@@ -230,6 +237,11 @@ def main():
         "EnhancerPredictionsAllPutative.ForVariantOverlap.shrunk150bp.txt.gz",
     )
     all_putative_list = []
+
+    if args.hic_powerlaw_fit:
+        powerlaw_fit = pd.read_csv(args.hic_powerlaw_fit, sep="\t")
+        args.hic_gamma = powerlaw_fit["pl_gamma"][0]
+        args.hic_scale = powerlaw_fit["pl_scale"][0]
 
     # Make predictions
     if args.chromosomes == "all":
