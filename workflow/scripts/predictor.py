@@ -229,10 +229,10 @@ def scale_hic_with_powerlaw(pred, args):
 
 def add_powerlaw_to_predictions(pred, args):
     pred["powerlaw_contact"] = get_powerlaw_at_distance(
-        pred["distance"].values, args.hic_gamma, args.hic_scale
+        pred["distance"].values, args.hic_gamma, scale=args.hic_scale
     )
     pred["powerlaw_contact_reference"] = get_powerlaw_at_distance(
-        pred["distance"].values, args.hic_gamma_reference, args.hic_scale
+        pred["distance"].values, args.hic_gamma_reference, scale=args.hic_scale
     )
 
     return pred

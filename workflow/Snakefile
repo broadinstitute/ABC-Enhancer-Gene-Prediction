@@ -107,7 +107,7 @@ rule call_candidate_regions:
 	output: 
 		candidateRegions = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed")
 	resources:
-		mem_gb=32,
+		mem_gb=64,
 		runtime_hr=6
 	shell: 
 		"""
@@ -180,7 +180,7 @@ rule run_predictions:
 		threshold = config['params_predict']['threshold'],
 		flags = config['params_predict']['flags'],
 		gamma = config['params_predict']['hic_gamma'],
-		#scale = config['params_predict']['hic_scale'],
+		scale = config['params_predict']['hic_scale'],
 		default = lambda wildcards: biosamples_config.loc[wildcards.biosample, 'default_accessibility_feature'],
 	conda:
 		"envs/abcenv.yml"
@@ -204,10 +204,10 @@ rule run_predictions:
 			--hic_resolution {params.hic_resolution} \
 			--threshold {params.threshold} \
 			--cellType {params.cellType} \
+			--hic_scale {params.scale} \
 			--genes {input.genes} \
 			{params.flags}
 		"""
-		#--hic_scale {params.scale}
 
 ### generate AllPredictions file
 rule make_all_predictions:

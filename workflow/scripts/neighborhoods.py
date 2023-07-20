@@ -458,21 +458,15 @@ def count_bam(
 
 
 def count_tagalign(tagalign, bed_file, output, genome_sizes):
-    # command1 = "tabix -B {tagalign} {bed_file} | cut -f1-3".format(**locals())
     index_file = tagalign + ".tbi"
     if os.path.exists(index_file):
         command1 = ""
     else:
         command1 = "tabix -p bed {tagalign} | cut -f1-3".format(**locals())
-    # command2 = "bedtools coverage -counts -b stdin -a {bed_file} | awk '{{print $1 \"\\t\" $2 \"\\t\" $3 \"\\t\" $NF}}' ".format(**locals())
-    # command2 = 'bedtools sort -faidx {genome_sizes} -i {tagalign} | bedtools coverage -counts -b stdin -a {bed_file} -sorted -g {genome_sizes} | awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\''.format(
-    #     **locals()
-    # )
-
-    command2 = 'bedtools coverage -counts -b {tagalign} -a {bed_file} | awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\' '.format(
-        **locals()
-    )
-
+    #command2 = 'bedtools sort -faidx {genome_sizes} -i {tagalign} | bedtools coverage -counts -b stdin -a {bed_file} -sorted -g {genome_sizes} | awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\' '.format(
+    #    **locals()
+    #)
+    command2 = 'bedtools coverage -counts -b {tagalign} -a {bed_file} -sorted -g {genome_sizes} | awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\' '.format(**locals())
     p1 = Popen(command1, stdout=PIPE, shell=True)
     with open(output, "wb") as outfp:
         p2 = check_call(command2, stdin=p1.stdout, stdout=outfp, shell=True)
