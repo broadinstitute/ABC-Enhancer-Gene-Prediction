@@ -29,7 +29,7 @@ def run_cmd(cmd: str, raise_ex: bool = True) -> bool:
     try:
         subprocess.check_output(cmd, shell=True)
     except subprocess.CalledProcessError as e:
-        logging.error(f"Error: {e.output}")
+        logging.error(f"Error: {e}")
         if raise_ex:
             raise
         return False

@@ -1,11 +1,15 @@
 import argparse
+import os
+import os.path
+import sys
+import time
+import traceback
+
+import numpy as np
+import pandas as pd
+from getVariantOverlap import *
 from predictor import *
 from tools import *
-from getVariantOverlap import *
-import pandas as pd
-import numpy as np
-import sys, traceback, os, os.path
-import time
 
 
 def get_model_argument_parser():
@@ -50,7 +54,7 @@ def get_model_argument_parser():
         help="Threshold on ABC Score (--score_column) to call a predicted positive",
     )
     parser.add_argument("--cellType", help="Name of cell type")
-    parser.add_argument("--chrom_sizes", help="Chromosome sizes file")
+    parser.add_argument("--chrom_sizes", required=True, help="Chromosome sizes file")
 
     # hic
     # To do: validate params
@@ -236,13 +240,19 @@ def main():
     else:
         chromosomes = args.chromosomes.split(",")
 
+    chrom_sizes_map = pd.read_csv(
+        args.chrom_sizes, sep="\t", header=None, index_col=0
+    ).to_dict()[1]
+
     for chromosome in chromosomes:
         print("Making predictions for chromosome: {}".format(chromosome))
         t = time.time()
         this_enh = enhancers.loc[enhancers["chr"] == chromosome, :].copy()
         this_genes = genes.loc[genes["chr"] == chromosome, :].copy()
 
-        this_chr = make_predictions(chromosome, this_enh, this_genes, args)
+        this_chr = make_predictions(
+            chromosome, this_enh, this_genes, args, chrom_sizes_map
+        )
         all_putative_list.append(this_chr)
 
         print(

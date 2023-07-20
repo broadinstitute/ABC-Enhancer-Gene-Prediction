@@ -1,14 +1,17 @@
+import os
+import sys
+import time
+from typing import Dict
+
 import numpy as np
 import pandas as pd
-from tools import *
-import sys, os
-import time
 import pyranges as pr
 from hic import *
+from tools import *
 
 
-def make_predictions(chromosome, enhancers, genes, args):
-    pred = make_pred_table(chromosome, enhancers, genes, args)
+def make_predictions(chromosome, enhancers, genes, args, chrom_sizes_map):
+    pred = make_pred_table(chromosome, enhancers, genes, args.window, chrom_sizes_map)
     pred = annotate_predictions(pred, args.tss_slop)
     pred = add_powerlaw_to_predictions(pred, args)
 
@@ -18,7 +21,15 @@ def make_predictions(chromosome, enhancers, genes, args):
             chromosome, args.HiCdir, hic_type=args.hic_type
         )
         pred = add_hic_to_enh_gene_table(
-            enhancers, genes, pred, hic_file, hic_norm_file, hic_is_vc, chromosome, args
+            enhancers,
+            genes,
+            pred,
+            hic_file,
+            hic_norm_file,
+            hic_is_vc,
+            chromosome,
+            args,
+            chrom_sizes_map,
         )
         pred = compute_score(
             pred, [pred["activity_base"], pred["hic_contact_pl_scaled_adj"]], "ABC"
@@ -31,7 +42,7 @@ def make_predictions(chromosome, enhancers, genes, args):
     return pred
 
 
-def make_pred_table(chromosome, enh, genes, args):
+def make_pred_table(chromosome, enh, genes, window, chrom_sizes_map: Dict[str, int]):
     print("Making putative predictions table...")
     t = time.time()
     enh["enh_midpoint"] = (enh["start"] + enh["end"]) / 2
@@ -42,15 +53,16 @@ def make_pred_table(chromosome, enh, genes, args):
         genes,
         start_col="TargetGeneTSS",
         end_col="TargetGeneTSS",
-        start_slop=args.window,
-        end_slop=args.window,
+        start_slop=window,
+        end_slop=window,
+        chrom_sizes_map=chrom_sizes_map,
     )
 
     pred = enh_pr.join(genes_pr).df.drop(
         ["Start_b", "End_b", "chr_b", "Chromosome", "Start", "End"], axis=1
     )
     pred["distance"] = abs(pred["enh_midpoint"] - pred["TargetGeneTSS"])
-    pred = pred.loc[pred["distance"] < args.window, :]  # for backwards compatability
+    pred = pred.loc[pred["distance"] < window, :]  # for backwards compatability
 
     # without pyranges version
     # else:
@@ -63,7 +75,7 @@ def make_pred_table(chromosome, enh, genes, args):
 
     #     pred['enh_midpoint'] = (pred['start'] + pred['end'])/2
     #     pred['distance'] = abs(pred['enh_midpoint'] - pred['TargetGeneTSS'])
-    #     pred = pred.loc[pred['distance'] < args.window,:]
+    #     pred = pred.loc[pred['distance'] < window,:]
 
     #     print('Done. There are {} putative enhancers for chromosome {}'.format(pred.shape[0], chromosome))
     #     print('Elapsed time: {}'.format(time.time() - t))
@@ -72,7 +84,15 @@ def make_pred_table(chromosome, enh, genes, args):
 
 
 def add_hic_to_enh_gene_table(
-    enh, genes, pred, hic_file, hic_norm_file, hic_is_vc, chromosome, args
+    enh,
+    genes,
+    pred,
+    hic_file,
+    hic_norm_file,
+    hic_is_vc,
+    chromosome,
+    args,
+    chrom_sizes_map,
 ):
     print("Begin HiC")
     HiC = load_hic(
@@ -107,14 +127,22 @@ def add_hic_to_enh_gene_table(
         # Overlap in one direction
         enh_hic1 = (
             df_to_pyranges(
-                enh, start_col="enh_midpoint", end_col="enh_midpoint", end_slop=1
+                enh,
+                start_col="enh_midpoint",
+                end_col="enh_midpoint",
+                end_slop=1,
+                chrom_sizes_map=chrom_sizes_map,
             )
             .join(hic1)
             .df
         )
         genes_hic2 = (
             df_to_pyranges(
-                genes, start_col="TargetGeneTSS", end_col="TargetGeneTSS", end_slop=1
+                genes,
+                start_col="TargetGeneTSS",
+                end_col="TargetGeneTSS",
+                end_slop=1,
+                chrom_sizes_map=chrom_sizes_map,
             )
             .join(hic2)
             .df
@@ -126,14 +154,22 @@ def add_hic_to_enh_gene_table(
         # Overlap in the other direction
         enh_hic2 = (
             df_to_pyranges(
-                enh, start_col="enh_midpoint", end_col="enh_midpoint", end_slop=1
+                enh,
+                start_col="enh_midpoint",
+                end_col="enh_midpoint",
+                end_slop=1,
+                chrom_sizes_map=chrom_sizes_map,
             )
             .join(hic2)
             .df
         )
         genes_hic1 = (
             df_to_pyranges(
-                genes, start_col="TargetGeneTSS", end_col="TargetGeneTSS", end_slop=1
+                genes,
+                start_col="TargetGeneTSS",
+                end_col="TargetGeneTSS",
+                end_slop=1,
+                chrom_sizes_map=chrom_sizes_map,
             )
             .join(hic1)
             .df
