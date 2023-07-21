@@ -45,7 +45,7 @@ params, this option is for you.
 #. Move your input files into `tests/resources`
 #. Add a new line indicating with the biosample name and input files references (BAM, Hi-C, ...)
 
-	a. Try to limit the biosample to only 1 chromosome (e.g chr22) 
+	a. Try to limit the biosample to only 1 chromosome (e.g chr22). You'll need to provide an alt_TSS and alt_genes file with lines only for that chromosome.  
 #. Put the expected results under `tests/expected_output/generic/{biosample_name}` 
 
 When you run `pytest`, the test suite will automatically pick up your new biosample

@@ -1,7 +1,9 @@
 import argparse
 import os
-from neighborhoods import *
 from subprocess import getoutput
+
+import pandas as pd
+from neighborhoods import *
 
 
 def parseargs(required_args=True):
@@ -167,6 +169,10 @@ def processCellType(args):
             outdir=args.outdir,
         )
 
+    chrom_sizes_map = pd.read_csv(
+        args.chrom_sizes, sep="\t", header=None, index_col=0
+    ).to_dict()[1]
+
     # Setup Candidate Enhancers
     load_enhancers(
         genes=genes_for_class_assignment,
@@ -181,6 +187,7 @@ def processCellType(args):
         cellType=args.cellType,
         class_override_file=args.enhancer_class_override,
         outdir=args.outdir,
+        chrom_sizes_map=chrom_sizes_map,
     )
 
     print("Neighborhoods Complete! \n")

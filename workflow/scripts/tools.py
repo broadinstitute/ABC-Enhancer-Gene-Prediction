@@ -1,9 +1,11 @@
 import os
+import re
+import sys
+from subprocess import check_call
+from typing import Dict, Optional
+
 import numpy as np
 import pandas as pd
-import re
-from subprocess import check_call
-import sys
 import pyranges as pr
 
 # setting this to raise makes sure that any dangerous assignments to pandas
@@ -60,10 +62,21 @@ def write_params(args, file):
 
 
 def df_to_pyranges(
-    df, start_col="start", end_col="end", chr_col="chr", start_slop=0, end_slop=0
+    df,
+    start_col="start",
+    end_col="end",
+    chr_col="chr",
+    start_slop=0,
+    end_slop=0,
+    chrom_sizes_map: Optional[Dict[str, int]] = None,
 ):
     df["Chromosome"] = df[chr_col]
     df["Start"] = df[start_col] - start_slop
     df["End"] = df[end_col] + end_slop
-
+    if start_slop or end_slop:
+        assert chrom_sizes_map, "Must pass in chrom_sizes_map if using slop"
+        df["chr_sizes"] = df[chr_col].apply(lambda x: chrom_sizes_map[x])
+        df["Start"] = df["Start"].apply(lambda x: max(x, 0))
+        df["End"] = df[["End", "chr_sizes"]].min(axis=1)
+        df.drop("chr_sizes", axis=1, inplace=True)
     return pr.PyRanges(df)
