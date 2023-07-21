@@ -7,7 +7,7 @@ from typing import Callable, List
 import pandas as pd
 import yaml
 from test_utils import (
-    compare_files,
+    read_file,
     get_biosample_names,
     get_filtered_dataframe,
     run_cmd,
@@ -44,8 +44,10 @@ class TestFullABCRun(unittest.TestCase):
         for file in INTERMEDIATE_FILES:
             test_file = os.path.join(TEST_OUTPUT_DIR, biosample, file)
             expected_file = os.path.join(EXPECTED_OUTPUT_DIR, biosample, file)
-            if not compare_files(test_file, expected_file):
-                logging.error(f"Intermediate file comparison failed for {file}")
+            msg = f"Intermediate file comparison failed for {file}"
+            test_contents = read_file(test_file)
+            expected_contents = read_file(expected_file)
+            self.assertEqual(test_contents, expected_contents, msg)
 
     def compare_prediction_file(self, biosample: str) -> None:
         test_file = os.path.join(TEST_OUTPUT_DIR, biosample, PREDICTION_FILE)
