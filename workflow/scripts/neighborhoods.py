@@ -268,6 +268,7 @@ def load_enhancers(
     default_accessibility_feature="",
     qnorm=None,
     class_override_file=None,
+    chrom_sizes_map=None,
 ):
     enhancers = read_bed(candidate_peaks)
     enhancers["chr"] = enhancers["chr"].astype("str")
@@ -292,7 +293,7 @@ def load_enhancers(
     if genes is not None:
         print("Assigning classes to enhancers")
         enhancers = assign_enhancer_classes(
-            enhancers, genes, tss_slop=tss_slop_for_class_assignment
+            enhancers, genes, chrom_sizes_map, tss_slop=tss_slop_for_class_assignment
         )
 
     # TO DO: Should qnorm each bam file separately (before averaging). Currently qnorm being performed on the average
@@ -319,10 +320,15 @@ def load_enhancers(
 
 
 # Kristy's version
-def assign_enhancer_classes(enhancers, genes, tss_slop=500):
+def assign_enhancer_classes(enhancers, genes, chrom_sizes_map, tss_slop=500):
     # build pyranges df
     tss_pyranges = df_to_pyranges(
-        genes, start_col="tss", end_col="tss", start_slop=tss_slop, end_slop=tss_slop
+        genes,
+        start_col="tss",
+        end_col="tss",
+        start_slop=tss_slop,
+        end_slop=tss_slop,
+        chrom_sizes_map=chrom_sizes_map,
     )
     gene_pyranges = df_to_pyranges(genes)
 

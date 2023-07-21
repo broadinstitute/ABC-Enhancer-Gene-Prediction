@@ -1,2 +1,2 @@
 biosample	DHS	ATAC	H3K27ac	default_accessibility_feature	HiC_dir	HiC_type	alt_TSS	alt_genes
-K562	example_chr22/input_data/Chromatin/ENCFF860XAE.chr22.sorted.se.bam		example_chr22/input_data/Chromatin/ENCFF790GFL.chr22.sorted.se.bam	DHS	example_chr22/input_data/HiC	juicebox	example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.hg38.TSS500bp.bed	example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.hg38.bed
+K562_chr16	example_chr/chr16/dhs.sorted.bam		example_chr/chr16/h3k27ac.sorted.bam	DHS	example_chr/HiC_K562	juicebox	example_chr/chr16/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr16.hg38.TSS500bp.bed	example_chr/chr16/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr16.hg38.bed
