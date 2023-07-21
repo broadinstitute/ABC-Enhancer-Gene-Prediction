@@ -71,7 +71,7 @@ class TestFullABCRun(unittest.TestCase):
         # Make sure the test doesn't take too long
         # May need to adjust as more biosamples are added, but we should keep
         # tests quick (so don't run ABC on all chromosomes)
-        max_time = 60 * 5  # 5 min
+        max_time = 60 * 3  # 3 min
         self.assertLessEqual(
             time_taken,
             max_time,
