@@ -10,6 +10,7 @@ import pandas as pd
 from getVariantOverlap import *
 from predictor import *
 from tools import *
+from compute_powerlaw_fit_from_hic import load_hic_for_powerlaw, do_powerlaw_fit
 
 
 def get_model_argument_parser():
@@ -79,6 +80,17 @@ def get_model_argument_parser():
         help="format of hic files",
     )
     parser.add_argument(
+        "--hic_minWindow",
+        type=float,
+        help="Minimum distance between bins to include in powerlaw fit (bp). Recommended to be at least >= resolution to avoid using the diagonal of the HiC Matrix. Default is to match with hic_resolution",
+    )
+    parser.add_argument(
+        "--hic_maxWindow",
+        default=1000000,  # 1Mbp
+        type=int,
+        help="Maximum distance between bins to include in powerlaw fit (bp)",
+    )
+    parser.add_argument(
         "--hic_is_doubly_stochastic",
         action="store_true",
         help="If hic matrix is already DS, can skip this step",
@@ -86,31 +98,24 @@ def get_model_argument_parser():
 
     # Power law
     parser.add_argument(
-        "--hic_powerlaw_fit",
-        help="tsv file describing scale/gamma to use for powerlaw. Generated from compute_powerlaw_fit_from_hic.py",
-    )
-    parser.add_argument(
         "--scale_hic_using_powerlaw",
         action="store_true",
-        help="Scale Hi-C values using powerlaw relationship. Used if hic_powerlaw_fit not provided",
+        help="Scale Hi-C values using powerlaw relationship.",
     )
     parser.add_argument(
         "--hic_gamma",
         type=float,
-        default=0.87,
-        help="powerlaw exponent of hic data. Must be positive. Used if hic_powerlaw_fit not provided",
+        help="powerlaw exponent of hic data. Must be positive. Default is derived from the HiC data",
     )
     parser.add_argument(
         "--hic_scale",
         type=float,
-        default=5.32,
-        help="scale of hic data. Must be positive",
+        help="scale of hic data. Must be positive. Default is derived from the HiC data",
     )
     parser.add_argument(
         "--hic_gamma_reference",
         type=float,
-        default=0.87,
-        help="powerlaw exponent to scale to. Must be positive. Used if hic_powerlaw_fit not provided",
+        help="powerlaw exponent to scale to. Must be positive. Default is derived from the HiC data",
     )
 
     # Genes to run through model
@@ -238,11 +243,6 @@ def main():
     )
     all_putative_list = []
 
-    if args.hic_powerlaw_fit:
-        powerlaw_fit = pd.read_csv(args.hic_powerlaw_fit, sep="\t")
-        args.hic_gamma = powerlaw_fit["pl_gamma"][0]
-        args.hic_scale = powerlaw_fit["pl_scale"][0]
-
     # Make predictions
     if args.chromosomes == "all":
         chromosomes = set(genes["chr"]).intersection(set(enhancers["chr"]))
@@ -255,6 +255,21 @@ def main():
     chrom_sizes_map = pd.read_csv(
         args.chrom_sizes, sep="\t", header=None, index_col=0
     ).to_dict()[1]
+
+    if args.hic_gamma and args.hic_scale:
+        print("Utilizing provided gamma and scale values")
+    elif args.HiCdir:
+        args.hic_minWindow = args.hic_minWindow or args.hic_resolution
+        chrom_hic_data = load_hic_for_powerlaw(
+            chromosomes,
+            args.hic_dir,
+            args.hic_type,
+            args.hic_resolution,
+            min_window=args.hic_minWindow,
+            max_window=args.hic_maxWindow,
+        )
+        args.hic_gamma, args.hic_scale, _ = do_powerlaw_fit(chrom_hic_data.values())
+        print(f"Gamma: {args.hic_gamma}. Scale: {args.hic_scale}. Fitted from HiC data")
 
     for chromosome in chromosomes:
         print("Making predictions for chromosome: {}".format(chromosome))

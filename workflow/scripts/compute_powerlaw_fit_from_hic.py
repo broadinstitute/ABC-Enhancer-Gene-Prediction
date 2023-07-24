@@ -5,9 +5,10 @@ import sys
 import traceback
 
 import numpy as np
-import pandas
-from hic import *
+import pandas as pd
+from hic import get_hic_file, load_hic
 from scipy import stats
+from typing import Dict
 
 # To do:
 # 1. Use MLE to estimate exponent?
@@ -29,7 +30,7 @@ def parseargs():
     readable = argparse.FileType("r")
     parser.add_argument(
         "--hicDir",
-        help="Directory containing observed HiC KR normalized matrices. File naming and structure should be: hicDir/chr*/chr*.KRobserved",
+        help="Directory containing observed HiC KR normalized matrices. File naming and structure should be: hicDir/chr*/chr*.{KR,Interscale}observed",
     )
     parser.add_argument("--outDir", help="Output directory")
     parser.add_argument(
@@ -52,7 +53,7 @@ def parseargs():
     )
     parser.add_argument(
         "--maxWindow",
-        default=1000000,
+        default=1000000, # 1Mbp
         type=int,
         help="Maximum distance between bins to include in powerlaw fit (bp)",
     )
@@ -65,18 +66,26 @@ def parseargs():
     args = parser.parse_args()
     return args
 
+def combine_hic_maps(chrom_hic_data):
+    all_data_list = [x["DATA"] for x in chrom_hic_data.values()]
+    return pd.concat(all_data_list)
 
 def main():
     args = parseargs()
     os.makedirs(args.outDir, exist_ok=True)
 
-    HiC = load_hic_for_powerlaw(args)
+    if args.chr == "all":
+        chromosomes = ["chr" + str(x) for x in list(range(1, 23))] + ["chrX"]
+    else:
+        chromosomes = args.chr.split(",")
+
+    chrom_hic_data = load_hic_for_powerlaw(chromosomes, args.hicDir, args.hic_type, args.resolution, args.minWindow, args.maxWindow)
 
     # Run
-    slope, intercept, hic_mean_var = do_powerlaw_fit(HiC)
+    slope, intercept, hic_mean_var = do_powerlaw_fit(chrom_hic_data)
 
     # print
-    res = pandas.DataFrame(
+    res = pd.DataFrame(
         {
             "resolution": [args.resolution],
             "maxWindow": [args.maxWindow],
@@ -97,18 +106,13 @@ def main():
     )
 
 
-def load_hic_for_powerlaw(args):
-    if args.chr == "all":
-        chromosomes = ["chr" + str(x) for x in list(range(1, 23))] + ["chrX"]
-    else:
-        chromosomes = args.chr.split(",")
-
-    all_data_list = []
+def load_hic_for_powerlaw(chromosomes, hicDir, hic_type, hic_resolution, min_window, max_window):
+    chrom_hic_data: Dict[str, Dict] = {}
     for chrom in chromosomes:
         try:
-            if args.hic_type == "juicebox":
+            if hic_type == "juicebox":
                 hic_file, hic_norm_file, hic_is_vc = get_hic_file(
-                    chrom, args.hicDir, allow_vc=False
+                    chrom, hicDir, allow_vc=False
                 )
                 print("Working on {}".format(hic_file))
                 this_data = load_hic(
@@ -116,20 +120,20 @@ def load_hic_for_powerlaw(args):
                     hic_norm_file=hic_norm_file,
                     hic_is_vc=hic_is_vc,
                     hic_type="juicebox",
-                    hic_resolution=args.resolution,
+                    hic_resolution=hic_resolution,
                     tss_hic_contribution=100,
-                    window=args.maxWindow,
-                    min_window=args.minWindow,
+                    window=max_window,
+                    min_window=min_window,
                     gamma=np.nan,
                     interpolate_nan=False,
                 )
                 this_data["dist_for_fit"] = (
-                    abs(this_data["bin1"] - this_data["bin2"]) * args.resolution
+                    abs(this_data["bin1"] - this_data["bin2"]) * hic_resolution
                 )
-                all_data_list.append(this_data)
-            elif args.hic_type == "bedpe":
+                chrom_hic_data[chrom] = {"IS_VC": hic_is_vc, "DATA": this_data}
+            elif hic_type == "bedpe":
                 hic_file, hic_norm_file, hic_is_vc = get_hic_file(
-                    chrom, args.hicDir, hic_type="bedpe"
+                    chrom, hicDir, hic_type="bedpe"
                 )
                 print("Working on {}".format(hic_file))
                 this_data = load_hic(
@@ -152,29 +156,27 @@ def load_hic_for_powerlaw(args):
                     - (this_data["y2"] + this_data["y1"]) / 2
                 )
                 this_data["dist_for_fit"] = (
-                    rawdist // args.resolution
-                ) * args.resolution
+                    rawdist // hic_resolution
+                ) * hic_resolution
                 this_data = this_data.loc[
                     np.logical_and(
-                        this_data["dist_for_fit"] >= args.minWindow,
-                        this_data["dist_for_fit"] <= args.maxWindow,
+                        this_data["dist_for_fit"] >= min_window,
+                        this_data["dist_for_fit"] <= max_window,
                     )
                 ]
-                all_data_list.append(this_data)
+                chrom_hic_data[chrom] = {"IS_VC": hic_is_vc, "DATA": this_data}
             else:
-                error("invalid --hic_type")
+                raise Exception("invalid --hic_type")
 
         except Exception as e:
             print(e)
             traceback.print_exc(file=sys.stdout)
-
-    all_data = pd.concat(all_data_list)
-
-    return all_data
+    return chrom_hic_data
 
 
-def do_powerlaw_fit(HiC):
+def do_powerlaw_fit(chrom_hic_data):
     print("Running regression")
+    HiC = combine_hic_maps(chrom_hic_data)
 
     # TO DO:
     # Print out mean/var plot of powerlaw relationship
