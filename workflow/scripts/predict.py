@@ -6,6 +6,7 @@ import time
 import traceback
 
 import numpy as np
+from typing import Dict
 import pandas as pd
 from getVariantOverlap import *
 from predictor import *
@@ -37,12 +38,6 @@ def get_model_argument_parser():
     )
     parser.add_argument("--outdir", required=True, help="output directory")
     parser.add_argument(
-        "--window",
-        type=int,
-        default=5000000,
-        help="Make predictions for all candidate elements within this distance of the gene's TSS",
-    )
-    parser.add_argument(
         "--score_column",
         default="ABC.Score",
         help="Column name of score to use for thresholding",
@@ -52,7 +47,7 @@ def get_model_argument_parser():
         type=float,
         required=True,
         default=0.022,
-        help="Threshold on ABC Score (--score_column) to call a predicted positive",
+        help="Threshold on ABC Score (--score_column) to call a predicted positive. Note that the threshold will need to be adjusted based on the combination of input datasets used.",
     )
     parser.add_argument("--cellType", help="Name of cell type")
     parser.add_argument("--chrom_sizes", required=True, help="Chromosome sizes file")
@@ -61,12 +56,6 @@ def get_model_argument_parser():
     # To do: validate params
     parser.add_argument("--HiCdir", default=None, help="HiC directory")
     parser.add_argument("--hic_resolution", type=int, help="HiC resolution")
-    parser.add_argument(
-        "--tss_hic_contribution",
-        type=float,
-        default=100,
-        help="Weighting of diagonal bin of hic matrix as a percentage of the maximum of its neighboring bins",
-    )
     parser.add_argument(
         "--hic_pseudocount_distance",
         type=int,
@@ -80,55 +69,58 @@ def get_model_argument_parser():
         help="format of hic files",
     )
     parser.add_argument(
-        "--hic_minWindow",
+        "--hic_is_doubly_stochastic",
+        action="store_true",
+        help="If hic matrix is already doubly stochastic, can skip this step",
+    )
+
+    # fitting hic to powerlaw
+    parser.add_argument(
+        "--hic_powerlaw_minWindow",
         type=float,
         help="Minimum distance between bins to include in powerlaw fit (bp). Recommended to be at least >= resolution to avoid using the diagonal of the HiC Matrix. Default is to match with hic_resolution",
     )
     parser.add_argument(
-        "--hic_maxWindow",
+        "--hic_powerlaw_maxWindow",
         default=1000000,  # 1Mbp
         type=int,
         help="Maximum distance between bins to include in powerlaw fit (bp)",
-    )
-    parser.add_argument(
-        "--hic_is_doubly_stochastic",
-        action="store_true",
-        help="If hic matrix is already DS, can skip this step",
     )
 
     # Power law
     parser.add_argument(
         "--scale_hic_using_powerlaw",
         action="store_true",
-        help="Scale Hi-C values using powerlaw relationship.",
+        help="Quantile normalize Hi-C values using powerlaw relationship. This parameter will rescale Hi-C contacts from the input Hi-C data (specified by --hic_gamma and --hic_scale) to match the power-law relationship of a reference cell type (specified by --hic_gamma_reference)",
     )
     parser.add_argument(
         "--hic_gamma",
         type=float,
-        help="powerlaw exponent of hic data. Must be positive. Default is derived from the HiC data",
+        help="powerlaw exponent (gamma) of hic data. Must be positive. Default is derived from the HiC data",
     )
     parser.add_argument(
         "--hic_scale",
         type=float,
-        help="scale of hic data. Must be positive. Default is derived from the HiC data",
+        help="scale parameter for powerlaw of hic data. Must be positive. Default is derived from the HiC data",
     )
     parser.add_argument(
         "--hic_gamma_reference",
         type=float,
-        help="powerlaw exponent to scale to. Must be positive. Default is derived from the HiC data",
+        default=0.87,
+        help="Powerlaw exponent (gamma) to scale to. Must be positive",
     )
 
     # Genes to run through model
     parser.add_argument(
         "--run_all_genes",
         action="store_true",
-        help="Do not check for gene expression, make predictions for all genes",
+        help="Do not check for gene expression, make predictions for all genes. Use of this parameter is not recommended.",
     )
     parser.add_argument(
         "--expression_cutoff",
         type=float,
         default=1,
-        help="Make predictions for genes with expression higher than this value",
+        help="Make predictions for genes with expression higher than this value. Use of this parameter is not recommended.",
     )
     parser.add_argument(
         "--promoter_activity_quantile_cutoff",
@@ -147,6 +139,20 @@ def get_model_argument_parser():
         "--use_hdf5",
         action="store_true",
         help="Write AllPutative file in hdf5 format instead of tab-delimited",
+    )
+
+    # Parameters used in development of ABC model that should not be changed for most use cases
+    parser.add_argument(
+        "--window",
+        type=int,
+        default=5000000,
+        help="Consider all candidate elements within this distance of the gene's TSS when computing ABC scores. This was a parameter optimized during development of ABC and should not typically be changed.",
+    )
+    parser.add_argument(
+        "--tss_hic_contribution",
+        type=float,
+        default=100,
+        help="Diagonal bin of Hi-C matrix is set to this percentage of the maximum of its neighboring bins. Default value (100%) means that the diagonal bin of the Hi-C matrix will be set exactly to the maximum of its two neighboring bins. This is a parameter used in development of the ABC model that should not typically be changed, unless experimenting with using different types of input 3D contact data that require different handling of the diagonal bin.",
     )
 
     # Other
@@ -179,6 +185,24 @@ def get_model_argument_parser():
 def get_predict_argument_parser():
     parser = get_model_argument_parser()
     return parser
+
+
+def fit_powerlaw_params(chromosomes, args):
+    args.hic_powerlaw_minWindow = args.hic_powerlaw_minWindow or args.hic_resolution
+    chrom_hic_data = load_hic_for_powerlaw(
+        chromosomes,
+        args.HiCdir,
+        args.hic_type,
+        args.hic_resolution,
+        min_window=args.hic_powerlaw_minWindow,
+        max_window=args.hic_powerlaw_maxWindow,
+    )
+    # TODO: To save time, we can try to leverage the loaded hic data from
+    # fitting, instead of re-loading. But we need to figure out how to
+    # handle different window params. (also remove interpolation)
+    slope, intercept, _ = do_powerlaw_fit(chrom_hic_data, args.hic_resolution)
+    args.hic_gamma = -1 * slope
+    args.hic_scale = intercept
 
 
 def main():
@@ -259,17 +283,10 @@ def main():
     if args.hic_gamma and args.hic_scale:
         print("Utilizing provided gamma and scale values")
     elif args.HiCdir:
-        args.hic_minWindow = args.hic_minWindow or args.hic_resolution
-        chrom_hic_data = load_hic_for_powerlaw(
-            chromosomes,
-            args.hic_dir,
-            args.hic_type,
-            args.hic_resolution,
-            min_window=args.hic_minWindow,
-            max_window=args.hic_maxWindow,
-        )
-        args.hic_gamma, args.hic_scale, _ = do_powerlaw_fit(chrom_hic_data.values())
+        fit_powerlaw_params(chromosomes, args)
         print(f"Gamma: {args.hic_gamma}. Scale: {args.hic_scale}. Fitted from HiC data")
+    else:
+        raise Exception("Must provide gamma/scale values or HiC dir")
 
     for chromosome in chromosomes:
         print("Making predictions for chromosome: {}".format(chromosome))

@@ -153,12 +153,11 @@ rule call_neighborhoods:
 			--H3K27ac {params.H3K27ac}
 		"""
 
-
 ### run predictions: takes in EnhancerList.txt and GeneList.txt generated from rule call_neighborhoods above and generates Enhancer-Gene Predictions and links
 rule run_predictions:
 	input:
 		enhancers = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "EnhancerList.txt"),
-		genes = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "GeneList.txt"),
+		genes = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "GeneList.txt")
 	params:
 		cellType = lambda wildcards: wildcards.biosample, 
 		output_dir = lambda wildcards: os.path.join(RESULTS_DIR, wildcards.biosample, "Predictions"),
@@ -168,6 +167,7 @@ rule run_predictions:
 		hic_resolution = config['params_predict']['hic_resolution'],
 		threshold = config['params_predict']['threshold'],
 		flags = config['params_predict']['flags'],
+		powerlaw_params = config['params_predict']['powerlaw_params']
 	conda:
 		"envs/abcenv.yml"
 	output: 
@@ -181,14 +181,13 @@ rule run_predictions:
 			--outdir {params.output_dir} \
 			--HiCdir {params.hic_dir} \
 			--hic_type {params.hic_type} \
-			--hic_gamma {params.gamma} \
-			--hic_scale {params.scale} \
 			--chrom_sizes {params.chrom_sizes} \
 			--hic_resolution {params.hic_resolution} \
 			--threshold {params.threshold} \
 			--cellType {params.cellType} \
 			--genes {input.genes} \
-			{params.flags}
+			{params.flags} \
+			{params.powerlaw_params}
 		"""
 
 ### generate AllPredictions file

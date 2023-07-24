@@ -6,7 +6,7 @@ import traceback
 
 import numpy as np
 import pandas as pd
-from hic import get_hic_file, load_hic
+from hic import get_hic_file, load_hic_juicebox, load_hic_bedpe, load_hic_avg
 from scipy import stats
 from typing import Dict
 
@@ -36,7 +36,7 @@ def parseargs():
     parser.add_argument(
         "--hic_type",
         default="juicebox",
-        choices=["juicebox", "bedpe"],
+        choices=["juicebox", "bedpe", "avg"],
         help="format of hic files",
     )
     parser.add_argument(
@@ -53,7 +53,7 @@ def parseargs():
     )
     parser.add_argument(
         "--maxWindow",
-        default=1000000, # 1Mbp
+        default=1000000,  # 1Mbp
         type=int,
         help="Maximum distance between bins to include in powerlaw fit (bp)",
     )
@@ -66,9 +66,10 @@ def parseargs():
     args = parser.parse_args()
     return args
 
+
 def combine_hic_maps(chrom_hic_data):
-    all_data_list = [x["DATA"] for x in chrom_hic_data.values()]
-    return pd.concat(all_data_list)
+    return pd.concat(list(chrom_hic_data.values()))
+
 
 def main():
     args = parseargs()
@@ -79,10 +80,17 @@ def main():
     else:
         chromosomes = args.chr.split(",")
 
-    chrom_hic_data = load_hic_for_powerlaw(chromosomes, args.hicDir, args.hic_type, args.resolution, args.minWindow, args.maxWindow)
+    chrom_hic_data = load_hic_for_powerlaw(
+        chromosomes,
+        args.hicDir,
+        args.hic_type,
+        args.resolution,
+        args.minWindow,
+        args.maxWindow,
+    )
 
     # Run
-    slope, intercept, hic_mean_var = do_powerlaw_fit(chrom_hic_data)
+    slope, intercept, hic_mean_var = do_powerlaw_fit(chrom_hic_data, args.resolution)
 
     # print
     res = pd.DataFrame(
@@ -106,48 +114,35 @@ def main():
     )
 
 
-def load_hic_for_powerlaw(chromosomes, hicDir, hic_type, hic_resolution, min_window, max_window):
-    chrom_hic_data: Dict[str, Dict] = {}
+def load_hic_for_powerlaw(
+    chromosomes, hicDir, hic_type, hic_resolution, min_window, max_window
+):
+    chrom_hic_data: Dict[str, pd.DataFrame] = {}
     for chrom in chromosomes:
         try:
+            hic_file, hic_norm_file, hic_is_vc = get_hic_file(
+                chrom, hicDir, hic_type=hic_type, allow_vc=False
+            )
             if hic_type == "juicebox":
-                hic_file, hic_norm_file, hic_is_vc = get_hic_file(
-                    chrom, hicDir, allow_vc=False
-                )
                 print("Working on {}".format(hic_file))
-                this_data = load_hic(
+                this_data = load_hic_juicebox(
                     hic_file=hic_file,
                     hic_norm_file=hic_norm_file,
                     hic_is_vc=hic_is_vc,
-                    hic_type="juicebox",
                     hic_resolution=hic_resolution,
                     tss_hic_contribution=100,
                     window=max_window,
                     min_window=min_window,
                     gamma=np.nan,
+                    scale=np.nan,
                     interpolate_nan=False,
                 )
                 this_data["dist_for_fit"] = (
                     abs(this_data["bin1"] - this_data["bin2"]) * hic_resolution
                 )
-                chrom_hic_data[chrom] = {"IS_VC": hic_is_vc, "DATA": this_data}
             elif hic_type == "bedpe":
-                hic_file, hic_norm_file, hic_is_vc = get_hic_file(
-                    chrom, hicDir, hic_type="bedpe"
-                )
                 print("Working on {}".format(hic_file))
-                this_data = load_hic(
-                    hic_file=hic_file,
-                    hic_type="bedpe",
-                    hic_norm_file=None,
-                    hic_is_vc=None,
-                    hic_resolution=None,
-                    tss_hic_contribution=None,
-                    window=None,
-                    min_window=None,
-                    gamma=None,
-                )
-
+                this_data = load_hic_bedpe(hic_file)
                 # Compute distance in bins as with juicebox data.
                 # This is needed to in order to maintain consistency, but is probably slightly less accurate.
                 # Binning also reduces noise level.
@@ -155,37 +150,50 @@ def load_hic_for_powerlaw(chromosomes, hicDir, hic_type, hic_resolution, min_win
                     (this_data["x2"] + this_data["x1"]) / 2
                     - (this_data["y2"] + this_data["y1"]) / 2
                 )
-                this_data["dist_for_fit"] = (
-                    rawdist // hic_resolution
-                ) * hic_resolution
+                this_data["dist_for_fit"] = (rawdist // hic_resolution) * hic_resolution
                 this_data = this_data.loc[
                     np.logical_and(
                         this_data["dist_for_fit"] >= min_window,
                         this_data["dist_for_fit"] <= max_window,
                     )
                 ]
-                chrom_hic_data[chrom] = {"IS_VC": hic_is_vc, "DATA": this_data}
+            elif hic_type == "avg":
+                print("Working on {}".format(hic_file))
+                this_data = load_hic_avg(hic_file, hic_resolution)
+                this_data["dist_for_fit"] = (
+                    abs((this_data["bin1"] - this_data["bin2"]) / hic_resolution)
+                    * hic_resolution
+                )
+                this_data["dist_for_fit"] = this_data["dist_for_fit"].astype("int")
             else:
                 raise Exception("invalid --hic_type")
 
+            chrom_hic_data[chrom] = this_data
         except Exception as e:
             print(e)
             traceback.print_exc(file=sys.stdout)
     return chrom_hic_data
 
 
-def do_powerlaw_fit(chrom_hic_data):
-    print("Running regression")
+def do_powerlaw_fit(chrom_hic_data, resolution):
     HiC = combine_hic_maps(chrom_hic_data)
+    print("Running regression")
 
     # TO DO:
     # Print out mean/var plot of powerlaw relationship
+    # Juicebox output is in sparse matrix format. This is an attempt to get a "mean" hic_contact for each distance bin since we don't have the total # of bins available.
     HiC_summary = HiC.groupby("dist_for_fit").agg({"hic_contact": "sum"})
-    HiC_summary["hic_contact"] = (
-        HiC_summary.hic_contact / HiC_summary.hic_contact.sum()
-    )  # technically this normalization should be over the entire genome (not just to maxWindow). Will only affect intercept though..
+    # HiC_summary['hic_contact'] = HiC_summary.hic_contact / HiC_summary.hic_contact.sum() #technically this normalization should be over the entire genome (not just to maxWindow). Will only affect intercept though
+    # get a better approximation of the total # of bins .
+    total_num_bins = len(HiC.loc[HiC["dist_for_fit"] == resolution])
+    print(total_num_bins)
+    #    idx = np.isfinite(HiC_summary['hic_contact']) & np.isfinite(HiC_summary.index)
+    HiC_summary["hic_contact"] = HiC_summary.hic_contact / total_num_bins
+    pseudocount = 0.000001
+    #    pseudocount = 0
     res = stats.linregress(
-        np.log(HiC_summary.index), np.log(HiC_summary["hic_contact"])
+        np.log(HiC_summary.index + pseudocount),
+        np.log(HiC_summary["hic_contact"] + pseudocount),
     )
 
     hic_mean_var = HiC.groupby("dist_for_fit").agg({"hic_contact": ["mean", "var"]})
