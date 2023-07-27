@@ -54,7 +54,7 @@ def get_model_argument_parser():
 
     # hic
     # To do: validate params
-    parser.add_argument("--HiCdir", default=None, help="HiC directory")
+    parser.add_argument("--hic_dir", default=None, help="HiC directory")
     parser.add_argument("--hic_resolution", type=int, help="HiC resolution")
     parser.add_argument(
         "--hic_pseudocount_distance",
@@ -74,19 +74,6 @@ def get_model_argument_parser():
         help="If hic matrix is already doubly stochastic, can skip this step",
     )
 
-    # fitting hic to powerlaw
-    parser.add_argument(
-        "--hic_powerlaw_minWindow",
-        type=float,
-        help="Minimum distance between bins to include in powerlaw fit (bp). Recommended to be at least >= resolution to avoid using the diagonal of the HiC Matrix. Default is to match with hic_resolution",
-    )
-    parser.add_argument(
-        "--hic_powerlaw_maxWindow",
-        default=1000000,  # 1Mbp
-        type=int,
-        help="Maximum distance between bins to include in powerlaw fit (bp)",
-    )
-
     # Power law
     parser.add_argument(
         "--scale_hic_using_powerlaw",
@@ -94,14 +81,9 @@ def get_model_argument_parser():
         help="Quantile normalize Hi-C values using powerlaw relationship. This parameter will rescale Hi-C contacts from the input Hi-C data (specified by --hic_gamma and --hic_scale) to match the power-law relationship of a reference cell type (specified by --hic_gamma_reference)",
     )
     parser.add_argument(
-        "--hic_gamma",
-        type=float,
-        help="powerlaw exponent (gamma) of hic data. Must be positive. Default is derived from the HiC data",
-    )
-    parser.add_argument(
-        "--hic_scale",
-        type=float,
-        help="scale parameter for powerlaw of hic data. Must be positive. Default is derived from the HiC data",
+        "--powerlaw_params_tsv",
+        type=str,
+        help="TSV file containing gamma/scale values according to powerlaw fit",
     )
     parser.add_argument(
         "--hic_gamma_reference",
@@ -187,24 +169,6 @@ def get_predict_argument_parser():
     return parser
 
 
-def fit_powerlaw_params(chromosomes, args):
-    args.hic_powerlaw_minWindow = args.hic_powerlaw_minWindow or args.hic_resolution
-    chrom_hic_data = load_hic_for_powerlaw(
-        chromosomes,
-        args.HiCdir,
-        args.hic_type,
-        args.hic_resolution,
-        min_window=args.hic_powerlaw_minWindow,
-        max_window=args.hic_powerlaw_maxWindow,
-    )
-    # TODO: To save time, we can try to leverage the loaded hic data from
-    # fitting, instead of re-loading. But we need to figure out how to
-    # handle different window params. (also remove interpolation)
-    slope, intercept, _ = do_powerlaw_fit(chrom_hic_data, args.hic_resolution)
-    args.hic_gamma = -1 * slope
-    args.hic_scale = intercept
-
-
 def main():
     parser = get_predict_argument_parser()
     args = parser.parse_args()
@@ -280,14 +244,8 @@ def main():
         args.chrom_sizes, sep="\t", header=None, index_col=0
     ).to_dict()[1]
 
-    if args.hic_gamma and args.hic_scale:
-        print("Utilizing provided gamma and scale values")
-    elif args.HiCdir:
-        fit_powerlaw_params(chromosomes, args)
-        print(f"Gamma: {args.hic_gamma}. Scale: {args.hic_scale}. Fitted from HiC data")
-    else:
-        raise Exception("Must provide gamma/scale values or HiC dir")
-
+    powerlaw_params = pd.read_csv(args.powerlaw_params_tsv, sep="\t").iloc[0]
+    hic_gamma, hic_scale = powerlaw_params["hic_gamma"], powerlaw_params["hic_scale"]
     for chromosome in chromosomes:
         print("Making predictions for chromosome: {}".format(chromosome))
         t = time.time()
@@ -295,7 +253,13 @@ def main():
         this_genes = genes.loc[genes["chr"] == chromosome, :].copy()
 
         this_chr = make_predictions(
-            chromosome, this_enh, this_genes, args, chrom_sizes_map
+            chromosome,
+            this_enh,
+            this_genes,
+            args,
+            hic_gamma,
+            hic_scale,
+            chrom_sizes_map,
         )
         all_putative_list.append(this_chr)
 
@@ -309,7 +273,8 @@ def main():
     print("Writing output files...")
     all_putative = pd.concat(all_putative_list)
     all_putative["CellType"] = args.cellType
-    all_putative["hic_contact_squared"] = all_putative["hic_contact"] ** 2
+    if args.hic_dir:
+        all_putative["hic_contact_squared"] = all_putative["hic_contact"] ** 2
     slim_cols = [
         "chr",
         "start",
@@ -396,12 +361,12 @@ def main():
 
 
 def validate_args(args):
-    if args.HiCdir and args.hic_type == "juicebox":
+    if args.hic_dir and args.hic_type == "juicebox":
         assert (
             args.hic_resolution is not None
         ), "HiC resolution must be provided if hic_type is juicebox"
 
-    if not args.HiCdir:
+    if not args.hic_dir:
         print(
             "WARNING: Hi-C directory not provided. Model will only compute ABC score using powerlaw!"
         )

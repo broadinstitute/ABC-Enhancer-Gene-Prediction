@@ -1,53 +1,89 @@
 import os
 import pandas as pd
+import hashlib
 from snakemake.utils import min_version
 min_version("7.0")
 
 configfile: "config/config.yaml"
 conda: "mamba"
 
+NA_VAL = "None"
 ## load biosamples config file
-biosamples_config_file = config["biosamplesTable"]
-biosamples_config = pd.read_table(biosamples_config_file, na_values="").fillna("None").set_index("biosample", drop=False)
+BIOSAMPLES_CONFIG = pd.read_table(config["biosamplesTable"], na_values="").fillna(NA_VAL).set_index("biosample", drop=False)
 
 ## get list of biosamples
-all_biosamples = list(biosamples_config.index.values)
+ALL_BIOSAMPLES = list(BIOSAMPLES_CONFIG.index.values)
 
-## get TSS and genefile names for each biosample 
-TSS_files = []
-gene_files = []
-for x in all_biosamples:
-	tss_file = config['params_candidate']['genome_tss']
-	gene_file = config['params_neighborhoods']['genes']
-	if biosamples_config.loc[x, "alt_TSS"] != "None":
-		tss_file = biosamples_config.loc[x, 'alt_TSS']
-	if biosamples_config.loc[x, "alt_genes"] != "None":
-		gene_file = biosamples_config.loc[x, 'alt_genes']
-	TSS_files.append(tss_file)
-	gene_files.append(gene_file)
-				
-biosamples_config["TSS"] = TSS_files
-biosamples_config["genes"] = gene_files
+def configure_tss_and_gene_files(biosamples_config):
+	## get TSS and genefile names for each biosample 
+	TSS_files = []
+	gene_files = []
+	for sample in ALL_BIOSAMPLES:
+		tss_file = config['params_candidate']['genome_tss']
+		gene_file = config['params_neighborhoods']['genes']
+		if biosamples_config.loc[sample, "alt_TSS"] != "None":
+			tss_file = biosamples_config.loc[sample, 'alt_TSS']
+		if biosamples_config.loc[sample, "alt_genes"] != "None":
+			gene_file = biosamples_config.loc[sample, 'alt_genes']
+		TSS_files.append(tss_file)
+		gene_files.append(gene_file)
+					
+	biosamples_config["TSS"] = TSS_files
+	biosamples_config["genes"] = gene_files
 
+def configure_hic_hashes(biosamples_config):
+	"""
+	Create a Map[hash(hic_dir), (hic_dir, hic_type, hic_gamma, hic_scale)]
+	This is done so that we don't recompute hic powerlaw fit
+	when multiple biosamples have the same hic_info
+	"""
+	hic_hashes = {}
+	hic_pairs = biosamples_config[["HiC_dir", "HiC_type", "HiC_gamma", "HiC_scale"]].drop_duplicates()	
+	for row in hic_pairs.values:
+		hic_dir = row[0]
+		if not hic_dir:
+			# Map only contains values with hic_directories
+			continue
+		hic_hashes[get_hic_dir_hash(row)] = row
+	return hic_hashes
 
+def get_hic_dir_hash(hic_info_row):
+	return hashlib.sha1(str(hic_info_row).encode()).hexdigest()[:8]
+
+def get_hic_powerlaw_fit_dir(wildcards):
+	"""
+	If HiC is provided, we store the fit in the HiC hash folder. Otherwise
+	we store under the biosamples folder
+	"""
+	row = BIOSAMPLES_CONFIG.loc[wildcards.biosample, ["HiC_dir", "HiC_type", "HiC_gamma", "HiC_scale"]].values
+	hic_dir = row[0]
+	if hic_dir != NA_VAL:
+		return os.path.join(RESULTS_DIR, "HiC_Powerlaw", get_hic_dir_hash(row))
+	else:
+		return os.path.join(RESULTS_DIR, "HiC_Powerlaw", wildcards.biosample)
+
+def get_hic_powerlaw_fit_file(wildcards):
+	return os.path.join(get_hic_powerlaw_fit_dir(wildcards), "hic.powerlaw.tsv")
+
+configure_tss_and_gene_files(BIOSAMPLES_CONFIG)
+HiC_HASHES = configure_hic_hashes(BIOSAMPLES_CONFIG)
 RESULTS_DIR = config['predictions_results_dir']
 
 def get_accessibility_file(wildcards):
-	default_accessibility_feature = biosamples_config.loc[wildcards.biosample, 'default_accessibility_feature']
-	return biosamples_config.loc[wildcards.biosample, default_accessibility_feature]
+	default_accessibility_feature = BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'default_accessibility_feature']
+	return BIOSAMPLES_CONFIG.loc[wildcards.biosample, default_accessibility_feature]
 
 ## overall rule to run pipeline
 rule all:
 	input:
-		narrowPeaks_sorted = expand(os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted"), biosample=all_biosamples),
-		candidateRegions = expand(os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed"),
-	    biosample=all_biosamples),
-		enhancerLists = expand(os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "EnhancerList.txt"),  biosample=all_biosamples),
-		allPutative = expand(os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.txt.gz"), biosample=all_biosamples),
-		enhPredictions = expand(os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictions.csv"), biosample=all_biosamples),
+		allPutative = expand(
+			os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.txt.gz"), biosample=ALL_BIOSAMPLES
+		),
+		enhPredictions = expand(
+			os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictions.csv"), biosample=ALL_BIOSAMPLES
+		),
 		allPred = os.path.join(RESULTS_DIR,"AllPredictions.txt.gz"),
-		altTSS = TSS_files,
-		metricsDirectory = expand(os.path.join(RESULTS_DIR, "{biosample}", "Metrics", "QCSummary.p"), biosample=all_biosamples)
+		metricsDirectory = expand(os.path.join(RESULTS_DIR, "{biosample}", "Metrics", "QCSummary.p"), biosample=ALL_BIOSAMPLES)
 
 	
 ## call macs2 -- if multiple accessibility inputs for one biosample, will aggregate into one output
@@ -89,7 +125,7 @@ rule call_candidate_regions:
 		narrowPeak = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted"),
 	params:
 		accessibility = get_accessibility_file,
-		TSS = lambda wildcards: biosamples_config.loc[wildcards.biosample, 'TSS'],
+		TSS = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'TSS'],
 		chrom_sizes = config['params_candidate']['chrom_sizes'],
 		regions_blocklist = config['params_candidate']['regions_blocklist'],
 		peakExtendFromSummit = config['params_candidate']['peakExtendFromSummit'],
@@ -118,11 +154,11 @@ rule call_neighborhoods:
 	input:		
 		candidateRegions = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed"),
 	params:
-		DHS = lambda wildcards: biosamples_config.loc[wildcards.biosample, 'DHS'] if not biosamples_config.loc[wildcards.biosample, 'DHS']=='None' else '',
-		ATAC = lambda wildcards: biosamples_config.loc[wildcards.biosample, 'ATAC'] if not biosamples_config.loc[wildcards.biosample, 'ATAC']=='None' else '',
-		default = lambda wildcards: biosamples_config.loc[wildcards.biosample, 'default_accessibility_feature'],
-		H3K27ac = lambda wildcards: biosamples_config.loc[wildcards.biosample, 'H3K27ac'] if not biosamples_config.loc[wildcards.biosample, 'H3K27ac']=='None' else '',
-		genes = lambda wildcards: biosamples_config.loc[wildcards.biosample, 'genes'],
+		DHS = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'DHS'] if not BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'DHS']=='None' else '',
+		ATAC = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'ATAC'] if not BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'ATAC']=='None' else '',
+		default = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'default_accessibility_feature'],
+		H3K27ac = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'H3K27ac'] if not BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'H3K27ac']=='None' else '',
+		genes = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'genes'],
 		ubiquitous_genes = config['params_neighborhoods']['ubiquitous_genes'],
 		chrom_sizes = config['params_candidate']['chrom_sizes'],
 		qnorm = config['params_neighborhoods']['qnorm'],
@@ -153,21 +189,51 @@ rule call_neighborhoods:
 			--H3K27ac {params.H3K27ac}
 		"""
 
+def get_write_powerlaw_params(wildcards) -> str:
+	if wildcards.KEY in HiC_HASHES:
+		hic_dir, hic_type, hic_gamma, hic_scale = HiC_HASHES[wildcards.KEY]
+		return f"--hic_dir {hic_dir} --hic_type {hic_type} --hic_gamma {hic_gamma} --hic_scale {hic_scale}"
+	else:
+		# Otherwise, KEY is a biosample and there's no HiC directory associated
+		hic_gamma = BIOSAMPLES_CONFIG.loc[wildcards.KEY, "HiC_gamma"]
+		hic_scale = BIOSAMPLES_CONFIG.loc[wildcards.KEY, "HiC_scale"]
+		# values here are validated in the script
+		return f"--hic_gamma {hic_gamma} --hic_scale {hic_scale}"
+	
+rule write_powerlaw_params:
+	params:
+		params = get_write_powerlaw_params
+	output:
+		powerlaw_params_tsv = os.path.join(RESULTS_DIR, "HiC_Powerlaw", "{KEY}", "hic.powerlaw.tsv")
+	shell:
+		"""
+		python workflow/scripts/write_powerlaw_params.py \
+			{params.params} \
+			--output_file {output.powerlaw_params_tsv}
+		"""
+
+def get_run_predictions_hic_params(wildcards):
+	hic_dir = BIOSAMPLES_CONFIG.loc[wildcards.biosample, "HiC_dir"]
+	hic_type = BIOSAMPLES_CONFIG.loc[wildcards.biosample, "HiC_type"]
+	if hic_dir == NA_VAL:
+		return "--score_column powerlaw.Score"
+	else:
+		return f"--hic_dir {hic_dir} --hic_type {hic_type}"
+
 ### run predictions: takes in EnhancerList.txt and GeneList.txt generated from rule call_neighborhoods above and generates Enhancer-Gene Predictions and links
 rule run_predictions:
 	input:
 		enhancers = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "EnhancerList.txt"),
-		genes = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "GeneList.txt")
+		genes = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "GeneList.txt"),
+		powerlaw_params_tsv = get_hic_powerlaw_fit_file
 	params:
 		cellType = lambda wildcards: wildcards.biosample, 
 		output_dir = lambda wildcards: os.path.join(RESULTS_DIR, wildcards.biosample, "Predictions"),
-		hic_dir = lambda wildcards: biosamples_config.loc[wildcards.biosample, "HiC_dir"],
-		hic_type = lambda wildcards: biosamples_config.loc[wildcards.biosample, "HiC_type"],
+		hic_params = get_run_predictions_hic_params,
 		chrom_sizes = config['params_candidate']['chrom_sizes'],
-		hic_resolution = config['params_predict']['hic_resolution'],
+		hic_resolution = config['params_predict']['hic_resolution'],  # TODO: Make this configurable in config-biosamples
 		threshold = config['params_predict']['threshold'],
 		flags = config['params_predict']['flags'],
-		powerlaw_params = config['params_predict']['powerlaw_params']
 	conda:
 		"envs/abcenv.yml"
 	output: 
@@ -179,21 +245,20 @@ rule run_predictions:
 		python workflow/scripts/predict.py \
 			--enhancers {input.enhancers} \
 			--outdir {params.output_dir} \
-			--HiCdir {params.hic_dir} \
-			--hic_type {params.hic_type} \
+			{params.hic_params} \
+			--powerlaw_params_tsv {input.powerlaw_params_tsv} \
 			--chrom_sizes {params.chrom_sizes} \
 			--hic_resolution {params.hic_resolution} \
 			--threshold {params.threshold} \
 			--cellType {params.cellType} \
 			--genes {input.genes} \
-			{params.flags} \
-			{params.powerlaw_params}
+			{params.flags}
 		"""
 
 ### generate AllPredictions file
 rule make_all_predictions:
 	input: 
-		predLists = expand(os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictions.csv"), biosample=all_biosamples)
+		predLists = expand(os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictions.csv"), biosample=ALL_BIOSAMPLES)
 	params:
 		output_dir = RESULTS_DIR
 	conda:

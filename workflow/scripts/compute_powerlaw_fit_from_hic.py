@@ -29,7 +29,7 @@ def parseargs():
     )
     readable = argparse.FileType("r")
     parser.add_argument(
-        "--hicDir",
+        "--hic_dir",
         help="Directory containing observed HiC KR normalized matrices. File naming and structure should be: hicDir/chr*/chr*.{KR,Interscale}observed",
     )
     parser.add_argument("--outDir", help="Output directory")
@@ -67,10 +67,6 @@ def parseargs():
     return args
 
 
-def combine_hic_maps(chrom_hic_data):
-    return pd.concat(list(chrom_hic_data.values()))
-
-
 def main():
     args = parseargs()
     os.makedirs(args.outDir, exist_ok=True)
@@ -80,9 +76,9 @@ def main():
     else:
         chromosomes = args.chr.split(",")
 
-    chrom_hic_data = load_hic_for_powerlaw(
+    HiC = load_hic_for_powerlaw(
         chromosomes,
-        args.hicDir,
+        args.hic_dir,
         args.hic_type,
         args.resolution,
         args.minWindow,
@@ -90,7 +86,7 @@ def main():
     )
 
     # Run
-    slope, intercept, hic_mean_var = do_powerlaw_fit(chrom_hic_data, args.resolution)
+    slope, intercept, hic_mean_var = do_powerlaw_fit(HiC, args.resolution)
 
     # print
     res = pd.DataFrame(
@@ -98,8 +94,8 @@ def main():
             "resolution": [args.resolution],
             "maxWindow": [args.maxWindow],
             "minWindow": [args.minWindow],
-            "pl_gamma": [slope * -1],  # gamma defined as neg slope
-            "pl_scale": [intercept],
+            "hic_gamma": [slope * -1],  # gamma defined as neg slope
+            "hic_scale": [intercept],
         }
     )
     res.to_csv(
@@ -117,7 +113,7 @@ def main():
 def load_hic_for_powerlaw(
     chromosomes, hicDir, hic_type, hic_resolution, min_window, max_window
 ):
-    chrom_hic_data: Dict[str, pd.DataFrame] = {}
+    all_data_list = []
     for chrom in chromosomes:
         try:
             hic_file, hic_norm_file, hic_is_vc = get_hic_file(
@@ -168,15 +164,17 @@ def load_hic_for_powerlaw(
             else:
                 raise Exception("invalid --hic_type")
 
-            chrom_hic_data[chrom] = this_data
+            all_data_list.append(this_data)
         except Exception as e:
             print(e)
             traceback.print_exc(file=sys.stdout)
-    return chrom_hic_data
+
+    all_data = pd.concat(all_data_list)
+
+    return all_data
 
 
-def do_powerlaw_fit(chrom_hic_data, resolution):
-    HiC = combine_hic_maps(chrom_hic_data)
+def do_powerlaw_fit(HiC, resolution):
     print("Running regression")
 
     # TO DO:

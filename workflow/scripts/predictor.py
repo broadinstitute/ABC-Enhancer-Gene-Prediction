@@ -15,14 +15,16 @@ from hic import (
 from tools import df_to_pyranges
 
 
-def make_predictions(chromosome, enhancers, genes, args, chrom_sizes_map):
+def make_predictions(
+    chromosome, enhancers, genes, args, hic_gamma, hic_scale, chrom_sizes_map
+):
     pred = make_pred_table(chromosome, enhancers, genes, args.window, chrom_sizes_map)
     pred = annotate_predictions(pred, args.tss_slop)
-    pred = add_powerlaw_to_predictions(pred, args)
+    pred = add_powerlaw_to_predictions(pred, args, hic_gamma, hic_scale)
     # if Hi-C directory is not provided, only powerlaw model will be computed
-    if args.HiCdir:
+    if args.hic_dir:
         hic_file, hic_norm_file, hic_is_vc = get_hic_file(
-            chromosome, args.HiCdir, hic_type=args.hic_type
+            chromosome, args.hic_dir, hic_type=args.hic_type
         )
         pred = add_hic_to_enh_gene_table(
             enhancers,
@@ -31,8 +33,9 @@ def make_predictions(chromosome, enhancers, genes, args, chrom_sizes_map):
             hic_file,
             hic_norm_file,
             hic_is_vc,
-            chromosome,
             args,
+            hic_gamma,
+            hic_scale,
             chrom_sizes_map,
         )
         pred = compute_score(
@@ -92,8 +95,9 @@ def add_hic_to_enh_gene_table(
     hic_file,
     hic_norm_file,
     hic_is_vc,
-    chromosome,
     args,
+    hic_gamma,
+    hic_scale,
     chrom_sizes_map,
 ):
     print("Begin HiC")
@@ -182,8 +186,8 @@ def add_hic_to_enh_gene_table(
                 tss_hic_contribution=args.tss_hic_contribution,
                 window=args.window,
                 min_window=0,
-                gamma=args.hic_gamma,
-                scale=args.hic_scale,
+                gamma=hic_gamma,
+                scale=hic_scale,
             )
         else:
             HiC = load_hic_avg(hic_file, args.hic_resolution)
@@ -246,7 +250,7 @@ def add_hic_to_enh_gene_table(
     pred = scale_hic_with_powerlaw(pred, args)
 
     # Add pseudocount
-    pred = add_hic_pseudocount(pred, args)
+    pred = add_hic_pseudocount(pred)
 
     print("HiC Complete")
     # print('Elapsed time: {}'.format(time.time() - t))
@@ -269,9 +273,9 @@ def scale_hic_with_powerlaw(pred, args):
     return pred
 
 
-def add_powerlaw_to_predictions(pred, args):
+def add_powerlaw_to_predictions(pred, args, hic_gamma, hic_scale):
     pred["powerlaw_contact"] = get_powerlaw_at_distance(
-        pred["distance"].values, args.hic_gamma, args.hic_scale
+        pred["distance"].values, hic_gamma, hic_scale
     )
 
     # 4.80 and 11.63 come from a linear regression of scale on gamma across 20
@@ -284,7 +288,7 @@ def add_powerlaw_to_predictions(pred, args):
     return pred
 
 
-def add_hic_pseudocount(pred, args):
+def add_hic_pseudocount(pred):
     # Add a pseudocount based on the powerlaw expected count at a given distance
 
     pseudocount = pred[["powerlaw_contact", "powerlaw_contact_reference"]].min(axis=1)
