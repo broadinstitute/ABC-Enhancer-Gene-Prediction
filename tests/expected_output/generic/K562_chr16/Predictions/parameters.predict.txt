@@ -11,7 +11,7 @@ hic_pseudocount_distance 1000000.0
 hic_type juicebox
 hic_is_doubly_stochastic False
 scale_hic_using_powerlaw True
-powerlaw_params_tsv tests/test_output/generic/HiC_Powerlaw/ecea955e/hic.powerlaw.tsv
+powerlaw_params_tsv tests/test_output/generic/HiC_Powerlaw/b08206e1/hic.powerlaw.tsv
 hic_gamma_reference 0.87
 run_all_genes False
 expression_cutoff 1
