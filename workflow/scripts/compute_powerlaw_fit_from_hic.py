@@ -40,7 +40,7 @@ def parseargs():
         help="format of hic files",
     )
     parser.add_argument(
-        "--resolution",
+        "--hic_resolution",
         default=5000,
         type=int,
         help="For Juicebox: resolution of hic dataset (in bp). For bedpe: distances will be binned to this resolution for powerlaw fit",
@@ -80,18 +80,18 @@ def main():
         chromosomes,
         args.hic_dir,
         args.hic_type,
-        args.resolution,
+        args.hic_resolution,
         args.minWindow,
         args.maxWindow,
     )
 
     # Run
-    slope, intercept, hic_mean_var = do_powerlaw_fit(HiC, args.resolution)
+    slope, intercept, hic_mean_var = do_powerlaw_fit(HiC, args.hic_resolution)
 
     # print
     res = pd.DataFrame(
         {
-            "resolution": [args.resolution],
+            "resolution": [args.hic_resolution],
             "maxWindow": [args.maxWindow],
             "minWindow": [args.minWindow],
             "hic_gamma": [slope * -1],  # gamma defined as neg slope
