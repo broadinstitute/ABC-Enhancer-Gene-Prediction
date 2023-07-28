@@ -1,0 +1,74 @@
+class InvalidConfig(Exception):
+	pass 
+
+
+def load_biosamples_config(config):
+	biosamples_config = pd.read_csv(config["biosamplesTable"], sep="\t", na_values="").replace([np.NaN], [None]).set_index("biosample", drop=False)
+	biosamples_config["HiC_resolution"] = biosamples_config["HiC_resolution"].replace([None], [0]).astype(int)
+	_validate_biosamples_config(biosamples_config)
+	_configure_tss_and_gene_files(biosamples_config)
+	return biosamples_config
+
+def configure_hic_hashes(biosamples_config):
+	"""
+	Create a Map[hash(hic_dir), HIC_COLUMNS]
+	This is done so that we don't recompute hic powerlaw fit
+	when multiple biosamples have the same hic_info
+	"""
+	hic_hashes = {}
+	hic_pairs = biosamples_config[HIC_COLUMNS].drop_duplicates()	
+	for row in hic_pairs.values:
+		hic_dir = row[0]
+		if hic_dir:
+			# Map only contains values with hic_directories
+			hic_hashes[get_hic_dir_hash(row)] = row
+	return hic_hashes
+
+def get_accessibility_file(wildcards):
+	# Inputs have been validated so only DHS or ATAC is provided
+	return BIOSAMPLES_CONFIG.loc[wildcards.biosample, "DHS"] or BIOSAMPLES_CONFIG.loc[wildcards.biosample, "ATAC"]
+
+def get_hic_dir_hash(hic_info_row):
+	return hashlib.sha1(str(hic_info_row).encode()).hexdigest()[:8]
+
+def _validate_accessibility_feature(row: pd.Series):
+	if row["DHS"] and row["ATAC"]:
+		raise InvalidConfig("Can only specify one of DHS or ATAC for accessibility")
+	if not (row["DHS"] or row["ATAC"]):
+		raise InvalidConfig("Must provide either DHS or ATAC accessibility file")
+
+def _validate_hic_info(row: pd.Series):
+	if row["HiC_dir"]:
+		if not (row["HiC_type"] and row["HiC_resolution"]):
+			raise InvalidConfig("Must provide HiC type and resolution with directory")
+	else:
+		if not (row["HiC_gamma"] and row["HiC_scale"]):
+			raise InvalidConfig(
+				"If HiC dir not provided, you must provide HiC gamma and scale "
+				"for powerlaw estimate for contact"
+			)
+
+def _validate_biosamples_config(biosamples_config):
+	"""
+	Throw exception if a row needs to be fixed
+	"""
+	for _, row in biosamples_config.iterrows():
+		_validate_hic_info(row)
+		_validate_accessibility_feature(row)
+
+def _configure_tss_and_gene_files(biosamples_config):
+	## get TSS and genefile names for each biosample 
+	TSS_files = []
+	gene_files = []
+	for sample in biosamples_config['biosample']:
+		tss_file = config['genome_tss']
+		gene_file = config['genes']
+		if biosamples_config.loc[sample, "alt_TSS"]:
+			tss_file = biosamples_config.loc[sample, 'alt_TSS']
+		if biosamples_config.loc[sample, "alt_genes"]:
+			gene_file = biosamples_config.loc[sample, 'alt_genes']
+		TSS_files.append(tss_file)
+		gene_files.append(gene_file)
+					
+	biosamples_config["TSS"] = TSS_files
+	biosamples_config["genes"] = gene_files
