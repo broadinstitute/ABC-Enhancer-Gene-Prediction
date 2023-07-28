@@ -6,10 +6,12 @@ import time
 import traceback
 
 import numpy as np
+from typing import Dict
 import pandas as pd
 from getVariantOverlap import *
 from predictor import *
 from tools import *
+from compute_powerlaw_fit_from_hic import load_hic_for_powerlaw, do_powerlaw_fit
 
 
 def get_model_argument_parser():
@@ -36,12 +38,6 @@ def get_model_argument_parser():
     )
     parser.add_argument("--outdir", required=True, help="output directory")
     parser.add_argument(
-        "--window",
-        type=int,
-        default=5000000,
-        help="Make predictions for all candidate elements within this distance of the gene's TSS",
-    )
-    parser.add_argument(
         "--score_column",
         default="ABC.Score",
         help="Column name of score to use for thresholding",
@@ -51,21 +47,15 @@ def get_model_argument_parser():
         type=float,
         required=True,
         default=0.022,
-        help="Threshold on ABC Score (--score_column) to call a predicted positive",
+        help="Threshold on ABC Score (--score_column) to call a predicted positive. Note that the threshold will need to be adjusted based on the combination of input datasets used.",
     )
     parser.add_argument("--cellType", help="Name of cell type")
     parser.add_argument("--chrom_sizes", required=True, help="Chromosome sizes file")
 
     # hic
     # To do: validate params
-    parser.add_argument("--HiCdir", default=None, help="HiC directory")
+    parser.add_argument("--hic_dir", default=None, help="HiC directory")
     parser.add_argument("--hic_resolution", type=int, help="HiC resolution")
-    parser.add_argument(
-        "--tss_hic_contribution",
-        type=float,
-        default=100,
-        help="Weighting of diagonal bin of hic matrix as a percentage of the maximum of its neighboring bins",
-    )
     parser.add_argument(
         "--hic_pseudocount_distance",
         type=int,
@@ -81,42 +71,38 @@ def get_model_argument_parser():
     parser.add_argument(
         "--hic_is_doubly_stochastic",
         action="store_true",
-        help="If hic matrix is already DS, can skip this step",
+        help="If hic matrix is already doubly stochastic, can skip this step",
     )
 
     # Power law
     parser.add_argument(
         "--scale_hic_using_powerlaw",
         action="store_true",
-        help="Scale Hi-C values using powerlaw relationship",
+        help="Quantile normalize Hi-C values using powerlaw relationship. This parameter will rescale Hi-C contacts from the input Hi-C data (specified by --hic_gamma and --hic_scale) to match the power-law relationship of a reference cell type (specified by --hic_gamma_reference)",
     )
     parser.add_argument(
-        "--hic_gamma",
-        type=float,
-        default=0.87,
-        help="powerlaw exponent of hic data. Must be positive",
-    )
-    parser.add_argument(
-        "--hic_scale", type=float, help="scale of hic data. Must be positive"
+        "--powerlaw_params_tsv",
+        type=str,
+        help="TSV file containing gamma/scale values according to powerlaw fit",
     )
     parser.add_argument(
         "--hic_gamma_reference",
         type=float,
         default=0.87,
-        help="powerlaw exponent to scale to. Must be positive",
+        help="Powerlaw exponent (gamma) to scale to. Must be positive",
     )
 
     # Genes to run through model
     parser.add_argument(
         "--run_all_genes",
         action="store_true",
-        help="Do not check for gene expression, make predictions for all genes",
+        help="Do not check for gene expression, make predictions for all genes. Use of this parameter is not recommended.",
     )
     parser.add_argument(
         "--expression_cutoff",
         type=float,
         default=1,
-        help="Make predictions for genes with expression higher than this value",
+        help="Make predictions for genes with expression higher than this value. Use of this parameter is not recommended.",
     )
     parser.add_argument(
         "--promoter_activity_quantile_cutoff",
@@ -135,6 +121,20 @@ def get_model_argument_parser():
         "--use_hdf5",
         action="store_true",
         help="Write AllPutative file in hdf5 format instead of tab-delimited",
+    )
+
+    # Parameters used in development of ABC model that should not be changed for most use cases
+    parser.add_argument(
+        "--window",
+        type=int,
+        default=5000000,
+        help="Consider all candidate elements within this distance of the gene's TSS when computing ABC scores. This was a parameter optimized during development of ABC and should not typically be changed.",
+    )
+    parser.add_argument(
+        "--tss_hic_contribution",
+        type=float,
+        default=100,
+        help="Diagonal bin of Hi-C matrix is set to this percentage of the maximum of its neighboring bins. Default value (100%) means that the diagonal bin of the Hi-C matrix will be set exactly to the maximum of its two neighboring bins. This is a parameter used in development of the ABC model that should not typically be changed, unless experimenting with using different types of input 3D contact data that require different handling of the diagonal bin.",
     )
 
     # Other
@@ -244,6 +244,8 @@ def main():
         args.chrom_sizes, sep="\t", header=None, index_col=0
     ).to_dict()[1]
 
+    powerlaw_params = pd.read_csv(args.powerlaw_params_tsv, sep="\t").iloc[0]
+    hic_gamma, hic_scale = powerlaw_params["hic_gamma"], powerlaw_params["hic_scale"]
     for chromosome in chromosomes:
         print("Making predictions for chromosome: {}".format(chromosome))
         t = time.time()
@@ -251,7 +253,13 @@ def main():
         this_genes = genes.loc[genes["chr"] == chromosome, :].copy()
 
         this_chr = make_predictions(
-            chromosome, this_enh, this_genes, args, chrom_sizes_map
+            chromosome,
+            this_enh,
+            this_genes,
+            args,
+            hic_gamma,
+            hic_scale,
+            chrom_sizes_map,
         )
         all_putative_list.append(this_chr)
 
@@ -265,7 +273,8 @@ def main():
     print("Writing output files...")
     all_putative = pd.concat(all_putative_list)
     all_putative["CellType"] = args.cellType
-    all_putative["hic_contact_squared"] = all_putative["hic_contact"] ** 2
+    if args.hic_dir:
+        all_putative["hic_contact_squared"] = all_putative["hic_contact"] ** 2
     slim_cols = [
         "chr",
         "start",
@@ -352,12 +361,12 @@ def main():
 
 
 def validate_args(args):
-    if args.HiCdir and args.hic_type == "juicebox":
+    if args.hic_dir and args.hic_type == "juicebox":
         assert (
             args.hic_resolution is not None
         ), "HiC resolution must be provided if hic_type is juicebox"
 
-    if not args.HiCdir:
+    if not args.hic_dir:
         print(
             "WARNING: Hi-C directory not provided. Model will only compute ABC score using powerlaw!"
         )

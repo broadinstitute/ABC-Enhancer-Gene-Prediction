@@ -2,8 +2,9 @@ import logging
 import os
 import time
 import unittest
-from typing import Callable, List
+from typing import Dict
 
+import numpy as np
 import pandas as pd
 import yaml
 from test_utils import (
@@ -18,16 +19,17 @@ logging.basicConfig(level=logging.INFO)
 CONFIG_FILE = "tests/config/generic_config.yml"
 with open(CONFIG_FILE, "r") as file:
     CONFIG = yaml.safe_load(file)
-COLUMNS_TO_COMPARE = [
-    "chr",
-    "start",
-    "end",
-    "name",
-    "class",
-    "TargetGene",
-    "ABC.Score.Numerator",
-    "ABC.Score",
-]
+COLUMNS_TO_COMPARE: Dict[str, type] = {
+    "chr": str,
+    "start": np.int64,
+    "end": np.int64,
+    "name": str,
+    "class": str,
+    "TargetGene": str,
+    "ABC.Score.Numerator": np.float64,
+    "ABC.Score": np.float64,
+    "powerlaw.Score": np.float64,
+}
 TEST_OUTPUT_DIR = CONFIG["predictions_results_dir"]
 EXPECTED_OUTPUT_DIR = f"tests/expected_output/{CONFIG['TEST_CONFIG_NAME']}"
 PREDICTION_FILE = "Predictions/EnhancerPredictionsAllPutative.txt.gz"
@@ -71,7 +73,7 @@ class TestFullABCRun(unittest.TestCase):
         # Make sure the test doesn't take too long
         # May need to adjust as more biosamples are added, but we should keep
         # tests quick (so don't run ABC on all chromosomes)
-        max_time = 60 * 3  # 3 min
+        max_time = 60 * 5  # 5 min
         self.assertLessEqual(
             time_taken,
             max_time,

@@ -5,20 +5,26 @@ from typing import Dict
 
 import numpy as np
 import pandas as pd
-import pyranges as pr
-from hic import *
-from tools import *
+from hic import (
+    get_hic_file,
+    get_powerlaw_at_distance,
+    load_hic_juicebox,
+    load_hic_bedpe,
+    load_hic_avg,
+)
+from tools import df_to_pyranges
 
 
-def make_predictions(chromosome, enhancers, genes, args, chrom_sizes_map):
+def make_predictions(
+    chromosome, enhancers, genes, args, hic_gamma, hic_scale, chrom_sizes_map
+):
     pred = make_pred_table(chromosome, enhancers, genes, args.window, chrom_sizes_map)
     pred = annotate_predictions(pred, args.tss_slop)
-    pred = add_powerlaw_to_predictions(pred, args)
-
+    pred = add_powerlaw_to_predictions(pred, args, hic_gamma, hic_scale)
     # if Hi-C directory is not provided, only powerlaw model will be computed
-    if args.HiCdir:
+    if args.hic_dir:
         hic_file, hic_norm_file, hic_is_vc = get_hic_file(
-            chromosome, args.HiCdir, hic_type=args.hic_type
+            chromosome, args.hic_dir, hic_type=args.hic_type
         )
         pred = add_hic_to_enh_gene_table(
             enhancers,
@@ -27,18 +33,17 @@ def make_predictions(chromosome, enhancers, genes, args, chrom_sizes_map):
             hic_file,
             hic_norm_file,
             hic_is_vc,
-            chromosome,
             args,
+            hic_gamma,
+            hic_scale,
             chrom_sizes_map,
         )
         pred = compute_score(
             pred, [pred["activity_base"], pred["hic_contact_pl_scaled_adj"]], "ABC"
         )
-
     pred = compute_score(
         pred, [pred["activity_base"], pred["powerlaw_contact_reference"]], "powerlaw"
     )
-
     return pred
 
 
@@ -90,24 +95,12 @@ def add_hic_to_enh_gene_table(
     hic_file,
     hic_norm_file,
     hic_is_vc,
-    chromosome,
     args,
+    hic_gamma,
+    hic_scale,
     chrom_sizes_map,
 ):
     print("Begin HiC")
-    HiC = load_hic(
-        hic_file=hic_file,
-        hic_norm_file=hic_norm_file,
-        hic_is_vc=hic_is_vc,
-        hic_type=args.hic_type,
-        hic_resolution=args.hic_resolution,
-        tss_hic_contribution=args.tss_hic_contribution,
-        window=args.window,
-        min_window=0,
-        gamma=args.hic_gamma,
-        scale=args.hic_scale,
-    )
-
     # Add hic to pred table
     # At this point we have a table where each row is an enhancer/gene pair.
     # We need to add the corresponding HiC matrix entry.
@@ -116,6 +109,7 @@ def add_hic_to_enh_gene_table(
 
     t = time.time()
     if args.hic_type == "bedpe":
+        HiC = load_hic_bedpe(hic_file)
         # Use pyranges to compute overlaps between enhancers/genes and hic bedpe table
         # Consider each range of the hic matrix separately - and merge each range into both enhancers and genes.
         # Then remerge on hic index
@@ -183,6 +177,21 @@ def add_hic_to_enh_gene_table(
         pred = pred.merge(ovl, on=["enh_idx", "gene_idx"], how="left")
         pred.fillna(value={"hic_contact": 0}, inplace=True)
     elif args.hic_type == "juicebox" or args.hic_type == "avg":
+        if args.hic_type == "juicebox":
+            HiC = load_hic_juicebox(
+                hic_file=hic_file,
+                hic_norm_file=hic_norm_file,
+                hic_is_vc=hic_is_vc,
+                hic_resolution=args.hic_resolution,
+                tss_hic_contribution=args.tss_hic_contribution,
+                window=args.window,
+                min_window=0,
+                gamma=hic_gamma,
+                scale=hic_scale,
+            )
+        else:
+            HiC = load_hic_avg(hic_file, args.hic_resolution)
+
         # Merge directly using indices
         # Could also do this by indexing into the sparse matrix (instead of merge) but this seems to be slower
         # Index into sparse matrix
@@ -241,7 +250,7 @@ def add_hic_to_enh_gene_table(
     pred = scale_hic_with_powerlaw(pred, args)
 
     # Add pseudocount
-    pred = add_hic_pseudocount(pred, args)
+    pred = add_hic_pseudocount(pred)
 
     print("HiC Complete")
     # print('Elapsed time: {}'.format(time.time() - t))
@@ -264,28 +273,25 @@ def scale_hic_with_powerlaw(pred, args):
     return pred
 
 
-def add_powerlaw_to_predictions(pred, args):
+def add_powerlaw_to_predictions(pred, args, hic_gamma, hic_scale):
     pred["powerlaw_contact"] = get_powerlaw_at_distance(
-        pred["distance"].values, args.hic_gamma, args.hic_scale
+        pred["distance"].values, hic_gamma, hic_scale
     )
+
+    # 4.80 and 11.63 come from a linear regression of scale on gamma across 20
+    # hic cell types at 5kb resolution. Do the params change across resolutions?
+    hic_scale_reference = -4.80 + 11.63 * args.hic_gamma_reference
     pred["powerlaw_contact_reference"] = get_powerlaw_at_distance(
-        pred["distance"].values, args.hic_gamma_reference, args.hic_scale
+        pred["distance"].values, args.hic_gamma_reference, hic_scale_reference
     )
 
     return pred
 
 
-def add_hic_pseudocount(pred, args):
+def add_hic_pseudocount(pred):
     # Add a pseudocount based on the powerlaw expected count at a given distance
 
-    powerlaw_fit = get_powerlaw_at_distance(pred["distance"].values, args.hic_gamma)
-    powerlaw_fit_at_ref = get_powerlaw_at_distance(
-        args.hic_pseudocount_distance, args.hic_gamma
-    )
-
-    pseudocount = np.amin(
-        pd.DataFrame({"a": powerlaw_fit, "b": powerlaw_fit_at_ref}), axis=1
-    )
+    pseudocount = pred[["powerlaw_contact", "powerlaw_contact_reference"]].min(axis=1)
     pred["hic_pseudocount"] = pseudocount
     pred["hic_contact_pl_scaled_adj"] = pred["hic_contact_pl_scaled"] + pseudocount
 

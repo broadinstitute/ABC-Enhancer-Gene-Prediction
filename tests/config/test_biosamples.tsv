@@ -1,2 +1,2 @@
-biosample	DHS	ATAC	H3K27ac	default_accessibility_feature	HiC_dir	HiC_type	alt_TSS	alt_genes
-K562_chr16	example_chr/chr16/dhs.sorted.bam		example_chr/chr16/h3k27ac.sorted.bam	DHS	example_chr/HiC_K562	juicebox	example_chr/chr16/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr16.hg38.TSS500bp.bed	example_chr/chr16/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr16.hg38.bed
+biosample	DHS	ATAC	H3K27ac	default_accessibility_feature	HiC_dir	HiC_type	HiC_gamma	HiC_scale	alt_TSS	alt_genes
+K562_chr16	example_chr/chr16/dhs.sorted.bam		example_chr/chr16/h3k27ac.sorted.bam	DHS	example_chr/HiC_K562	juicebox	1.0044322152129264	5.522049023040861	example_chr/chr16/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr16.hg38.TSS500bp.bed	example_chr/chr16/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr16.hg38.bed
