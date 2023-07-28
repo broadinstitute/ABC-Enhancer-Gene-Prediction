@@ -2,7 +2,7 @@ rule gen_qc_plots:
 	input: 
 		candidateRegions = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed"),
 		neighborhoodDirectory = directory(os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods")),
-		enhPredictionsFull = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsFull.csv")
+		enhPredictionsFull = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsFull.tsv")
 	params:
 		output_dir = os.path.join(RESULTS_DIR, "{biosample}", "Metrics")
 	conda:

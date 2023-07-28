@@ -39,8 +39,8 @@ rule run_predictions:
 		"../envs/abcenv.yml"
 	output: 
 		allPutative = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.txt.gz"),
-		enhPredictions = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictions.csv"),
-		enhPredictionsFull = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsFull.csv"),
+		enhPredictions = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictions.tsv"),
+		enhPredictionsFull = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsFull.tsv"),
 	shell:
 		"""
 		python workflow/scripts/predict.py \
@@ -58,7 +58,7 @@ rule run_predictions:
 ### generate AllPredictions file
 rule make_all_predictions:
 	input: 
-		predLists = expand(os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictions.csv"), biosample=BIOSAMPLES_CONFIG['biosample'])
+		predLists = expand(os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictions.tsv"), biosample=BIOSAMPLES_CONFIG['biosample'])
 	params:
 		output_dir = RESULTS_DIR
 	conda:

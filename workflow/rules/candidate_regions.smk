@@ -9,7 +9,6 @@ rule call_candidate_regions:
 		regions_blocklist = config['regions_blocklist'],
 		peakExtendFromSummit = config['params_candidate']['peakExtendFromSummit'],
 		nStrongestPeak = config['params_candidate']['nStrongestPeaks'],
-		threads = 10,
 		output_dir = RESULTS_DIR
 	conda:
 		"../envs/abcenv.yml"
