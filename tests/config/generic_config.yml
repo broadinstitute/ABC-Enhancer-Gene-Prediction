@@ -8,28 +8,29 @@ biosamplesTable: "tests/config/test_biosamples.tsv"  # replace with your own con
 ### OUTPUT DATA
 predictions_results_dir: "tests/test_output/generic"
 
-### PARAMS
+### REFERENCE FILES
+chrom_sizes: "reference/hg38/chr_sizes"
+regions_blocklist: "reference/hg38/hg38.blacklist.bed"
+ubiquitous_genes: "reference/UbiquitouslyExpressedGenes.txt"
+genes: "reference/hg38/RefSeqCurated.170308.bed.CollapsedGeneBounds.hg38.bed"
+genome_tss: "reference/hg38/RefSeqCurated.170308.bed.CollapsedGeneBounds.hg38.TSS500bp.bed"
+
+
+### RULE SPECIFIC PARAMS
 params_macs:
         pval: 0.1
         threads: 10
 
 # These parameters are used to run the Run Candidate Regions portion of the abc code 
 params_candidate:
-        DHS: False
-        chrom_sizes: "reference/hg38/chr_sizes"
-        regions_blocklist: "reference/hg38/hg38.blacklist.bed"
-        genome_tss: "reference/hg38/RefSeqCurated.170308.bed.CollapsedGeneBounds.hg38.TSS500bp.bed"
         peakExtendFromSummit: 250
         nStrongestPeaks: 150000
 
 # These parameters are used to run the Run Neighborhoods portion of the abc code
 params_neighborhoods:
-        ubiquitous_genes: "reference/UbiquitouslyExpressedGenes.txt"
         qnorm: "reference/EnhancersQNormRef.K562.txt"
-        genes: "reference/hg38/RefSeqCurated.170308.bed.CollapsedGeneBounds.hg38.bed"
-
+        
 # These parameters are used to run the Predictions portion of the abc code
 params_predict:
-        hic_resolution: 5000
         flags: "--scale_hic_using_powerlaw --make_all_putative --include_self_promoter"
         threshold: 0.02
