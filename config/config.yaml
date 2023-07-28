@@ -32,5 +32,3 @@ params_predict:
         hic_resolution: 5000
         flags: "--scale_hic_using_powerlaw --make_all_putative --include_self_promoter"
         threshold: 0.02
-        hic_gamma: 5.522049023040861
-        hic_scale: 1.0044322152129264

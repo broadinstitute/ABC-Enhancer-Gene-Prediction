@@ -1,7 +1,7 @@
 import gzip
 import logging
 import subprocess
-from typing import Callable, List
+from typing import Callable, List, Dict
 
 import pandas as pd
 
@@ -21,8 +21,14 @@ def compare_files(test_file: str, expected_file: str) -> bool:
     return test_contents == expected_contents
 
 
-def get_filtered_dataframe(file: str, cols_to_compare: List[str]) -> pd.DataFrame:
-    return pd.read_csv(file, sep="\t", compression="gzip")[cols_to_compare]
+def get_filtered_dataframe(file: str, cols_to_compare: Dict[str, type]) -> pd.DataFrame:
+    return pd.read_csv(
+        file,
+        sep="\t",
+        compression="gzip",
+        dtype=cols_to_compare,
+        usecols=cols_to_compare.keys(),
+    )
 
 
 def run_cmd(cmd: str, raise_ex: bool = True) -> bool:

@@ -1,10 +1,10 @@
-from hic import *
+import pandas as pd
 import numpy as np
 from functools import reduce
 import argparse
 import sys, os, os.path
 from tools import write_params
-import pyranges
+from hic import load_hic_juicebox, get_hic_file, get_powerlaw_at_distance
 
 
 # To do
@@ -170,11 +170,10 @@ def process_chr(
     )
 
     # Read in and normalize to make DS
-    hic = load_hic(
+    hic = load_hic_juicebox(
         hic_file=hic_file,
         hic_norm_file=hic_norm_file,
         hic_is_vc=False,
-        hic_type="juicebox",
         hic_resolution=resolution,
         tss_hic_contribution=np.NaN,
         window=np.Inf,
