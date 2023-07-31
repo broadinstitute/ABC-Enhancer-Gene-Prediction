@@ -2,6 +2,7 @@
 rule call_neighborhoods:
 	input:		
 		candidateRegions = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed"),
+		chrom_sizes_bed = os.path.join(RESULTS_DIR, "tmp", "chr_sizes.bed")
 	params:
 		DHS = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'DHS'] if BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'DHS'] else '',
 		ATAC = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'ATAC'] if BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'ATAC'] else '',
@@ -21,7 +22,7 @@ rule call_neighborhoods:
 		"""
 		# get sorted & unique gene list
 		# intersect first to remove alternate chromosomes
-		bedtools intersect -u -a {params.genes} -b {params.chrom_sizes}.bed | \
+		bedtools intersect -u -a {params.genes} -b {input.chrom_sizes_bed} | \
 		bedtools sort -faidx {params.chrom_sizes} -i stdin | \
 		uniq > {params.genes}.sorted.uniq
 						
