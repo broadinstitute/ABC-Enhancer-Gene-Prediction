@@ -1,18 +1,3 @@
-def _get_hic_powerlaw_fit_dir(wildcards):
-	"""
-	If HiC is provided, we store the fit in the HiC hash folder. Otherwise
-	we store under the biosamples folder
-	"""
-	row = BIOSAMPLES_CONFIG.loc[wildcards.biosample, HIC_COLUMNS].values
-	hic_dir = row[0]
-	if hic_dir:
-		return os.path.join(RESULTS_DIR, "HiC_Powerlaw", get_hic_dir_hash(row))
-	else:
-		return os.path.join(RESULTS_DIR, "HiC_Powerlaw", wildcards.biosample)
-
-def _get_hic_powerlaw_fit_file(wildcards):
-	return os.path.join(_get_hic_powerlaw_fit_dir(wildcards), "hic.powerlaw.tsv")
-	
 def _get_run_predictions_hic_params(wildcards):
 	hic_dir = BIOSAMPLES_CONFIG.loc[wildcards.biosample, "HiC_dir"]
 	hic_type = BIOSAMPLES_CONFIG.loc[wildcards.biosample, "HiC_type"]
@@ -27,7 +12,7 @@ rule run_predictions:
 	input:
 		enhancers = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "EnhancerList.txt"),
 		genes = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "GeneList.txt"),
-		powerlaw_params_tsv = _get_hic_powerlaw_fit_file
+		powerlaw_params_tsv = get_hic_powerlaw_fit_file
 	params:
 		cellType = lambda wildcards: wildcards.biosample, 
 		output_dir = lambda wildcards: os.path.join(RESULTS_DIR, wildcards.biosample, "Predictions"),

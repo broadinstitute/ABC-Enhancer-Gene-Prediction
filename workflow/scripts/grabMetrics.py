@@ -2,6 +2,7 @@
 import sys
 from metrics import *
 from tools import *
+import pandas as pd
 import glob
 import argparse
 import pickle
@@ -16,6 +17,11 @@ def parse_args():
     )
     parser.add_argument("--preds_file", help="Prediction file output by ABC")
     parser.add_argument("--neighborhood_outdir", help="Neighborhood Directory")
+    parser.add_argument(
+        "--powerlaw_params_tsv",
+        type=str,
+        help="TSV file containing gamma/scale values according to powerlaw fit",
+    )
     parser.add_argument("--outdir", help="Predictions Directory")
     args = parser.parse_args()
     return args
@@ -69,6 +75,10 @@ def generateQCMetrics(args):
         pred_metrics = NeighborhoodFileQC(
             pred_metrics, args.neighborhood_outdir, args.outdir, "ATAC"
         )
+    if args.powerlaw_params_tsv:
+        powerlaw_params = pd.read_csv(args.powerlaw_params_tsv, sep="\t").iloc[0]
+        hic_gamma, hic_scale = powerlaw_params["hic_gamma"], powerlaw_params["hic_scale"]
+        HiCQC(prediction_df, hic_gamma, hic_scale, args.outdir)
 
     with open("{}/QCSummary.p".format(args.outdir), "wb") as f:
         pickle.dump(pred_metrics, f)
