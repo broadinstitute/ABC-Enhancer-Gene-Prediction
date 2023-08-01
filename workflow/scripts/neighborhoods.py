@@ -99,17 +99,16 @@ def load_genes(
 def annotate_genes_with_features(
     genes,
     genome_sizes,
-    skip_gene_counts=False,
+    chrom_sizes_map,
     features={},
     outdir=".",
     force=False,
     use_fast_count=True,
     default_accessibility_feature="",
-    **kwargs
 ):
     # Setup files for counting
     bounds_bed = os.path.join(outdir, "GeneList.bed")
-    tss1kb = make_tss_region_file(genes, outdir, genome_sizes)
+    tss1kb = make_tss_region_file(genes, outdir, genome_sizes, chrom_sizes_map)
     tss1kb_file = os.path.join(outdir, "GeneList.TSS1kb.bed")
 
     # Count features over genes and promoters
@@ -160,15 +159,14 @@ def annotate_genes_with_features(
     return merged
 
 
-def make_tss_region_file(genes, outdir, sizes, tss_slop=500):
+def make_tss_region_file(genes, outdir, sizes, chrom_sizes_map, tss_slop=500):
     # Given a gene file, define 1kb regions around the tss of each gene
 
-    sizes_pr = df_to_pyranges(read_bed(sizes + ".bed"))
     tss1kb = genes.loc[:, ["chr", "start", "end", "name", "score", "strand"]]
     tss1kb["start"] = genes["tss"]
     tss1kb["end"] = genes["tss"]
     tss1kb = df_to_pyranges(tss1kb).slack(tss_slop)
-    tss1kb = pr.gf.genome_bounds(tss1kb, sizes_pr).df[
+    tss1kb = pr.gf.genome_bounds(tss1kb, chrom_sizes_map).df[
         ["Chromosome", "Start", "End", "name", "score", "strand"]
     ]
     tss1kb.columns = ["chr", "start", "end", "name", "score", "strand"]
