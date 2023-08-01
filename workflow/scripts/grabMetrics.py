@@ -77,7 +77,10 @@ def generateQCMetrics(args):
         )
     if args.powerlaw_params_tsv:
         powerlaw_params = pd.read_csv(args.powerlaw_params_tsv, sep="\t").iloc[0]
-        hic_gamma, hic_scale = powerlaw_params["hic_gamma"], powerlaw_params["hic_scale"]
+        hic_gamma, hic_scale = (
+            powerlaw_params["hic_gamma"],
+            powerlaw_params["hic_scale"],
+        )
         HiCQC(prediction_df, hic_gamma, hic_scale, args.outdir)
 
     with open("{}/QCSummary.p".format(args.outdir), "wb") as f:
