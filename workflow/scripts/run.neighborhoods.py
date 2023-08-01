@@ -159,19 +159,20 @@ def processCellType(args):
         class_gene_file=args.genes_for_class_assignment,
     )
 
+    chrom_sizes_map = pd.read_csv(
+        args.chrom_sizes, sep="\t", header=None, index_col=0
+    ).to_dict()[1]
+
     if not args.skip_gene_counts:
         annotate_genes_with_features(
             genes=genes,
             genome_sizes=args.chrom_sizes,
+            chrom_sizes_map=chrom_sizes_map,
             use_fast_count=(not args.use_secondary_counting_method),
             default_accessibility_feature=params["default_accessibility_feature"],
             features=params["features"],
             outdir=args.outdir,
         )
-
-    chrom_sizes_map = pd.read_csv(
-        args.chrom_sizes, sep="\t", header=None, index_col=0
-    ).to_dict()[1]
 
     # Setup Candidate Enhancers
     load_enhancers(
