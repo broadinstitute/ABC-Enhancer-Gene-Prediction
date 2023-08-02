@@ -1,16 +1,10 @@
-import os, sys
+import os
 import pandas as pd
 import seaborn as sns
+import matplotlib.pyplot as plt
+from scipy import stats
 import glob
 import numpy as np
-from subprocess import (
-    check_call,
-    check_output,
-    PIPE,
-    Popen,
-    getoutput,
-    CalledProcessError,
-)
 
 
 def grabStatistics(arr_values):
@@ -60,10 +54,17 @@ def GrabQCMetrics(prediction_df, outdir):
     numEnhancers = len(prediction_df[["chr", "start", "end"]].drop_duplicates())
 
     # Plot Distributions and save as png
-    PlotDistribution(NumGenesPerEnhancer, "NumberOfGenesPerEnhancer", outdir)
-    PlotDistribution(EnhancerPerGene, "NumberOfEnhancersPerGene", outdir)
-    PlotDistribution(enhancergeneperchrom, "EnhancersPerChromosome", outdir)
-    PlotDistribution(distance, "EnhancerGeneDistance", outdir)
+    PlotDistribution(
+        NumGenesPerEnhancer, "NumberOfGenesPerEnhancer", outdir, "Num Genes"
+    )
+    PlotDistribution(
+        EnhancerPerGene, "NumberOfEnhancersPerGene", outdir, "Num Enhancers"
+    )
+    PlotDistribution(
+        enhancergeneperchrom, "EnhancersPerChromosome", outdir, "Num Enhancers"
+    )
+    log_dist = np.log(distance[distance > 0])
+    PlotDistribution(log_dist, "EnhancerGeneDistance", outdir, "Log Distance")
 
     pred_metrics = {}
     pred_metrics["MedianEnhPerGene"] = GeneMedian
@@ -101,6 +102,7 @@ def PlotQuantilePlot(EnhancerList, title, outdir):
     fig = ax.get_figure()
     outfile = os.path.join(outdir, i + str(title) + ".pdf")
     fig.savefig(outfile, format="pdf")
+    plt.clf()
 
 
 def NeighborhoodFileQC(pred_metrics, neighborhood_dir, outdir, feature):
@@ -145,7 +147,7 @@ def PeakFileQC(pred_metrics, macs_peaks, outdir):
     candidateRegions = pd.read_csv(macs_peaks, sep="\t", header=None)
     candidateRegions["dist"] = candidateRegions[2] - candidateRegions[1]
     candreg = list(candidateRegions["dist"])
-    PlotDistribution(candreg, "WidthOfCandidateRegions", outdir)
+    PlotDistribution(candreg, "WidthOfCandidateRegions", outdir, "Width")
 
     # Calculate width of peaks
     peaks["dist"] = peaks[2] - peaks[1]
@@ -163,11 +165,50 @@ def PeakFileQC(pred_metrics, macs_peaks, outdir):
 
 
 # Plots and saves a distribution as *.png
-def PlotDistribution(array, title, outdir):
-    ax = sns.distplot(array)
+def PlotDistribution(array, title, outdir, x_label):
+    ax = sns.histplot(array, kde=True, bins=50, kde_kws=dict(cut=3))
     ax.set_title(title)
-    ax.set_ylabel("Estimated PDF of distribution")
-    ax.set_xlabel("Counts")
+    ax.set_ylabel("Counts")
+    ax.set_xlabel(x_label)
     fig = ax.get_figure()
     outfile = os.path.join(outdir, str(title) + ".pdf")
     fig.savefig(outfile, format="pdf")
+    plt.clf()
+
+
+def HiCQC(df, gamma, scale, outdir):
+    # filter for e-g distances of >10kb and <1Mb
+    df = df.loc[(df["distance"] > 10000) & (df["distance"] < 1000000)]
+    PlotPowerLawRelationship(
+        df, "distance", "hic_contact", "Distance_HiC Powerlaw", outdir, gamma, scale
+    )
+
+
+def PlotPowerLawRelationship(df, x_axis_col, y_axis_col, title, outdir, gamma, scale):
+    # filter out zeros
+    df = df[df[x_axis_col] > 0]
+    df = df[df[y_axis_col] > 0]
+
+    max_samples = 10000
+    df = df.sample(min(max_samples, len(df)))
+
+    log_x_axis_label = f"log_{x_axis_col}"
+    log_y_axis_label = f"log_{y_axis_col}"
+    log_x_vals = np.log(df[x_axis_col])
+    log_y_vals = np.log(df[y_axis_col])
+
+    values = np.vstack([log_x_vals, log_y_vals])
+    kernel = stats.gaussian_kde(values)(values)
+    ax = sns.scatterplot(x=log_x_vals, y=log_y_vals, c=kernel, cmap="viridis")
+
+    fitted_y_vals = scale + -1 * gamma * log_x_vals
+    sns.lineplot(
+        x=log_x_vals, y=fitted_y_vals, color="red", label="Fitted Powerlaw Fit"
+    )
+    ax.set(title=title)
+    ax.set_xlabel(log_x_axis_label)
+    ax.set_ylabel(log_y_axis_label)
+
+    outfile = os.path.join(outdir, str(title) + ".pdf")
+    ax.get_figure().savefig(outfile, format="pdf")
+    plt.clf()

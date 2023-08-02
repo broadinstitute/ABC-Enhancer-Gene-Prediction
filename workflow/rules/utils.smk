@@ -31,6 +31,22 @@ def get_accessibility_file(wildcards):
 def get_hic_dir_hash(hic_info_row):
 	return hashlib.sha1(str(hic_info_row).encode()).hexdigest()[:8]
 
+
+def get_hic_powerlaw_fit_file(wildcards):
+	return os.path.join(_get_hic_powerlaw_fit_dir(wildcards), "hic.powerlaw.tsv")
+
+def _get_hic_powerlaw_fit_dir(wildcards):
+	"""
+	If HiC is provided, we store the fit in the HiC hash folder. Otherwise
+	we store under the biosamples folder
+	"""
+	row = BIOSAMPLES_CONFIG.loc[wildcards.biosample, HIC_COLUMNS].values
+	hic_dir = row[0]
+	if hic_dir:
+		return os.path.join(RESULTS_DIR, "HiC_Powerlaw", get_hic_dir_hash(row))
+	else:
+		return os.path.join(RESULTS_DIR, "HiC_Powerlaw", wildcards.biosample)
+
 def _validate_accessibility_feature(row: pd.Series):
 	if row["DHS"] and row["ATAC"]:
 		raise InvalidConfig("Can only specify one of DHS or ATAC for accessibility")
