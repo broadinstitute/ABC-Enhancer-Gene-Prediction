@@ -4,14 +4,14 @@ import os.path
 import sys
 import time
 import traceback
+from typing import Dict
 
 import numpy as np
-from typing import Dict
 import pandas as pd
+from compute_powerlaw_fit_from_hic import do_powerlaw_fit, load_hic_for_powerlaw
 from getVariantOverlap import *
 from predictor import *
 from tools import *
-from compute_powerlaw_fit_from_hic import load_hic_for_powerlaw, do_powerlaw_fit
 
 
 def get_model_argument_parser():
@@ -212,7 +212,17 @@ def main():
     # TO DO
     # Think about which columns to include
     enhancers = enhancers_full.loc[
-        :, ["chr", "start", "end", "name", "class", "activity_base", "normalized_dhs"]
+        :,
+        [
+            "chr",
+            "start",
+            "end",
+            "name",
+            "class",
+            "activity_base",
+            "normalized_dhs",
+            "normalized_h3K27ac",
+        ],
     ]
     enhancers["activity_base_squared"] = enhancers["activity_base"] ** 2
     # Initialize Prediction files
