@@ -1,10 +1,12 @@
+import glob
 import os
+from typing import List
+
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn as sns
-import matplotlib.pyplot as plt
 from scipy import stats
-import glob
-import numpy as np
 
 
 def grabStatistics(arr_values):
@@ -14,9 +16,18 @@ def grabStatistics(arr_values):
     return mean, median, std
 
 
+def sort_by_chrom_order(series: pd.Series, chrom_order: List[str]) -> pd.Series:
+    new_series = pd.Series()
+    for chr in chrom_order:
+        if chr in series:
+            new_series[chr] = series[chr]
+    return new_series
+
+
 # Generates QC Prediction Metrics:
-def GrabQCMetrics(prediction_df, outdir):
+def GrabQCMetrics(prediction_df, chrom_order, outdir):
     EnhancerPerGene = prediction_df.groupby(["TargetGene"]).size()
+
     EnhancerPerGene.to_csv(os.path.join(outdir, "EnhancerPerGene.txt"), sep="\t")
 
     # Grab Number of Enhancers Per Gene
@@ -35,6 +46,7 @@ def GrabQCMetrics(prediction_df, outdir):
 
     # Grab Number of Enhancer-Gene Pairs Per Chromsome
     enhancergeneperchrom = prediction_df.groupby(["chr"]).size()
+    enhancergeneperchrom = sort_by_chrom_order(enhancergeneperchrom, chrom_order)
     enhancergeneperchrom.to_csv(
         os.path.join(outdir, "EnhancerGenePairsPerChrom.txt"), sep="\t"
     )
@@ -55,16 +67,36 @@ def GrabQCMetrics(prediction_df, outdir):
 
     # Plot Distributions and save as png
     PlotDistribution(
-        NumGenesPerEnhancer, "NumberOfGenesPerEnhancer", outdir, "Num Genes"
+        NumGenesPerEnhancer,
+        "Number Of Genes Per Enhancer",
+        outdir,
+        x_label="Genes Per Enhancer",
+        density_line=False,
     )
     PlotDistribution(
-        EnhancerPerGene, "NumberOfEnhancersPerGene", outdir, "Num Enhancers"
+        EnhancerPerGene,
+        "Number of Enhancers Per Gene",
+        outdir,
+        x_label="Enhancers per Gene",
+        density_line=False,
     )
+    plotBarPlot(
+        enhancergeneperchrom,
+        enhancergeneperchrom.index,
+        "Enhancer-Gene Pairs Per Chromosome",
+        outdir,
+        x_label="Number of E-G pairs",
+        y_label="Chromosome",
+    )
+
+    log_dist = np.log10(distance[distance > 0])
     PlotDistribution(
-        enhancergeneperchrom, "EnhancersPerChromosome", outdir, "Num Enhancers"
+        log_dist,
+        "Enhancer-Gene Distance",
+        outdir,
+        x_label="Log10 Distance",
+        stat="density",
     )
-    log_dist = np.log(distance[distance > 0])
-    PlotDistribution(log_dist, "EnhancerGeneDistance", outdir, "Log Distance")
 
     pred_metrics = {}
     pred_metrics["MedianEnhPerGene"] = GeneMedian
@@ -82,6 +114,17 @@ def GrabQCMetrics(prediction_df, outdir):
     pred_metrics["EG10th"] = thquantile
     pred_metrics["EG90th"] = testthquantile
     return pred_metrics
+
+
+def plotBarPlot(x_data, y_data, title, outdir, x_label, y_label, color="blue"):
+    ax = sns.barplot(x=x_data, y=y_data, color=color, orient="h")
+    ax.set_title(title)
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
+    fig = ax.get_figure()
+    outfile = os.path.join(outdir, str(title) + ".pdf")
+    fig.savefig(outfile, format="pdf")
+    plt.clf()
 
 
 def PlotQuantilePlot(EnhancerList, title, outdir):
@@ -142,16 +185,13 @@ def PeakFileQC(pred_metrics, macs_peaks, outdir):
         peaks = pd.read_csv(macs_peaks, sep="\t", header=None)
 
     # Calculate metrics for candidate regions
-    # outfile = os.path.join(outdir, os.path.basename(macs_peaks) + ".sorted.candidateRegions.bed")
-
     candidateRegions = pd.read_csv(macs_peaks, sep="\t", header=None)
     candidateRegions["dist"] = candidateRegions[2] - candidateRegions[1]
     candreg = list(candidateRegions["dist"])
-    PlotDistribution(candreg, "WidthOfCandidateRegions", outdir, "Width")
+    PlotDistribution(candreg, "WidthOfCandidateRegions", outdir, x_label="Width")
 
     # Calculate width of peaks
     peaks["dist"] = peaks[2] - peaks[1]
-    peaks_array = list(peaks["dist"])
     pred_metrics["NumPeaks"] = len(peaks["dist"])
     pred_metrics["MedWidth"] = peaks["dist"].median()
     pred_metrics["MeanWidth"] = peaks["dist"].mean()
@@ -165,11 +205,11 @@ def PeakFileQC(pred_metrics, macs_peaks, outdir):
 
 
 # Plots and saves a distribution as *.png
-def PlotDistribution(array, title, outdir, x_label):
-    ax = sns.histplot(array, kde=True, bins=50, kde_kws=dict(cut=3))
+def PlotDistribution(array, title, outdir, x_label, stat="count", density_line=True):
+    ax = sns.histplot(array, kde=density_line, bins=50, kde_kws=dict(cut=3), stat=stat)
     ax.set_title(title)
-    ax.set_ylabel("Counts")
     ax.set_xlabel(x_label)
+    ax.set_ylabel(stat.capitalize())
     fig = ax.get_figure()
     outfile = os.path.join(outdir, str(title) + ".pdf")
     fig.savefig(outfile, format="pdf")
@@ -179,6 +219,8 @@ def PlotDistribution(array, title, outdir, x_label):
 def HiCQC(df, gamma, scale, outdir):
     # filter for e-g distances of >10kb and <1Mb
     df = df.loc[(df["distance"] > 10000) & (df["distance"] < 1000000)]
+    max_samples = 10000
+    df = df.sample(min(max_samples, len(df)))
     PlotPowerLawRelationship(
         df, "distance", "hic_contact", "Distance_HiC Powerlaw", outdir, gamma, scale
     )
@@ -188,9 +230,6 @@ def PlotPowerLawRelationship(df, x_axis_col, y_axis_col, title, outdir, gamma, s
     # filter out zeros
     df = df[df[x_axis_col] > 0]
     df = df[df[y_axis_col] > 0]
-
-    max_samples = 10000
-    df = df.sample(min(max_samples, len(df)))
 
     log_x_axis_label = f"log_{x_axis_col}"
     log_y_axis_label = f"log_{y_axis_col}"
