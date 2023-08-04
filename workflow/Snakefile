@@ -32,5 +32,7 @@ rule all:
 			os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictions.tsv"), biosample=BIOSAMPLES_CONFIG["biosample"]
 		),
 		allPred = os.path.join(RESULTS_DIR,"AllPredictions.txt.gz"),
-		metricsDirectory = expand(os.path.join(RESULTS_DIR, "{biosample}", "Metrics", "QCSummary.p"), biosample=BIOSAMPLES_CONFIG["biosample"])
+		qcPlots = expand(
+			os.path.join(RESULTS_DIR, "{biosample}", "Metrics", "QCPlots.pdf"), biosample=BIOSAMPLES_CONFIG["biosample"]
+		)
 
