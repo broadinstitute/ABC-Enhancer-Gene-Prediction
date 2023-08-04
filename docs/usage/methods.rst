@@ -1,5 +1,7 @@
+.. _ABC-methods:
+
 Detailed Methods
-=========
+================
 
 To-do:  This page should include detailed methods for each of the main operations for ABC
 
@@ -14,7 +16,7 @@ Key concepts:
 - Interpreting the ABC score
 
 1. Defining candidate elements
----------
+------------------------------
 
 'Candidate elements' are the set of putative enhancer elements for which ABC Scores will be computed. These include gene promoters. 
 
@@ -26,12 +28,12 @@ The method of defining candidate elements includes the following steps:
 - Adding promoters
 
 1.1. Calling peaks with MACS2
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Rosa to add details about the MACS2 methods calling
 
   
 1.2. Defining gene promoters
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Defining the promoter region for a gene has a strong influence on the ABC computation.
 
 describe how it is important how promoters are selected, and how changing the promoter list can impact ABC scores 
@@ -46,27 +48,27 @@ In practice, we provide a gene promoter file that we have used for various purpo
 
 
 2. Estimating enhancer activity
----------
+-------------------------------
 
 3. Estimating enhancer-promoter 3D contact
----------
+------------------------------------------
 
 3.1. Cell-type average Hi-C data (recommended)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 3.2. Cell-type specific Hi-C data
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 3.3. Power-law function of distance
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 4. Making predictions with different combinations of input datasets
----------
+------------------------------------------------------------------------
 
 
 5. Interpreting the ABC score
----------
+------------------------------------
 
 - Benchmark against the CRISPR data
 - Correlates with effect size, but not in a linear way

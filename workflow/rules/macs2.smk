@@ -4,6 +4,7 @@ rule call_macs_peaks:
 		accessibility = get_accessibility_file
 	params:
 		pval = config['params_macs']['pval'],
+		genome_size = config['params_macs']['genome_size'],
 		out_dir = config["predictions_results_dir"]
 	conda:
 		"../envs/abcenv.yml"
@@ -11,7 +12,7 @@ rule call_macs_peaks:
 		narrowPeak = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak")
 	shell: 
 		""" 
-		macs2 callpeak -f AUTO -g hs -p {params.pval} -n macs2 --call-summits --outdir {params.out_dir}/{wildcards.biosample}/Peaks -t {input.accessibility}
+		macs2 callpeak -f AUTO -g {params.genome_size} -p {params.pval} -n macs2 --call-summits --outdir {params.out_dir}/{wildcards.biosample}/Peaks -t {input.accessibility}
 		"""
 
 rule gen_chrom_sizes_bed:
