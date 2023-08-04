@@ -5,7 +5,6 @@ channels:
   - defaults
   - anaconda
 dependencies:
-  - blas=1.0=openblas
   - bedtools=2.26.0
   - click
   - macs2
@@ -19,4 +18,8 @@ dependencies:
   - scipy
   - seaborn
   - snakemake>=7.0
+  - sphinx
   - yaml
+  - pip:
+    - sphinx_rtd_theme
+  

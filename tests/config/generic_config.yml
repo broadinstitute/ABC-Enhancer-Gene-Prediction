@@ -19,6 +19,7 @@ genome_tss: "reference/hg38/RefSeqCurated.170308.bed.CollapsedGeneBounds.hg38.TS
 ### RULE SPECIFIC PARAMS
 params_macs:
         pval: 0.1
+        genome_size: hs  # shortcuts: hs: human ; mm: mice
         threads: 10
 
 # These parameters are used to run the Run Candidate Regions portion of the abc code 
