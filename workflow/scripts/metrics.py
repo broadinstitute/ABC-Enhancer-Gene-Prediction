@@ -25,11 +25,17 @@ def sort_by_chrom_order(series: pd.Series, chrom_order: List[str]) -> pd.Series:
 
 
 # Generates QC Prediction Metrics:
-def GrabQCMetrics(prediction_df, chrom_order, outdir):
+def GrabQCMetrics(prediction_df, chrom_order, outdir, pdf_writer):
     EnhancerPerGene = prediction_df.groupby(["TargetGene"]).size()
-
-    EnhancerPerGene.to_csv(os.path.join(outdir, "EnhancerPerGene.txt"), sep="\t")
-
+    EnhancerPerGene.to_csv(os.path.join(outdir, "EnhancerPerGene.tsv"), sep="\t")
+    pdf_writer.savefig(
+        PlotDistribution(
+            EnhancerPerGene,
+            "Number of Enhancers Per Gene",
+            x_label="Enhancers per Gene",
+            density_line=False,
+        )
+    )
     # Grab Number of Enhancers Per Gene
     GeneMean, GeneMedian, GeneStdev = grabStatistics(EnhancerPerGene)
 
@@ -37,7 +43,15 @@ def GrabQCMetrics(prediction_df, chrom_order, outdir):
     NumGenesPerEnhancer = (
         prediction_df[["chr", "start", "end"]].groupby(["chr", "start", "end"]).size()
     )
-    NumGenesPerEnhancer.to_csv(os.path.join(outdir, "GenesPerEnhancer.txt"), sep="\t")
+    NumGenesPerEnhancer.to_csv(os.path.join(outdir, "GenesPerEnhancer.tsv"), sep="\t")
+    pdf_writer.savefig(
+        PlotDistribution(
+            NumGenesPerEnhancer,
+            "Number Of Genes Per Enhancer",
+            x_label="Genes Per Enhancer",
+            density_line=False,
+        )
+    )
     (
         mean_genes_per_enhancer,
         median_genes_per_enhancer,
@@ -50,7 +64,15 @@ def GrabQCMetrics(prediction_df, chrom_order, outdir):
     enhancergeneperchrom.to_csv(
         os.path.join(outdir, "EnhancerGenePairsPerChrom.txt"), sep="\t"
     )
-
+    pdf_writer.savefig(
+        plotBarPlot(
+            enhancergeneperchrom,
+            enhancergeneperchrom.index,
+            "Enhancer-Gene Pairs Per Chromosome",
+            x_label="Number of E-G pairs",
+            y_label="Chromosome",
+        )
+    )
     (
         mean_enhancergeneperchrom,
         median_enhancergeneperchrom,
@@ -59,45 +81,20 @@ def GrabQCMetrics(prediction_df, chrom_order, outdir):
 
     # Enhancer-Gene Distancee
     distance = np.array(prediction_df["distance"])
+    log_dist = np.log10(distance[distance > 0])
+    pdf_writer.savefig(
+        PlotDistribution(
+            log_dist,
+            "Enhancer-Gene Distance",
+            x_label="Log10 Distance",
+            stat="density",
+        )
+    )
     thquantile = np.percentile(distance, 10)
     testthquantile = np.percentile(distance, 90)
 
     # Number of Enhancers
     numEnhancers = len(prediction_df[["chr", "start", "end"]].drop_duplicates())
-
-    # Plot Distributions and save as png
-    PlotDistribution(
-        NumGenesPerEnhancer,
-        "Number Of Genes Per Enhancer",
-        outdir,
-        x_label="Genes Per Enhancer",
-        density_line=False,
-    )
-    PlotDistribution(
-        EnhancerPerGene,
-        "Number of Enhancers Per Gene",
-        outdir,
-        x_label="Enhancers per Gene",
-        density_line=False,
-    )
-    plotBarPlot(
-        enhancergeneperchrom,
-        enhancergeneperchrom.index,
-        "Enhancer-Gene Pairs Per Chromosome",
-        outdir,
-        x_label="Number of E-G pairs",
-        y_label="Chromosome",
-    )
-
-    log_dist = np.log10(distance[distance > 0])
-    PlotDistribution(
-        log_dist,
-        "Enhancer-Gene Distance",
-        outdir,
-        x_label="Log10 Distance",
-        stat="density",
-    )
-
     pred_metrics = {}
     pred_metrics["MedianEnhPerGene"] = GeneMedian
     pred_metrics["StdEnhPerGene"] = GeneStdev
@@ -116,39 +113,16 @@ def GrabQCMetrics(prediction_df, chrom_order, outdir):
     return pred_metrics
 
 
-def plotBarPlot(x_data, y_data, title, outdir, x_label, y_label, color="blue"):
+def plotBarPlot(x_data, y_data, title, x_label, y_label, color="blue"):
+    plt.clf()  # make sure we're starting with a fresh plot
     ax = sns.barplot(x=x_data, y=y_data, color=color, orient="h")
     ax.set_title(title)
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
-    fig = ax.get_figure()
-    outfile = os.path.join(outdir, str(title) + ".pdf")
-    fig.savefig(outfile, format="pdf")
-    plt.clf()
+    return ax.get_figure()
 
 
-def PlotQuantilePlot(EnhancerList, title, outdir):
-    i = "DHS"
-    ax = sns.scatterplot("DHS.RPM", "DHS.RPM.quantile", data=EnhancerList)
-    ax.set_title(title)
-    ax.set_ylabel("RPM.quantile")
-    ax.set_xlabel("RPM")
-    fig = ax.get_figure()
-    outfile = os.path.join(outdir, i + str(title) + ".pdf")
-    fig.savefig(outfile, format="pdf")
-
-    i = "H3K27ac"
-    ax = sns.scatterplot("H3K27ac.RPM", "H3K27ac.RPM.quantile", data=EnhancerList)
-    ax.set_title(title)
-    ax.set_ylabel("RPM.quantile")
-    ax.set_xlabel("RPM")
-    fig = ax.get_figure()
-    outfile = os.path.join(outdir, i + str(title) + ".pdf")
-    fig.savefig(outfile, format="pdf")
-    plt.clf()
-
-
-def NeighborhoodFileQC(pred_metrics, neighborhood_dir, outdir, feature):
+def NeighborhoodFileQC(pred_metrics, neighborhood_dir, feature):
     x = glob.glob(
         os.path.join(
             neighborhood_dir, "Enhancers.{}.*CountReads.bedgraph".format(feature)
@@ -178,7 +152,7 @@ def NeighborhoodFileQC(pred_metrics, neighborhood_dir, outdir, feature):
 
 
 # Generates peak file metrics
-def PeakFileQC(pred_metrics, macs_peaks, outdir):
+def PeakFileQC(pred_metrics, macs_peaks, pdf_writer):
     if macs_peaks.endswith(".gz"):
         peaks = pd.read_csv(macs_peaks, compression="gzip", sep="\t", header=None)
     else:
@@ -188,7 +162,9 @@ def PeakFileQC(pred_metrics, macs_peaks, outdir):
     candidateRegions = pd.read_csv(macs_peaks, sep="\t", header=None)
     candidateRegions["dist"] = candidateRegions[2] - candidateRegions[1]
     candreg = list(candidateRegions["dist"])
-    PlotDistribution(candreg, "WidthOfCandidateRegions", outdir, x_label="Width")
+    pdf_writer.savefig(
+        PlotDistribution(candreg, "WidthOfCandidateRegions", x_label="Width")
+    )
 
     # Calculate width of peaks
     peaks["dist"] = peaks[2] - peaks[1]
@@ -205,34 +181,35 @@ def PeakFileQC(pred_metrics, macs_peaks, outdir):
 
 
 # Plots and saves a distribution as *.png
-def PlotDistribution(array, title, outdir, x_label, stat="count", density_line=True):
+def PlotDistribution(array, title, x_label, stat="count", density_line=True):
+    plt.clf()  # make sure we're starting with a fresh plot
     ax = sns.histplot(array, kde=density_line, bins=50, kde_kws=dict(cut=3), stat=stat)
     ax.set_title(title)
     ax.set_xlabel(x_label)
     ax.set_ylabel(stat.capitalize())
-    fig = ax.get_figure()
-    outfile = os.path.join(outdir, str(title) + ".pdf")
-    fig.savefig(outfile, format="pdf")
-    plt.clf()
+    return ax.get_figure()
 
 
-def HiCQC(df, gamma, scale, outdir):
+def HiCQC(df, gamma, scale, pdf_writer):
     # filter for e-g distances of >10kb and <1Mb
     df = df.loc[(df["distance"] > 10000) & (df["distance"] < 1000000)]
     max_samples = 10000
     df = df.sample(min(max_samples, len(df)))
-    PlotPowerLawRelationship(
-        df, "distance", "hic_contact", "Distance_HiC Powerlaw", outdir, gamma, scale
+    pdf_writer.savefig(
+        PlotPowerLawRelationship(
+            df, "distance", "hic_contact", "E-G Pair HiC Powerlaw Fit", gamma, scale
+        )
     )
 
 
-def PlotPowerLawRelationship(df, x_axis_col, y_axis_col, title, outdir, gamma, scale):
+def PlotPowerLawRelationship(df, x_axis_col, y_axis_col, title, gamma, scale):
+    plt.clf()  # make sure we're starting with a fresh plot
     # filter out zeros
     df = df[df[x_axis_col] > 0]
     df = df[df[y_axis_col] > 0]
 
-    log_x_axis_label = f"log_{x_axis_col}"
-    log_y_axis_label = f"log_{y_axis_col}"
+    log_x_axis_label = f"natural log ({x_axis_col})"
+    log_y_axis_label = f"natural log ({y_axis_col})"
     log_x_vals = np.log(df[x_axis_col])
     log_y_vals = np.log(df[y_axis_col])
 
@@ -247,7 +224,4 @@ def PlotPowerLawRelationship(df, x_axis_col, y_axis_col, title, outdir, gamma, s
     ax.set(title=title)
     ax.set_xlabel(log_x_axis_label)
     ax.set_ylabel(log_y_axis_label)
-
-    outfile = os.path.join(outdir, str(title) + ".pdf")
-    ax.get_figure().savefig(outfile, format="pdf")
-    plt.clf()
+    return ax.get_figure()

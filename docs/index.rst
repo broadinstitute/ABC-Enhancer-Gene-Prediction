@@ -30,6 +30,7 @@ Released Versions
 v1.0 (version for ENCODE paper)
 
 - Snakemake and config files for improved usability
+- QC Plots
 - Other feature additions and bug fixes
 
 v0.2 (version for [1])
