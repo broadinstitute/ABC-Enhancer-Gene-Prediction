@@ -1,7 +1,7 @@
 rule gen_qc_plots:
 	input: 
 		candidateRegions = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed"),
-		neighborhoodDirectory = directory(os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods")),
+		neighborhoodDirectory = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods"),
 		enhPredictionsFull = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsFull.tsv"),
 		chrom_sizes = config['chrom_sizes'],
 		powerlaw_params_tsv = get_hic_powerlaw_fit_file
@@ -10,7 +10,8 @@ rule gen_qc_plots:
 	conda:
 		"../envs/abcenv.yml"
 	output:
-		qc_summary = os.path.join(RESULTS_DIR, "{biosample}", "Metrics", "QCSummary.p")
+		qc_summary = os.path.join(RESULTS_DIR, "{biosample}", "Metrics", "QCSummary.tsv"),
+		qc_plots = os.path.join(RESULTS_DIR, "{biosample}", "Metrics", "QCPlots.pdf")
 	shell:
 		"""
 		python workflow/scripts/grabMetrics.py \
