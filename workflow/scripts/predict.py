@@ -49,6 +49,12 @@ def get_model_argument_parser():
         default=0.022,
         help="Threshold on ABC Score (--score_column) to call a predicted positive. Note that the threshold will need to be adjusted based on the combination of input datasets used.",
     )
+    parser.add_argument(
+        "--accessibility_feature",
+        default=None,
+        nargs="?",
+        help="If both ATAC and DHS are provided, this flag must be set to either 'DHS' or 'ATAC' signifying which datatype to use in computing activity",
+    )
     parser.add_argument("--cellType", help="Name of cell type")
     parser.add_argument("--chrom_sizes", required=True, help="Chromosome sizes file")
 
@@ -185,45 +191,41 @@ def main():
     genes = determine_expressed_genes(
         genes, args.expression_cutoff, args.promoter_activity_quantile_cutoff
     )
-    genes = genes.loc[
-        :,
-        [
-            "chr",
-            "symbol",
-            "tss",
-            "Expression",
-            "PromoterActivityQuantile",
-            "isExpressed",
-            "DHS.RPKM.quantile.TSS1Kb",
-        ],
+
+    genes_columns_to_subset = [
+        "chr",
+        "symbol",
+        "tss",
+        "Expression",
+        "PromoterActivityQuantile",
+        "isExpressed",
     ]
-    genes.columns = [
+    genes_column_names = [
         "chr",
         "TargetGene",
         "TargetGeneTSS",
         "TargetGeneExpression",
         "TargetGenePromoterActivityQuantile",
         "TargetGeneIsExpressed",
-        "normalized_dhs",
     ]
-
     print("reading enhancers")
     enhancers_full = pd.read_csv(args.enhancers, sep="\t")
-    # TO DO
-    # Think about which columns to include
-    enhancers = enhancers_full.loc[
-        :,
-        [
-            "chr",
-            "start",
-            "end",
-            "name",
-            "class",
-            "activity_base",
-            "normalized_dhs",
-            "normalized_h3K27ac",
-        ],
-    ]
+    enhancers_column_names = ["chr", "start", "end", "name", "class", "activity_base"]
+    if args.accessibility_feature == "ATAC":
+        subset_columns = genes_columns_to_subset + ["ATAC.RPKM.quantile.TSS1Kb"]
+        genes = genes.loc[:, subset_columns]
+        genes.columns = genes_column_names + ["normalized_atac"]
+        subset_columns = enhancers_column_names + ["normalized_atac"]
+        enhancers = enhancers_full.loc[:, subset_columns]
+    elif args.accessibility_feature == "DHS":
+        subset_columns = genes_columns_to_subset + ["DHS.RPKM.quantile.TSS1Kb"]
+        genes = genes.loc[:, subset_columns]
+        genes.columns = genes_column_names + ["normalized_dhs"]
+        subset_columns = enhancers_column_names + ["normalized_dhs"]
+        enhancers = enhancers_full.loc[:, subset_columns]
+    else:
+        print("The feature does not exist!")
+
     enhancers["activity_base_squared"] = enhancers["activity_base"] ** 2
     # Initialize Prediction files
     pred_file_full = os.path.join(args.outdir, "EnhancerPredictionsFull.tsv")

@@ -10,9 +10,23 @@ rule call_macs_peaks:
 		"../envs/abcenv.yml"
 	output: 
 		narrowPeak = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak")
+	resources:
+		mem_gb=32,
+		runtime_hr=6
 	shell: 
 		""" 
-		macs2 callpeak -f AUTO -g {params.genome_size} -p {params.pval} -n macs2 --call-summits --outdir {params.out_dir}/{wildcards.biosample}/Peaks -t {input.accessibility}
+		macs2 callpeak \
+		-f AUTO \
+		-g {params.genome_size} \
+		-p {params.pval} \
+		-n macs2 \
+		--shift -75 \
+		--extsize 150 \
+		--nomodel \
+		--keep-dup all \
+		--call-summits \
+		--outdir {params.out_dir}/{wildcards.biosample}/Peaks \
+		-t {input.accessibility} 
 		"""
 
 rule gen_chrom_sizes_bed:
@@ -20,6 +34,9 @@ rule gen_chrom_sizes_bed:
 		chrom_sizes = config['chrom_sizes']
 	output:
 		chrom_sizes_bed = os.path.join(RESULTS_DIR, "tmp", "chr_sizes.bed")
+	resources:
+		mem_gb=4,
+		runtime_hr=1
 	shell:
 		"""
 		awk 'BEGIN {{OFS="\t"}} {{if (NF > 0) print $1,"0",$2 ; else print $0}}' {input.chrom_sizes} > {output.chrom_sizes_bed}
@@ -34,6 +51,9 @@ rule sort_narrowpeaks:
 		chrom_sizes = config['chrom_sizes']
 	conda:
 		"../envs/abcenv.yml"
+	resources:
+		mem_gb=4,
+		runtime_hr=1
 	output:
 		narrowPeakSorted = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted")
 	shell:

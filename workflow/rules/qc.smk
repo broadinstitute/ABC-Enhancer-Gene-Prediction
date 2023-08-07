@@ -11,6 +11,9 @@ rule gen_qc_plots:
 		"../envs/abcenv.yml"
 	output:
 		qc_summary = os.path.join(RESULTS_DIR, "{biosample}", "Metrics", "QCSummary.p")
+	resources:
+		mem_gb=32,
+		runtime_hr=6
 	shell:
 		"""
 		python workflow/scripts/grabMetrics.py \

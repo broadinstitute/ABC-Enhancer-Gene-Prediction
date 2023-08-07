@@ -20,12 +20,16 @@ rule run_predictions:
 		chrom_sizes = config['chrom_sizes'],
 		threshold = config['params_predict']['threshold'],
 		flags = config['params_predict']['flags'],
+		accessibility_feature = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'default_accessibility_feature'],
 	conda:
 		"../envs/abcenv.yml"
 	output: 
 		allPutative = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.txt.gz"),
 		enhPredictions = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictions.tsv"),
 		enhPredictionsFull = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsFull.tsv"),
+	resources:
+		mem_gb=128,
+		runtime_hr=6
 	shell:
 		"""
 		python workflow/scripts/predict.py \
@@ -34,6 +38,7 @@ rule run_predictions:
 			{params.hic_params} \
 			--powerlaw_params_tsv {input.powerlaw_params_tsv} \
 			--chrom_sizes {params.chrom_sizes} \
+			--accessibility_feature {params.accessibility_feature} \
 			--threshold {params.threshold} \
 			--cellType {params.cellType} \
 			--genes {input.genes} \
@@ -50,6 +55,9 @@ rule make_all_predictions:
 		"../envs/abcenv.yml"
 	output:
 		allPred = os.path.join(RESULTS_DIR,"AllPredictions.txt.gz")
+	resources:
+		mem_gb=32,
+		runtime_hr=6
 	shell:
 		"""			
 		set +o pipefail;

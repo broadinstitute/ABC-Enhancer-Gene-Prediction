@@ -14,6 +14,9 @@ rule call_candidate_regions:
 		"../envs/abcenv.yml"
 	output: 
 		candidateRegions = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed")
+	resources:
+		mem_gb=64,
+		runtime_hr=6
 	shell: 
 		"""
 		python workflow/scripts/makeCandidateRegions.py \
