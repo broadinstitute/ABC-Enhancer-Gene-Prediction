@@ -1,17 +1,12 @@
 import argparse
 import os
 import os.path
-import sys
 import time
-import traceback
-from typing import Dict
 
-import numpy as np
 import pandas as pd
-from compute_powerlaw_fit_from_hic import do_powerlaw_fit, load_hic_for_powerlaw
-from getVariantOverlap import *
-from predictor import *
-from tools import *
+from getVariantOverlap import test_variant_overlap
+from predictor import make_predictions
+from tools import write_params, determine_expressed_genes
 
 
 def get_model_argument_parser():
@@ -36,24 +31,16 @@ def get_model_argument_parser():
         required=True,
         help="Genes to make predictions for. Formatted as the GeneList.txt file produced by run.neighborhoods.py",
     )
-    parser.add_argument("--outdir", required=True, help="output directory")
     parser.add_argument(
         "--score_column",
         default="ABC.Score",
         help="Column name of score to use for thresholding",
     )
-    parser.add_argument(
-        "--threshold",
-        type=float,
-        required=True,
-        default=0.022,
-        help="Threshold on ABC Score (--score_column) to call a predicted positive. Note that the threshold will need to be adjusted based on the combination of input datasets used.",
-    )
+    parser.add_argument("--outdir", required=True, help="output directory")
     parser.add_argument("--cellType", help="Name of cell type")
     parser.add_argument("--chrom_sizes", required=True, help="Chromosome sizes file")
 
     # hic
-    # To do: validate params
     parser.add_argument("--hic_dir", default=None, help="HiC directory")
     parser.add_argument("--hic_resolution", type=int, help="HiC resolution")
     parser.add_argument(
@@ -74,7 +61,7 @@ def get_model_argument_parser():
         help="If hic matrix is already doubly stochastic, can skip this step",
     )
 
-    # Power law
+    # Power law values
     parser.add_argument(
         "--scale_hic_using_powerlaw",
         action="store_true",
@@ -93,11 +80,6 @@ def get_model_argument_parser():
     )
 
     # Genes to run through model
-    parser.add_argument(
-        "--run_all_genes",
-        action="store_true",
-        help="Do not check for gene expression, make predictions for all genes. Use of this parameter is not recommended.",
-    )
     parser.add_argument(
         "--expression_cutoff",
         type=float,
@@ -154,11 +136,6 @@ def get_model_argument_parser():
         "-y",
         action="store_true",
         help="Make predictions on Y chromosome",
-    )
-    parser.add_argument(
-        "--include_self_promoter",
-        action="store_true",
-        help="Include self-promoter elements as enhancers ",
     )
 
     return parser
@@ -226,18 +203,11 @@ def main():
     ]
     enhancers["activity_base_squared"] = enhancers["activity_base"] ** 2
     # Initialize Prediction files
-    pred_file_full = os.path.join(args.outdir, "EnhancerPredictionsFull.tsv")
-    pred_file_slim = os.path.join(args.outdir, "EnhancerPredictions.tsv")
-    pred_file_bedpe = os.path.join(args.outdir, "EnhancerPredictions.bedpe")
     all_pred_file_expressed = os.path.join(
-        args.outdir, "EnhancerPredictionsAllPutative.txt.gz"
+        args.outdir, "EnhancerPredictionsAllPutative.tsv.gz"
     )
     all_pred_file_nonexpressed = os.path.join(
-        args.outdir, "EnhancerPredictionsAllPutativeNonExpressedGenes.txt.gz"
-    )
-    variant_overlap_file = os.path.join(
-        args.outdir,
-        "EnhancerPredictionsAllPutative.ForVariantOverlap.shrunk150bp.txt.gz",
+        args.outdir, "EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz"
     )
     all_putative_list = []
 
@@ -246,7 +216,6 @@ def main():
         chromosomes = set(genes["chr"]).intersection(set(enhancers["chr"]))
         if not args.include_chrY:
             chromosomes.discard("chrY")
-    #            chromosomes.discard('chr9')
     else:
         chromosomes = args.chromosomes.split(",")
 
@@ -285,85 +254,25 @@ def main():
     all_putative["CellType"] = args.cellType
     if args.hic_dir:
         all_putative["hic_contact_squared"] = all_putative["hic_contact"] ** 2
-    slim_cols = [
-        "chr",
-        "start",
-        "end",
-        "name",
-        "TargetGene",
-        "TargetGeneTSS",
-        "CellType",
-        args.score_column,
-    ]
-    if args.run_all_genes:
-        all_positive = all_putative.iloc[
-            np.logical_and.reduce(
-                (
-                    all_putative[args.score_column] > args.threshold,
-                    ~(all_putative["class"] == "promoter"),
-                )
-            ),
-            :,
-        ]
-    else:
-        all_positive = all_putative.iloc[
-            np.logical_and.reduce(
-                (
-                    all_putative.TargetGeneIsExpressed,
-                    all_putative[args.score_column] > args.threshold,
-                    ~(all_putative["class"] == "promoter"),
-                )
-            ),
-            :,
-        ]
 
-    if args.include_self_promoter:
-        self_promoter = all_putative.loc[all_putative["isSelfPromoter"], :]
-        all_positive = pd.concat([all_positive, self_promoter]).drop_duplicates()
-
-    all_positive.to_csv(
-        pred_file_full, sep="\t", index=False, header=True, float_format="%.6f"
+    all_putative.loc[all_putative.TargetGeneIsExpressed, :].to_csv(
+        all_pred_file_expressed,
+        sep="\t",
+        index=False,
+        header=True,
+        compression="gzip",
+        float_format="%.6f",
+        na_rep="NaN",
     )
-    all_positive[slim_cols].to_csv(
-        pred_file_slim, sep="\t", index=False, header=True, float_format="%.6f"
+    all_putative.loc[~all_putative.TargetGeneIsExpressed, :].to_csv(
+        all_pred_file_nonexpressed,
+        sep="\t",
+        index=False,
+        header=True,
+        compression="gzip",
+        float_format="%.6f",
+        na_rep="NaN",
     )
-
-    make_gene_prediction_stats(all_putative, args)
-    write_connections_bedpe_format(all_positive, pred_file_bedpe, args.score_column)
-
-    if args.make_all_putative:
-        if not args.use_hdf5:
-            all_putative.loc[all_putative.TargetGeneIsExpressed, :].to_csv(
-                all_pred_file_expressed,
-                sep="\t",
-                index=False,
-                header=True,
-                compression="gzip",
-                float_format="%.6f",
-                na_rep="NaN",
-            )
-            all_putative.loc[~all_putative.TargetGeneIsExpressed, :].to_csv(
-                all_pred_file_nonexpressed,
-                sep="\t",
-                index=False,
-                header=True,
-                compression="gzip",
-                float_format="%.6f",
-                na_rep="NaN",
-            )
-        else:
-            all_pred_file_expressed = os.path.join(
-                args.outdir, "EnhancerPredictionsAllPutative.h5"
-            )
-            all_pred_file_nonexpressed = os.path.join(
-                args.outdir, "EnhancerPredictionsAllPutativeNonExpressedGenes.h5"
-            )
-            all_putative.loc[all_putative.TargetGeneIsExpressed, :].to_hdf(
-                all_pred_file_expressed, key="predictions", complevel=9, mode="w"
-            )
-            all_putative.loc[~all_putative.TargetGeneIsExpressed, :].to_hdf(
-                all_pred_file_nonexpressed, key="predictions", complevel=9, mode="w"
-            )
 
     test_variant_overlap(args, all_putative)
 

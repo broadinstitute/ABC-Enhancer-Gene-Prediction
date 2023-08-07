@@ -25,7 +25,6 @@ def get_filtered_dataframe(file: str, cols_to_compare: Dict[str, type]) -> pd.Da
     return pd.read_csv(
         file,
         sep="\t",
-        compression="gzip",
         dtype=cols_to_compare,
         usecols=cols_to_compare.keys(),
     )

@@ -23,7 +23,9 @@ def parse_args():
         "--neighborhood_outdir", required=True, help="Neighborhood Directory"
     )
     parser.add_argument("--chrom_sizes", required=True, help="Chromosome sizes file")
-    parser.add_argument("--outdir", required=True, help="Predictions Directory")
+    parser.add_argument("--outdir", required=True, help="Metrics Directory")
+    parser.add_argument("--output_qc_summary", required=True)
+    parser.add_argument("--output_qc_plots", required=True)
     parser.add_argument(
         "--powerlaw_params_tsv",
         type=str,
@@ -38,7 +40,7 @@ def generateQCMetrics(args):
     # read prediction file
     prediction_df = pd.read_csv(args.preds_file, sep="\t")
 
-    with PdfPages(f"{args.outdir}/QCPlots.pdf") as pdf_writer:
+    with PdfPages(args.output_qc_plots) as pdf_writer:
         pred_metrics = GrabQCMetrics(
             prediction_df, chrom_order, args.outdir, pdf_writer
         )
@@ -63,7 +65,7 @@ def generateQCMetrics(args):
                 pred_metrics, args.neighborhood_outdir, feature
             )
 
-    with open(f"{args.outdir}/QCSummary.tsv", "w") as f:
+    with open(args.output_qc_summary, "w") as f:
         writer = csv.writer(f, delimiter="\t")
         for key, val in pred_metrics.items():
             writer.writerow((key, val))

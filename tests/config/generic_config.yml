@@ -33,5 +33,10 @@ params_neighborhoods:
         
 # These parameters are used to run the Predictions portion of the abc code
 params_predict:
-        flags: "--scale_hic_using_powerlaw --make_all_putative --include_self_promoter"
-        threshold: 0.02
+        flags: "--scale_hic_using_powerlaw"
+
+params_filter_predictions:
+        score_column: 'ABC.Score'
+        threshold: .02
+        include_self_promoter: True
+        only_expressed_genes: True

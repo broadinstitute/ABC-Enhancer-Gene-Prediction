@@ -1,5 +1,4 @@
-## call neighborhoods
-rule call_neighborhoods:
+rule create_neighborhoods:
 	input:		
 		candidateRegions = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed"),
 		chrom_sizes_bed = os.path.join(RESULTS_DIR, "tmp", "chr_sizes.bed")
