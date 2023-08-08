@@ -35,11 +35,7 @@ def main(
         all_putative = pd.concat([all_putative, non_expressed], ignore_index=True)
 
     filtered_predictions = all_putative[all_putative[score_column] > threshold]
-
-    if not include_self_promoter:
-        filtered_predictions = filtered_predictions[
-            ~filtered_predictions["isSelfPromoter"]
-        ]
+    filtered_predictions = remove_promoters(filtered_predictions, include_self_promoter)
 
     filtered_predictions.to_csv(
         output_tsv_file, sep="\t", index=False, header=True, float_format="%.6f"
@@ -48,6 +44,13 @@ def main(
     make_gene_prediction_stats(
         filtered_predictions, score_column, threshold, output_gene_stats_file
     )
+
+
+def remove_promoters(pred_df: pd.DataFrame, keep_self_promoters: bool) -> pd.DataFrame:
+    if keep_self_promoters:
+        return pred_df[(pred_df["class"] != "promoter") | pred_df["isSelfPromoter"]]
+    else:
+        return pred_df[pred_df["class"] != "promoter"]
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ wildcard_constraints:
 	separator=".{0}|_",
 	other_flags=".{0}|[^0-9]+"  # match empty strings or more flags
 
-FILTERED_PREDICTION_FILE_FORMAT = "threshold{threshold}{separator}{other_flags}"
+FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE = "threshold{threshold}{separator}{other_flags}"
 
 def determine_filtered_prediction_file_format(config):
 	threshold = config['params_filter_predictions']['threshold']
@@ -23,7 +23,7 @@ def determine_filtered_prediction_file_format(config):
 	else:
 		separator = ''
 		other_flags = ''
-	return FILTERED_PREDICTION_FILE_FORMAT.format(threshold=threshold, separator=separator, other_flags=other_flags)
+	return FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE.format(threshold=threshold, separator=separator, other_flags=other_flags)
 
 def load_biosamples_config(config):
 	biosamples_config = pd.read_csv(config["biosamplesTable"], sep="\t", na_values="").replace([np.NaN], [None]).set_index("biosample", drop=False)

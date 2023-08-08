@@ -32,10 +32,10 @@ COLUMNS_TO_COMPARE: Dict[str, type] = {
 }
 TEST_OUTPUT_DIR = CONFIG["predictions_results_dir"]
 EXPECTED_OUTPUT_DIR = f"tests/expected_output/{CONFIG['TEST_CONFIG_NAME']}"
-ALL_PUTATIVE_PRED_FILE = "Predictions/EnhancerPredictionsAllPutative.txt.gz"
-# POSITIVES_PRED_FILE = "Predictions/EnhancerPredictionsAllPutative.txt.gz"
+ALL_PUTATIVE_PRED_FILE = "Predictions/EnhancerPredictionsAllPutative.tsv.gz"
+POSITIVES_PRED_FILE = "Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter__only_expr_genes.tsv"
 INTERMEDIATE_FILES = [
-    # EnhancerList is not good to compare b/c genicSymbol column isn't deterministic 
+    # EnhancerList is not good to compare b/c genicSymbol column isn't deterministic
     # "Neighborhoods/EnhancerList.txt",
     "Neighborhoods/GeneList.txt",
     "Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed",
@@ -70,6 +70,7 @@ class TestFullABCRun(unittest.TestCase):
         for biosample in biosample_names:
             self.compare_intermediate_files(biosample)
             self.compare_prediction_file(biosample, ALL_PUTATIVE_PRED_FILE)
+            self.compare_prediction_file(biosample, POSITIVES_PRED_FILE)
 
         # Make sure the test doesn't take too long
         # May need to adjust as more biosamples are added, but we should keep

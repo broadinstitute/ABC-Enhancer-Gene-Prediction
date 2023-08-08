@@ -1,8 +1,7 @@
 enhancers tests/test_output/generic/K562_chr16/Neighborhoods/EnhancerList.txt
 genes tests/test_output/generic/K562_chr16/Neighborhoods/GeneList.txt
-outdir tests/test_output/generic/K562_chr16/Predictions
 score_column ABC.Score
-threshold 0.02
+outdir tests/test_output/generic/K562_chr16/Predictions
 cellType K562_chr16
 chrom_sizes reference/hg38/chr_sizes
 hic_dir example_chr/HiC_K562
@@ -13,14 +12,12 @@ hic_is_doubly_stochastic False
 scale_hic_using_powerlaw True
 powerlaw_params_tsv tests/test_output/generic/HiC_Powerlaw/b08206e1/hic.powerlaw.tsv
 hic_gamma_reference 0.87
-run_all_genes False
 expression_cutoff 1
 promoter_activity_quantile_cutoff 0.4
-make_all_putative True
+make_all_putative False
 use_hdf5 False
 window 5000000
 tss_hic_contribution 100
 tss_slop 500
 chromosomes all
 include_chrY False
-include_self_promoter True
