@@ -15,7 +15,7 @@ rule call_macs_peaks:
 		macs2 callpeak -f AUTO -g {params.genome_size} -p {params.pval} -n macs2 --call-summits --outdir {params.out_dir}/{wildcards.biosample}/Peaks -t {input.accessibility}
 		"""
 
-rule gen_chrom_sizes_bed:
+rule generate_chrom_sizes_bed_file:
 	input:
 		chrom_sizes = config['chrom_sizes']
 	output:

@@ -17,22 +17,24 @@ HIC_HASHES = configure_hic_hashes(BIOSAMPLES_CONFIG)
 
 include: "rules/macs2.smk"
 include: "rules/candidate_regions.smk"
-include: "rules/call_neighborhoods.smk"
+include: "rules/neighborhoods.smk"
 include: "rules/write_powerlaw_params.smk"
 include: "rules/predictions.smk"
 include: "rules/qc.smk"
 
 ## overall rule to run pipeline
+
+filtered_prediction_file_format = determine_filtered_prediction_file_format(config)
+
 rule all:
 	input:
 		allPutative = expand(
-			os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.txt.gz"), biosample=BIOSAMPLES_CONFIG["biosample"]
+			os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.tsv.gz"), biosample=BIOSAMPLES_CONFIG["biosample"]
 		),
-		enhPredictions = expand(
-			os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictions.tsv"), biosample=BIOSAMPLES_CONFIG["biosample"]
+		enhPredictionsFull = expand(
+			os.path.join(RESULTS_DIR, "{biosample}", "Predictions", f"EnhancerPredictionsFull_{filtered_prediction_file_format}.tsv"), biosample=BIOSAMPLES_CONFIG["biosample"]
 		),
-		allPred = os.path.join(RESULTS_DIR,"AllPredictions.txt.gz"),
 		qcPlots = expand(
-			os.path.join(RESULTS_DIR, "{biosample}", "Metrics", "QCPlots.pdf"), biosample=BIOSAMPLES_CONFIG["biosample"]
+			os.path.join(RESULTS_DIR, "{biosample}", "Metrics", f"QCSummary_{filtered_prediction_file_format}.tsv"), biosample=BIOSAMPLES_CONFIG["biosample"]
 		)
 

@@ -7,8 +7,7 @@ def _get_run_predictions_hic_params(wildcards):
 	else:
 		return "--score_column powerlaw.Score"
 
-### run predictions: takes in EnhancerList.txt and GeneList.txt generated from rule call_neighborhoods above and generates Enhancer-Gene Predictions and links
-rule run_predictions:
+rule create_predictions:
 	input:
 		enhancers = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "EnhancerList.txt"),
 		genes = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "GeneList.txt"),
@@ -16,48 +15,54 @@ rule run_predictions:
 	params:
 		cellType = lambda wildcards: wildcards.biosample, 
 		output_dir = lambda wildcards: os.path.join(RESULTS_DIR, wildcards.biosample, "Predictions"),
+		score_column = config['params_filter_predictions']['score_column'],
 		hic_params = _get_run_predictions_hic_params,
 		chrom_sizes = config['chrom_sizes'],
-		threshold = config['params_predict']['threshold'],
 		flags = config['params_predict']['flags'],
 	conda:
 		"../envs/abcenv.yml"
 	output: 
-		allPutative = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.txt.gz"),
-		enhPredictions = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictions.tsv"),
-		enhPredictionsFull = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsFull.tsv"),
+		allPutative = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.tsv.gz"),
+		allPutativeNonExpressed = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz"),
 	shell:
 		"""
 		python workflow/scripts/predict.py \
 			--enhancers {input.enhancers} \
 			--outdir {params.output_dir} \
-			{params.hic_params} \
 			--powerlaw_params_tsv {input.powerlaw_params_tsv} \
+			--score_column {params.score_column} \
 			--chrom_sizes {params.chrom_sizes} \
-			--threshold {params.threshold} \
 			--cellType {params.cellType} \
 			--genes {input.genes} \
+			{params.hic_params} \
 			{params.flags}
 		"""
 
-### generate AllPredictions file
-rule make_all_predictions:
+rule filter_predictions:
 	input: 
-		predLists = expand(os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictions.tsv"), biosample=BIOSAMPLES_CONFIG['biosample'])
+		allPutative = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.tsv.gz"),
+		allPutativeNonExpressed = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz"),
 	params:
-		output_dir = RESULTS_DIR
+		score_column = config['params_filter_predictions']['score_column'],
+		threshold = config['params_filter_predictions']['threshold'],
+		include_self_promoter = config['params_filter_predictions']['include_self_promoter'],
+		only_expressed_genes = config['params_filter_predictions']['only_expressed_genes']
 	conda:
 		"../envs/abcenv.yml"
 	output:
-		allPred = os.path.join(RESULTS_DIR,"AllPredictions.txt.gz")
+		enhPredictionsFull = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", f"EnhancerPredictionsFull_{FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE}.tsv"),
+		enhPredictionsFullBed = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", f"EnhancerPredictionsFull_{FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE}.bed"),
+		genePredictionsStats = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", f"GenePredictionStats_{FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE}.tsv"),
 	shell:
-		"""			
-		set +o pipefail;
-		## make all predictions file 
-		printf "chr\tstart\tend\tname\tTargetGene\tTargetGeneTSS\tCellType\tABC.Score\n" > {params.output_dir}/AllPredictions.txt
-		for sample in {input.predLists}
-		do
-			cat $sample | sed 1d >> {params.output_dir}/AllPredictions.txt
-		done
-		gzip {params.output_dir}/AllPredictions.txt
+		"""
+		python workflow/scripts/filter_predictions.py \
+			--output_tsv_file {output.enhPredictionsFull} \
+			--output_bed_file {output.enhPredictionsFullBed} \
+			--output_gene_stats_file {output.genePredictionsStats} \
+			--pred_file {input.allPutative} \
+			--pred_nonexpressed_file {input.allPutativeNonExpressed} \
+			--score_column {params.score_column} \
+			--threshold {params.threshold} \
+			--include_self_promoter {params.include_self_promoter} \
+			--only_expressed_genes {params.only_expressed_genes}
 		"""

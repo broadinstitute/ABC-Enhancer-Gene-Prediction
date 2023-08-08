@@ -1,6 +1,29 @@
 class InvalidConfig(Exception):
 	pass 
 
+wildcard_constraints:
+    threshold="\d+\.\d+",
+	separator=".{0}|_",
+	other_flags=".{0}|[^0-9]+"  # match empty strings or more flags
+
+FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE = "threshold{threshold}{separator}{other_flags}"
+
+def determine_filtered_prediction_file_format(config):
+	threshold = config['params_filter_predictions']['threshold']
+	include_self_promoter = config['params_filter_predictions']['include_self_promoter']
+	only_expressed_genes = config['params_filter_predictions']['only_expressed_genes']
+	if include_self_promoter or only_expressed_genes:
+		separator = '_'
+		other_flags = []
+		if include_self_promoter:
+			other_flags.append('self_promoter')
+		if only_expressed_genes:
+			other_flags.append('only_expr_genes')
+		other_flags = "__".join(other_flags)
+	else:
+		separator = ''
+		other_flags = ''
+	return FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE.format(threshold=threshold, separator=separator, other_flags=other_flags)
 
 def load_biosamples_config(config):
 	biosamples_config = pd.read_csv(config["biosamplesTable"], sep="\t", na_values="").replace([np.NaN], [None]).set_index("biosample", drop=False)
