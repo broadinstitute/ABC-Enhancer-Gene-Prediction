@@ -14,20 +14,19 @@ rule call_macs_peaks:
 		mem_gb=32,
 		runtime_hr=6
 	shell: 
-		"""
-		macs2 callpeak -f AUTO -g {params.genome_size} -p {params.pval} -n macs2 --call-summits --outdir {params.out_dir}/{wildcards.biosample}/Peaks -t {input.accessibility}
-		#macs2 callpeak \
-		#-f AUTO \
-		#-g {params.genome_size} \
-		#-p {params.pval} \
-		#-n macs2 \
-		#--shift -75 \
-		#--extsize 150 \
-		#--nomodel \
-		#--keep-dup all \
-		#--call-summits \
-		#--outdir {params.out_dir}/{wildcards.biosample}/Peaks \
-		#-t {input.accessibility} 
+		""" 
+		macs2 callpeak \
+		-f AUTO \
+		-g {params.genome_size} \
+		-p {params.pval} \
+		-n macs2 \
+		--shift -75 \
+		--extsize 150 \
+		--nomodel \
+		--keep-dup all \
+		--call-summits \
+		--outdir {params.out_dir}/{wildcards.biosample}/Peaks \
+		-t {input.accessibility} 
 		"""
 
 rule gen_chrom_sizes_bed:
