@@ -214,7 +214,7 @@ def main():
     try:
         ["ATAC", "DHS"].index(args.accessibility_feature)
     except ValueError:
-         print("The feature has to be either ATAC or DHS!")
+        print("The feature has to be either ATAC or DHS!")
     else:
         if args.accessibility_feature == "ATAC":
             subset_columns = genes_columns_to_subset + ["ATAC.RPKM.quantile.TSS1Kb"]
@@ -228,7 +228,7 @@ def main():
             genes.columns = genes_column_names + ["normalized_dhs"]
             subset_columns = enhancers_column_names + ["normalized_dhs"]
             enhancers = enhancers_full.loc[:, subset_columns]
-   
+
     enhancers["activity_base_squared"] = enhancers["activity_base"] ** 2
     # Initialize Prediction files
     pred_file_full = os.path.join(args.outdir, "EnhancerPredictionsFull.tsv")
