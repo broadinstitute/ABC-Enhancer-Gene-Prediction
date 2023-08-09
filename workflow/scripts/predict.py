@@ -211,21 +211,24 @@ def main():
     print("reading enhancers")
     enhancers_full = pd.read_csv(args.enhancers, sep="\t")
     enhancers_column_names = ["chr", "start", "end", "name", "class", "activity_base"]
-    if args.accessibility_feature == "ATAC":
-        subset_columns = genes_columns_to_subset + ["ATAC.RPKM.quantile.TSS1Kb"]
-        genes = genes.loc[:, subset_columns]
-        genes.columns = genes_column_names + ["normalized_atac"]
-        subset_columns = enhancers_column_names + ["normalized_atac"]
-        enhancers = enhancers_full.loc[:, subset_columns]
-    elif args.accessibility_feature == "DHS":
-        subset_columns = genes_columns_to_subset + ["DHS.RPKM.quantile.TSS1Kb"]
-        genes = genes.loc[:, subset_columns]
-        genes.columns = genes_column_names + ["normalized_dhs"]
-        subset_columns = enhancers_column_names + ["normalized_dhs"]
-        enhancers = enhancers_full.loc[:, subset_columns]
+    try:
+        ["ATAC", "DHS"].index(args.accessibility_feature)
+    except ValueError:
+         print("The feature has to be either ATAC or DHS!")
     else:
-        print("The feature does not exist!")
-
+        if args.accessibility_feature == "ATAC":
+            subset_columns = genes_columns_to_subset + ["ATAC.RPKM.quantile.TSS1Kb"]
+            genes = genes.loc[:, subset_columns]
+            genes.columns = genes_column_names + ["normalized_atac"]
+            subset_columns = enhancers_column_names + ["normalized_atac"]
+            enhancers = enhancers_full.loc[:, subset_columns]
+        elif args.accessibility_feature == "DHS":
+            subset_columns = genes_columns_to_subset + ["DHS.RPKM.quantile.TSS1Kb"]
+            genes = genes.loc[:, subset_columns]
+            genes.columns = genes_column_names + ["normalized_dhs"]
+            subset_columns = enhancers_column_names + ["normalized_dhs"]
+            enhancers = enhancers_full.loc[:, subset_columns]
+   
     enhancers["activity_base_squared"] = enhancers["activity_base"] ** 2
     # Initialize Prediction files
     pred_file_full = os.path.join(args.outdir, "EnhancerPredictionsFull.tsv")
