@@ -1,0 +1,10 @@
+narrowPeak /oak/stanford/groups/engreitz/Users/rosaxma/ABC_single_cell_hg38/creating_ATAC_test/results/K562_chr22_tagAlign/Peaks/macs2_peaks.narrowPeak.sorted
+bam /oak/stanford/groups/engreitz/Users/rosaxma/ABC_single_cell_hg38/creating_ATAC_test/chr22.tagAlign.gz
+chrom_sizes /oak/stanford/groups/engreitz/Users/rosaxma/ABC_dev/ABC-Enhancer-Gene-Prediction/reference/hg38/chr_sizes
+outDir /oak/stanford/groups/engreitz/Users/rosaxma/ABC_single_cell_hg38/creating_ATAC_test/results/K562_chr22_tagAlign/Peaks
+nStrongestPeaks 150000
+peakExtendFromSummit 250
+ignoreSummits False
+minPeakWidth 500
+regions_includelist /oak/stanford/groups/engreitz/Users/rosaxma/ABC_dev/ABC-Enhancer-Gene-Prediction/example_chr/chr22/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.hg38.TSS500bp.bed
+regions_blocklist /oak/stanford/groups/engreitz/Users/rosaxma/ABC_dev/ABC-Enhancer-Gene-Prediction/reference/hg38/hg38.blacklist.bed
