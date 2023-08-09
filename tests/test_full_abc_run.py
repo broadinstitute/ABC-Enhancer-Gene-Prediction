@@ -54,6 +54,7 @@ class TestFullABCRun(unittest.TestCase):
     def compare_prediction_file(self, biosample: str) -> None:
         test_file = os.path.join(TEST_OUTPUT_DIR, biosample, PREDICTION_FILE)
         expected_file = os.path.join(EXPECTED_OUTPUT_DIR, biosample, PREDICTION_FILE)
+        print(biosample)
         pd.testing.assert_frame_equal(
             get_filtered_dataframe(test_file, COLUMNS_TO_COMPARE),
             get_filtered_dataframe(expected_file, COLUMNS_TO_COMPARE),
@@ -61,7 +62,7 @@ class TestFullABCRun(unittest.TestCase):
 
     def run_test(self, config_file: str) -> None:
         start = time.time()
-        cmd = f"snakemake -j4 -F --configfile {config_file}"
+        cmd = f"snakemake -j4 --configfile {config_file}"
         run_cmd(cmd)
         time_taken = time.time() - start
 
