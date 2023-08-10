@@ -1,5 +1,6 @@
 import argparse
 import subprocess
+
 from tools import run_command
 
 
@@ -40,13 +41,10 @@ def main(args):
         chromosomes = args.chromosomes.split(",")
 
     for chromosome in chromosomes:
-        import pdb
-
-        pdb.set_trace()
         print("Starting chr" + str(chromosome) + " ... ")
         outdir = "{0}/chr{1}/".format(args.outdir, chromosome)
         command = "mkdir -p " + outdir
-        out = subprocess.getoutput(command)
+        run_command(command)
 
         ## Download observed matrix with KR normalization
         command = (
@@ -56,7 +54,7 @@ def main(args):
             )
         )
         print(command)
-        out = subprocess.getoutput(command)
+        run_command(command)
         if not args.skip_gzip:
             run_command("gzip {0}chr{1}.KRobserved".format(outdir, chromosome))
 
@@ -67,7 +65,7 @@ def main(args):
                 args.hic_file, chromosome, outdir, args.resolution
             )
         )
-        out = subprocess.getoutput(command)
+        run_command(command)
         print(command)
         if not args.skip_gzip:
             run_command("gzip {0}chr{1}.KRnorm".format(outdir, chromosome))
@@ -81,7 +79,7 @@ def main(args):
                 )
             )
             print(command)
-            out = subprocess.getoutput(command)
+            run_command(command)
             if not args.skip_gzip:
                 run_command("gzip {0}chr{1}.RAWobserved".format(outdir, chromosome))
 
