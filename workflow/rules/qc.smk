@@ -13,6 +13,9 @@ rule generate_qc_plot_and_summary:
 	output:
 		qc_summary = os.path.join(RESULTS_DIR, "{biosample}", "Metrics", f"QCSummary_{FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE}.tsv"),
 		qc_plots = os.path.join(RESULTS_DIR, "{biosample}", "Metrics", f"QCPlots_{FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE}.pdf")
+	resources:
+		mem_gb=32,
+		runtime_hr=6
 	shell:
 		"""
 		python workflow/scripts/grabMetrics.py \

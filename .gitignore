@@ -2,7 +2,6 @@
 results/
 tests/test_output
 docs/_build/*
-
 # emacs backups
 *~
 
