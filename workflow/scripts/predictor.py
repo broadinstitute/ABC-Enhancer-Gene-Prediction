@@ -69,21 +69,12 @@ def make_pred_table(chromosome, enh, genes, window, chrom_sizes_map: Dict[str, i
     pred["distance"] = abs(pred["enh_midpoint"] - pred["TargetGeneTSS"])
     pred = pred.loc[pred["distance"] < window, :]  # for backwards compatability
 
-    # without pyranges version
-    # else:
-    #     enh['temp_merge_key'] = 0
-    #     genes['temp_merge_key'] = 0
-
-    #     #Make cartesian product and then subset to EG pairs within window.
-    #     #TO DO: Replace with pyranges equivalent of bedtools intersect or GRanges overlaps
-    #     pred = pd.merge(enh, genes, on = 'temp_merge_key')
-
-    #     pred['enh_midpoint'] = (pred['start'] + pred['end'])/2
-    #     pred['distance'] = abs(pred['enh_midpoint'] - pred['TargetGeneTSS'])
-    #     pred = pred.loc[pred['distance'] < window,:]
-
-    #     print('Done. There are {} putative enhancers for chromosome {}'.format(pred.shape[0], chromosome))
-    #     print('Elapsed time: {}'.format(time.time() - t))
+    print(
+        "Done. There are {} putative enhancers for chromosome {}".format(
+            pred.shape[0], chromosome
+        )
+    )
+    print("Elapsed time: {}".format(time.time() - t))
 
     return pred
 

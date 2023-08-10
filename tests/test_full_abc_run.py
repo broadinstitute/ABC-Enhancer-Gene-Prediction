@@ -55,6 +55,7 @@ class TestFullABCRun(unittest.TestCase):
     def compare_prediction_file(self, biosample: str, pred_file) -> None:
         test_file = os.path.join(TEST_OUTPUT_DIR, biosample, pred_file)
         expected_file = os.path.join(EXPECTED_OUTPUT_DIR, biosample, pred_file)
+        print(f"Comparing biosample: {biosample} for pred_file: {pred_file}")
         pd.testing.assert_frame_equal(
             get_filtered_dataframe(test_file, COLUMNS_TO_COMPARE),
             get_filtered_dataframe(expected_file, COLUMNS_TO_COMPARE),
