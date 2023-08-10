@@ -19,6 +19,9 @@ rule write_powerlaw_params:
 		"../envs/abcenv.yml"
 	output:
 		powerlaw_params_tsv = os.path.join(RESULTS_DIR, "HiC_Powerlaw", "{KEY}", "hic.powerlaw.tsv")
+	resources:
+		mem_gb=16,
+		runtime_hr=6
 	shell:
 		"""
 		python workflow/scripts/write_powerlaw_params.py \

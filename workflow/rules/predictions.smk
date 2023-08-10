@@ -19,11 +19,15 @@ rule create_predictions:
 		hic_params = _get_run_predictions_hic_params,
 		chrom_sizes = config['chrom_sizes'],
 		flags = config['params_predict']['flags'],
+		accessibility_feature = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'default_accessibility_feature'],
 	conda:
 		"../envs/abcenv.yml"
 	output: 
 		allPutative = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.tsv.gz"),
 		allPutativeNonExpressed = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz"),
+	resources:
+		mem_gb=128,
+		runtime_hr=6
 	shell:
 		"""
 		python workflow/scripts/predict.py \
@@ -32,6 +36,7 @@ rule create_predictions:
 			--powerlaw_params_tsv {input.powerlaw_params_tsv} \
 			--score_column {params.score_column} \
 			--chrom_sizes {params.chrom_sizes} \
+			--accessibility_feature {params.accessibility_feature} \
 			--cellType {params.cellType} \
 			--genes {input.genes} \
 			{params.hic_params} \
@@ -53,6 +58,9 @@ rule filter_predictions:
 		enhPredictionsFull = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", f"EnhancerPredictionsFull_{FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE}.tsv"),
 		enhPredictionsFullBed = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", f"EnhancerPredictionsFull_{FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE}.bed"),
 		genePredictionsStats = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", f"GenePredictionStats_{FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE}.tsv"),
+	resources:
+		mem_gb=32,
+		runtime_hr=6
 	shell:
 		"""
 		python workflow/scripts/filter_predictions.py \

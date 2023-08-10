@@ -62,7 +62,7 @@ class TestFullABCRun(unittest.TestCase):
 
     def run_test(self, config_file: str) -> None:
         start = time.time()
-        cmd = f"snakemake -j4 -F --configfile {config_file}"
+        cmd = f"snakemake -F -j4 --configfile {config_file}"
         run_cmd(cmd)
         time_taken = time.time() - start
 
