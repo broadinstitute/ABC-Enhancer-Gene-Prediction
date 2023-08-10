@@ -1,5 +1,4 @@
-## call candidate regions
-rule call_candidate_regions:
+rule make_candidate_regions:
 	input:
 		narrowPeak = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted"),
 	params:

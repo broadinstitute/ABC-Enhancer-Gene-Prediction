@@ -32,9 +32,10 @@ COLUMNS_TO_COMPARE: Dict[str, type] = {
 }
 TEST_OUTPUT_DIR = CONFIG["predictions_results_dir"]
 EXPECTED_OUTPUT_DIR = f"tests/expected_output/{CONFIG['TEST_CONFIG_NAME']}"
-PREDICTION_FILE = "Predictions/EnhancerPredictionsAllPutative.txt.gz"
+ALL_PUTATIVE_PRED_FILE = "Predictions/EnhancerPredictionsAllPutative.tsv.gz"
+POSITIVES_PRED_FILE = "Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter__only_expr_genes.tsv"
 INTERMEDIATE_FILES = [
-    # EnhancerList is not good to compare b/c column names change randomly
+    # EnhancerList is not good to compare b/c genicSymbol column isn't deterministic
     # "Neighborhoods/EnhancerList.txt",
     "Neighborhoods/GeneList.txt",
     "Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed",
@@ -51,9 +52,9 @@ class TestFullABCRun(unittest.TestCase):
             expected_contents = read_file(expected_file)
             self.assertEqual(test_contents, expected_contents, msg)
 
-    def compare_prediction_file(self, biosample: str) -> None:
-        test_file = os.path.join(TEST_OUTPUT_DIR, biosample, PREDICTION_FILE)
-        expected_file = os.path.join(EXPECTED_OUTPUT_DIR, biosample, PREDICTION_FILE)
+    def compare_prediction_file(self, biosample: str, pred_file) -> None:
+        test_file = os.path.join(TEST_OUTPUT_DIR, biosample, pred_file)
+        expected_file = os.path.join(EXPECTED_OUTPUT_DIR, biosample, pred_file)
         pd.testing.assert_frame_equal(
             get_filtered_dataframe(test_file, COLUMNS_TO_COMPARE),
             get_filtered_dataframe(expected_file, COLUMNS_TO_COMPARE),
@@ -68,7 +69,8 @@ class TestFullABCRun(unittest.TestCase):
         biosample_names = get_biosample_names(CONFIG["biosamplesTable"])
         for biosample in biosample_names:
             self.compare_intermediate_files(biosample)
-            self.compare_prediction_file(biosample)
+            self.compare_prediction_file(biosample, ALL_PUTATIVE_PRED_FILE)
+            self.compare_prediction_file(biosample, POSITIVES_PRED_FILE)
 
         # Make sure the test doesn't take too long
         # May need to adjust as more biosamples are added, but we should keep

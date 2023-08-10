@@ -30,7 +30,7 @@ rule call_macs_peaks:
 		#-t {input.accessibility} 
 		"""
 
-rule gen_chrom_sizes_bed:
+rule generate_chrom_sizes_bed_file:
 	input:
 		chrom_sizes = config['chrom_sizes']
 	output:

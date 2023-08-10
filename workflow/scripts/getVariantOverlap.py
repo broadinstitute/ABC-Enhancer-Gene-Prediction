@@ -17,7 +17,7 @@ def parse_args():
 def test_variant_overlap(args, all_putative):
     variant_overlap_file = os.path.join(
         args.outdir,
-        "EnhancerPredictionsAllPutative.ForVariantOverlap.shrunk150bp.txt.gz",
+        "EnhancerPredictionsAllPutative.ForVariantOverlap.shrunk150bp.tsv.gz",
     )
     # generate predictions for variant overlap
     score_t = all_putative[args.score_column] > 0.015

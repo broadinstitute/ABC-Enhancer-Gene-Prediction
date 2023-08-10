@@ -1,8 +1,9 @@
 #! bin/python3
 import argparse
+import csv
 import glob
 import os.path
-import pickle
+from matplotlib.backends.backend_pdf import PdfPages
 
 import pandas as pd
 from metrics import GrabQCMetrics, HiCQC, NeighborhoodFileQC, PeakFileQC
@@ -22,7 +23,9 @@ def parse_args():
         "--neighborhood_outdir", required=True, help="Neighborhood Directory"
     )
     parser.add_argument("--chrom_sizes", required=True, help="Chromosome sizes file")
-    parser.add_argument("--outdir", required=True, help="Predictions Directory")
+    parser.add_argument("--outdir", required=True, help="Metrics Directory")
+    parser.add_argument("--output_qc_summary", required=True)
+    parser.add_argument("--output_qc_plots", required=True)
     parser.add_argument(
         "--powerlaw_params_tsv",
         type=str,
@@ -36,60 +39,36 @@ def generateQCMetrics(args):
     chrom_order = pd.read_csv(args.chrom_sizes, sep="\t", header=None)[0].tolist()
     # read prediction file
     prediction_df = pd.read_csv(args.preds_file, sep="\t")
-    # Generate QC Summary.txt in Predictions Directory
-    pred_metrics = GrabQCMetrics(prediction_df, chrom_order, args.outdir)
-    # Generate PeakFileQCSummary.txt in Peaks Directory#
-    pred_metrics = PeakFileQC(pred_metrics, args.macs_peaks, args.outdir)
-    # Appends Percentage Counts in Promoters into PeakFileQCSummary.txt
-    if (
-        len(
-            glob.glob(
-                os.path.join(
-                    args.neighborhood_outdir, "Enhancers.DHS.*CountReads.bedgraph"
-                )
-            )
-        )
-        > 0
-    ):
-        pred_metrics = NeighborhoodFileQC(
-            pred_metrics, args.neighborhood_outdir, args.outdir, "DHS"
-        )
-    if (
-        len(
-            glob.glob(
-                os.path.join(
-                    args.neighborhood_outdir, "Enhancers.H3K27ac.*CountReads.bedgraph"
-                )
-            )
-        )
-        > 0
-    ):
-        pred_metrics = NeighborhoodFileQC(
-            pred_metrics, args.neighborhood_outdir, args.outdir, "H3K27ac"
-        )
-    if (
-        len(
-            glob.glob(
-                os.path.join(
-                    args.neighborhood_outdir, "Enhancers.ATAC.*CountReads.bedgraph"
-                )
-            )
-        )
-        > 0
-    ):
-        pred_metrics = NeighborhoodFileQC(
-            pred_metrics, args.neighborhood_outdir, args.outdir, "ATAC"
-        )
-    if args.powerlaw_params_tsv:
-        powerlaw_params = pd.read_csv(args.powerlaw_params_tsv, sep="\t").iloc[0]
-        hic_gamma, hic_scale = (
-            powerlaw_params["hic_gamma"],
-            powerlaw_params["hic_scale"],
-        )
-        HiCQC(prediction_df, hic_gamma, hic_scale, args.outdir)
 
-    with open("{}/QCSummary.p".format(args.outdir), "wb") as f:
-        pickle.dump(pred_metrics, f)
+    with PdfPages(args.output_qc_plots) as pdf_writer:
+        pred_metrics = GrabQCMetrics(
+            prediction_df, chrom_order, args.outdir, pdf_writer
+        )
+        pred_metrics = PeakFileQC(pred_metrics, args.macs_peaks, pdf_writer)
+
+        if args.powerlaw_params_tsv:
+            powerlaw_params = pd.read_csv(args.powerlaw_params_tsv, sep="\t").iloc[0]
+            hic_gamma, hic_scale = (
+                powerlaw_params["hic_gamma"],
+                powerlaw_params["hic_scale"],
+            )
+            HiCQC(prediction_df, hic_gamma, hic_scale, pdf_writer)
+
+    # Appends Percentage Counts in Promoters into PeakFileQCSummary.txt
+    potential_features = ["DHS", "H3K27ac", "ATAC"]
+    for feature in potential_features:
+        pattern = os.path.join(
+            args.neighborhood_outdir, f"Enhancers.{feature}.*CountReads.bedgraph"
+        )
+        if glob.glob(pattern):
+            pred_metrics = NeighborhoodFileQC(
+                pred_metrics, args.neighborhood_outdir, feature
+            )
+
+    with open(args.output_qc_summary, "w") as f:
+        writer = csv.writer(f, delimiter="\t")
+        for key, val in pred_metrics.items():
+            writer.writerow((key, val))
 
 
 if __name__ == "__main__":
