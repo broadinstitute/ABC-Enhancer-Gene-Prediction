@@ -6,7 +6,7 @@ import time
 import pandas as pd
 from getVariantOverlap import test_variant_overlap
 from predictor import make_predictions
-from tools import write_params, determine_expressed_genes
+from tools import determine_expressed_genes, write_params
 
 
 def get_model_argument_parser():
@@ -176,6 +176,7 @@ def main():
         "Expression",
         "PromoterActivityQuantile",
         "isExpressed",
+        "Ensembl_ID",
     ]
     genes_column_names = [
         "chr",
@@ -184,6 +185,7 @@ def main():
         "TargetGeneExpression",
         "TargetGenePromoterActivityQuantile",
         "TargetGeneIsExpressed",
+        "TargetGeneEnsembl_ID",
     ]
     print("reading enhancers")
     enhancers_full = pd.read_csv(args.enhancers, sep="\t")
