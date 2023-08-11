@@ -7,12 +7,7 @@ from typing import Dict
 import numpy as np
 import pandas as pd
 import yaml
-from test_utils import (
-    read_file,
-    get_biosample_names,
-    get_filtered_dataframe,
-    run_cmd,
-)
+from test_utils import get_biosample_names, get_filtered_dataframe, read_file, run_cmd
 
 logging.basicConfig(level=logging.INFO)
 
@@ -55,6 +50,7 @@ class TestFullABCRun(unittest.TestCase):
     def compare_prediction_file(self, biosample: str, pred_file) -> None:
         test_file = os.path.join(TEST_OUTPUT_DIR, biosample, pred_file)
         expected_file = os.path.join(EXPECTED_OUTPUT_DIR, biosample, pred_file)
+        print(f"Comparing biosample: {biosample} for pred_file: {pred_file}")
         pd.testing.assert_frame_equal(
             get_filtered_dataframe(test_file, COLUMNS_TO_COMPARE),
             get_filtered_dataframe(expected_file, COLUMNS_TO_COMPARE),
@@ -62,7 +58,7 @@ class TestFullABCRun(unittest.TestCase):
 
     def run_test(self, config_file: str) -> None:
         start = time.time()
-        cmd = f"snakemake -F -j4 --configfile {config_file}"
+        cmd = f"snakemake -j4 --configfile {config_file}"
         run_cmd(cmd)
         time_taken = time.time() - start
 

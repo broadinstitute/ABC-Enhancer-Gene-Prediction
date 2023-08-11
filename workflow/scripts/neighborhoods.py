@@ -23,6 +23,22 @@ pd.options.display.max_colwidth = (
     10000  # seems to be necessary for pandas to read long file names... strange
 )
 
+BED3_COLS = ["chr", "start", "end"]
+BED6_COLS = BED3_COLS + ["name", "score", "strand"]
+
+
+def read_gene_bed_file(bed_file):
+    # BED6 format with extra columns for ensemble info
+    columns = BED6_COLS + ["Ensembl_ID", "gene_type"]
+    skip = 1 if ("track" in open(bed_file, "r").readline()) else 0
+    result = pd.read_table(
+        bed_file, names=columns, header=None, skiprows=skip, comment="#"
+    )
+    assert (
+        result.loc[:, "Ensembl_ID"].str.contains("EN").all()
+    ), "Gene file doesn't follow the correct format with Ensembl info"
+    return result
+
 
 def load_genes(
     file,
@@ -35,7 +51,8 @@ def load_genes(
     cellType,
     class_gene_file,
 ):
-    bed = read_bed(file)
+    # Add
+    bed = read_gene_bed_file(file)
     genes = process_gene_bed(bed, gene_id_names, primary_id, chrom_sizes)
 
     genes[["chr", "start", "end", "name", "score", "strand"]].to_csv(
@@ -666,21 +683,20 @@ def read_bed(
     skip_chr_sorting=True,
 ):
     skip = 1 if ("track" in open(filename, "r").readline()) else 0
-    names = ["chr", "start", "end"] + extra_colnames
+    names = BED3_COLS + extra_colnames
     result = pd.read_table(
         filename, names=names, header=None, skiprows=skip, comment="#"
     )
     result = result.dropna(axis=1, how="all")  # drop empty columns
     assert result.columns[0] == "chr"
 
-    # result['chr'] = pd.Categorical(result['chr'], chromosomes, ordered=True)
     result["chr"] = pd.Categorical(result["chr"], ordered=True)
     if chr is not None:
         result = result[result.chr == chr]
     if not skip_chr_sorting:
         result.sort_values("chr", inplace=True)
     if sort:
-        result.sort_values(["chr", "start", "end"], inplace=True)
+        result.sort_values(BED3_COLS, inplace=True)
     return result
 
 

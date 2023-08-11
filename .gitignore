@@ -1,6 +1,7 @@
 *.snakemake/
 results/
 tests/test_output
+tests/**/Metrics
 docs/_build/*
 # emacs backups
 *~
