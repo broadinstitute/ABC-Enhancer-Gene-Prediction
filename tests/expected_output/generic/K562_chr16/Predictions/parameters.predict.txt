@@ -1,6 +1,7 @@
 enhancers tests/test_output/generic/K562_chr16/Neighborhoods/EnhancerList.txt
 genes tests/test_output/generic/K562_chr16/Neighborhoods/GeneList.txt
 score_column ABC.Score
+accessibility_feature DHS
 outdir tests/test_output/generic/K562_chr16/Predictions
 cellType K562_chr16
 chrom_sizes reference/hg38/chr_sizes

@@ -1,7 +1,8 @@
 import click
 import pandas as pd
-from tools import write_connections_bedpe_format
 from predictor import make_gene_prediction_stats
+from tools import write_connections_bedpe_format
+
 
 @click.command()
 @click.option("--output_tsv_file", type=str)
@@ -30,7 +31,16 @@ def main(
     include_self_promoter,
     only_expressed_genes,
 ):
-    slim_columns = ['chr','start','end','name','TargetGene','TargetGeneTSS','CellType', score_column]
+    slim_columns = [
+        "chr",
+        "start",
+        "end",
+        "name",
+        "TargetGene",
+        "TargetGeneTSS",
+        "CellType",
+        score_column,
+    ]
 
     all_putative = pd.read_csv(pred_file, sep="\t")
     if not only_expressed_genes:
@@ -47,7 +57,7 @@ def main(
     filtered_predictions_slim.to_csv(
         output_slim_tsv_file, sep="\t", index=False, header=True, float_format="%.6f"
     )
-    
+
     write_connections_bedpe_format(filtered_predictions, output_bed_file, score_column)
     make_gene_prediction_stats(
         filtered_predictions, score_column, threshold, output_gene_stats_file
