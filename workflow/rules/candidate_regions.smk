@@ -1,8 +1,8 @@
 rule make_candidate_regions:
 	input:
 		narrowPeak = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted"),
-	params:
 		accessibility = get_accessibility_file,
+	params:
 		TSS = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'TSS'],
 		chrom_sizes = config['chrom_sizes'],
 		regions_blocklist = config['regions_blocklist'],
@@ -14,13 +14,12 @@ rule make_candidate_regions:
 	output: 
 		candidateRegions = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed")
 	resources:
-		mem_gb=64,
-		runtime_hr=6
+		mem_mb=determine_mem_mb
 	shell: 
 		"""
 		python workflow/scripts/makeCandidateRegions.py \
 			--narrowPeak {input.narrowPeak}\
-			--bam {params.accessibility} \
+			--bam {input.accessibility} \
 			--outDir {params.output_dir}/{wildcards.biosample}/Peaks \
 			--chrom_sizes {params.chrom_sizes} \
 			--regions_blocklist {params.regions_blocklist} \
