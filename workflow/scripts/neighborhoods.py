@@ -34,9 +34,9 @@ def read_gene_bed_file(bed_file):
     result = pd.read_table(
         bed_file, names=columns, header=None, skiprows=skip, comment="#"
     )
-    assert (
-        result.loc[:, "Ensembl_ID"].str.contains("EN").all()
-    ), "Gene file doesn't follow the correct format with Ensembl info"
+    ensembl_id_col = result.loc[:, "Ensembl_ID"]
+    if ensembl_id_col.isna().all() or not ensembl_id_col.str.contains("EN").all():
+        raise Exception("Gene file doesn't follow the correct format with Ensembl info")
     return result
 
 
