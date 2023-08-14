@@ -8,9 +8,9 @@ import pandas as pd
 from hic import (
     get_hic_file,
     get_powerlaw_at_distance,
-    load_hic_juicebox,
-    load_hic_bedpe,
     load_hic_avg,
+    load_hic_bedpe,
+    load_hic_juicebox,
 )
 from tools import df_to_pyranges
 
@@ -166,7 +166,6 @@ def add_hic_to_enh_gene_table(
         # Concatenate both directions and merge into preditions
         ovl = pd.concat([ovl12, ovl21]).drop_duplicates()
         pred = pred.merge(ovl, on=["enh_idx", "gene_idx"], how="left")
-        pred.fillna(value={"hic_contact": 0}, inplace=True)
     elif args.hic_type == "juicebox" or args.hic_type == "avg":
         if args.hic_type == "juicebox":
             HiC = load_hic_juicebox(
@@ -200,7 +199,6 @@ def add_hic_to_enh_gene_table(
             pred["bin1"] = np.amin(pred[["enh_bin", "tss_bin"]], axis=1)
             pred["bin2"] = np.amax(pred[["enh_bin", "tss_bin"]], axis=1)
             pred = pred.merge(HiC, how="left", on=["bin1", "bin2"])
-            pred.fillna(value={"hic_contact": 0}, inplace=True)
         else:
             # The matrix is not triangular, its full
             # For VC assume genes correspond to rows and columns to enhancers
@@ -210,12 +208,11 @@ def add_hic_to_enh_gene_table(
                 left_on=["tss_bin", "enh_bin"],
                 right_on=["bin1", "bin2"],
             )
-
-        pred.fillna(value={"hic_contact": 0}, inplace=True)
-
         # QC juicebox HiC
         pred = qc_hic(pred)
 
+    # Remove all NaN values so we have valid scores
+    pred.fillna(value={"hic_contact": 0}, inplace=True)
     pred.drop(
         [
             "x1",
