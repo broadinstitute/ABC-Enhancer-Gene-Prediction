@@ -1,9 +1,6 @@
-import pandas as pd
-import numpy as np
 import argparse
 import os
-from peaks import *
-import traceback
+from peaks import make_candidate_regions_from_summits, make_candidate_regions_from_peaks
 from tools import write_params
 
 
@@ -83,8 +80,7 @@ def processCellType(args):
     if not args.ignoreSummits:
         make_candidate_regions_from_summits(
             macs_peaks=args.narrowPeak,
-            # accessibility_file = args.bam,
-            accessibility_file=args.bam.split(","),
+            accessibility_file=args.bam,
             genome_sizes=args.chrom_sizes,
             regions_includelist=args.regions_includelist,
             regions_blocklist=args.regions_blocklist,
