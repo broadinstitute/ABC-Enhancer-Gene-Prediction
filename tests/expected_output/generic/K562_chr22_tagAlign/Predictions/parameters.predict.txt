@@ -4,7 +4,7 @@ score_column ABC.Score
 accessibility_feature ATAC
 outdir tests/test_output/generic/K562_chr22_tagAlign/Predictions
 cellType K562_chr22_tagAlign
-chrom_sizes reference/hg38/chr_sizes
+chrom_sizes reference/hg38/GRCh38_EBV.no_alt.chrom.sizes.tsv
 hic_dir example_chr/HiC_K562
 hic_resolution 5000
 hic_pseudocount_distance 1000000.0
