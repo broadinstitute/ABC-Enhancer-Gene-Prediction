@@ -373,10 +373,6 @@ def assign_enhancer_classes(enhancers, genes, chrom_sizes_map, tss_slop=500):
 
         return genic_enh, promoter_enh
 
-    # import pdb
-    # pdb.Pdb(stdout=sys.__stdout__).set_trace()
-    # pdb.set_trace()
-
     # label everything as intergenic
     enhancers["class"] = "intergenic"
     enhancers["uid"] = range(enhancers.shape[0])
@@ -411,35 +407,6 @@ def assign_enhancer_classes(enhancers, genes, chrom_sizes_map, tss_slop=500):
         lambda e: "{}|{}:{}-{}".format(e["class"], e.chr, e.start, e.end), axis=1
     )
     return enhancers
-
-
-# TO DO: convert to pyranges
-# def overrideEnhancerAnnotations(enhancers, cell_line, override_file):
-#     #Override enhancer class with manual annotations
-
-#     override = pandas.read_csv(override_file, sep="\t")
-#     override = override.loc[override['cellType'] == cell_line, :]
-
-#     if override.shape[0] > 0:
-#         enhancers = read_enhancers(enhancers)
-#     else:
-#         return(enhancers)
-
-#     #for each entry in the override file find the overlaps with enhancers
-#     #Then modify each enhancer entry appropriately
-#     for idx, row in override.iterrows():
-#         ovl_idx = enhancers.within_range(row['chr'],row['start'],row['end']).index
-
-#         enhancers.ranges.loc[ovl_idx, 'class'] = row['class']
-
-#         #Now need to update various columns derived from 'class'
-#         enhancers.ranges.loc[ovl_idx, 'isPromoterElement'] = row['class'] == 'promoter'
-#         enhancers.ranges.loc[ovl_idx, 'isGenicElement'] = row['class'] == 'genic'
-#         enhancers.ranges.loc[ovl_idx, 'isIntergenicElement'] = row['class'] == 'intergenic'
-
-#         enhancers.ranges.loc[ovl_idx, 'name'] = enhancers.ranges.loc[ovl_idx].apply(lambda e: "{}|{}:{}-{}".format(e["class"], e.chr, e.start, e.end), axis=1)
-
-#     return enhancers.ranges
 
 
 def run_count_reads(target, output, bed_file, genome_sizes, use_fast_count):
@@ -478,16 +445,11 @@ def count_bam(
 
 
 def count_tagalign(tagalign, bed_file, output, genome_sizes):
-    # command1 = "tabix -B {tagalign} {bed_file} | cut -f1-3".format(**locals())
     index_file = tagalign + ".tbi"
     if os.path.exists(index_file):
         command1 = ""
     else:
         command1 = "tabix -p bed {tagalign} | cut -f1-3".format(**locals())
-    # command2 = "bedtools coverage -counts -b stdin -a {bed_file} | awk '{{print $1 \"\\t\" $2 \"\\t\" $3 \"\\t\" $NF}}' ".format(**locals())
-    # command2 = 'bedtools sort -faidx {genome_sizes} -i {tagalign} | bedtools coverage -counts -b stdin -a {bed_file} -sorted -g {genome_sizes} | awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\''.format(
-    #     **locals()
-    # )
 
     command2 = 'bedtools coverage -counts -b {tagalign} -a {bed_file} | awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\' '.format(
         **locals()

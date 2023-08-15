@@ -39,9 +39,6 @@ def make_candidate_regions_from_summits(
     else:
         blocklist_command = ""
 
-    # 1. Count DHS/ATAC reads in candidate regions
-    # run_count_reads(accessibility_file, raw_counts_outfile, macs_peaks, genome_sizes, use_fast_count=True)
-
     # 1. Count DHS/ATAC reads in candidate regions for all accessibility files provided, and return the filename of the average # reads
     run_count_reads(
         accessibility_file,

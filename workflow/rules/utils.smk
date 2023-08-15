@@ -8,6 +8,19 @@ wildcard_constraints:
 
 FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE = "threshold{threshold}{separator}{other_flags}"
 
+MAX_MEM_MB = 256 * 1000  # 256GB
+
+def determine_mem_mb(wildcards, input, attempt, min_gb=8):
+	# Memory resource calculator for snakemake rules
+	input_size_mb = input.size_mb
+	for _, file in input.items():
+		if file.endswith('gz'):
+			input_size_mb *= 5  # assume gz compressesed the file <= 5x
+	attempt_multiplier = 2 ** (attempt - 1)  # Double memory for each retry
+	mem_to_use_mb = attempt_multiplier *  max(4 * input_size_mb, min_gb * 1000)
+	return min(mem_to_use_mb, MAX_MEM_MB)
+	
+
 def determine_filtered_prediction_file_format(config):
 	threshold = config['params_filter_predictions']['threshold']
 	include_self_promoter = config['params_filter_predictions']['include_self_promoter']
