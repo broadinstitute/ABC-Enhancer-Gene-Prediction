@@ -182,16 +182,22 @@ def PeakFileQC(pred_metrics, macs_peaks, pdf_writer):
 
 
 # Plots and saves a distribution as *.png
-def PlotDistribution(pd_series: pd.Series, title, x_label, stat="count", density_line=True):
+def PlotDistribution(
+    pd_series: pd.Series, title, x_label, stat="count", density_line=True
+):
     plt.clf()  # make sure we're starting with a fresh plot
-    ax = sns.histplot(pd_series, kde=density_line, bins=50, kde_kws=dict(cut=3), stat=stat)
+    ax = sns.histplot(
+        pd_series, kde=density_line, bins=50, kde_kws=dict(cut=3), stat=stat
+    )
     ax.set_title(title)
     ax.set_xlabel(x_label)
     ax.set_ylabel(stat.capitalize())
 
     mean, median, _ = grabStatistics(pd_series)
-    plt.axvline(x=mean, color='red', linestyle='-', label='Mean')
-    plt.axvline(x=median, color='green', linestyle='-', label='Median')
+    mean = round(mean, 3)  # 3 decimal places
+    median = round(median, 3)  # 3 decimal places
+    plt.axvline(x=mean, color="red", linestyle="-", label=f"Mean={mean}")
+    plt.axvline(x=median, color="green", linestyle="-", label=f"Median={median}")
     plt.legend()
 
     return ax.get_figure()
