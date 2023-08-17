@@ -80,8 +80,9 @@ def GrabQCMetrics(prediction_df, chrom_order, outdir, pdf_writer):
     ) = grabStatistics(enhancergeneperchrom)
 
     # Enhancer-Gene Distancee
-    distance = np.array(prediction_df["distance"])
-    log_dist = np.log10(distance[distance > 0])
+    distance = prediction_df["distance"]
+    distance = distance[distance > 0]
+    log_dist = distance.apply(np.log10)
     pdf_writer.savefig(
         PlotDistribution(
             log_dist,
@@ -161,7 +162,7 @@ def PeakFileQC(pred_metrics, macs_peaks, pdf_writer):
     # Calculate metrics for candidate regions
     candidateRegions = pd.read_csv(macs_peaks, sep="\t", header=None)
     candidateRegions["dist"] = candidateRegions[2] - candidateRegions[1]
-    candreg = list(candidateRegions["dist"])
+    candreg = candidateRegions["dist"]
     pdf_writer.savefig(
         PlotDistribution(candreg, "WidthOfCandidateRegions", x_label="Width")
     )
@@ -181,12 +182,18 @@ def PeakFileQC(pred_metrics, macs_peaks, pdf_writer):
 
 
 # Plots and saves a distribution as *.png
-def PlotDistribution(array, title, x_label, stat="count", density_line=True):
+def PlotDistribution(pd_series: pd.Series, title, x_label, stat="count", density_line=True):
     plt.clf()  # make sure we're starting with a fresh plot
-    ax = sns.histplot(array, kde=density_line, bins=50, kde_kws=dict(cut=3), stat=stat)
+    ax = sns.histplot(pd_series, kde=density_line, bins=50, kde_kws=dict(cut=3), stat=stat)
     ax.set_title(title)
     ax.set_xlabel(x_label)
     ax.set_ylabel(stat.capitalize())
+
+    mean, median, _ = grabStatistics(pd_series)
+    plt.axvline(x=mean, color='red', linestyle='-', label='Mean')
+    plt.axvline(x=median, color='green', linestyle='-', label='Median')
+    plt.legend()
+
     return ax.get_figure()
 
 
