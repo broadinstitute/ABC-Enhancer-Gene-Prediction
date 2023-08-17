@@ -11,6 +11,7 @@ dependencies:
   - matplotlib
   - numpy
   - pandas
+  - pip
   - pyranges
   - pysam
   - python>=3.6
