@@ -410,7 +410,8 @@ def assign_enhancer_classes(enhancers, genes, chrom_sizes_map, tss_slop=500):
 
 
 def run_count_reads(target, output, bed_file, genome_sizes, use_fast_count):
-    if target.endswith(".bam"):
+    filename = os.path.basename(target)
+    if filename.endswith(".bam"):
         count_bam(
             target,
             bed_file,
@@ -418,9 +419,9 @@ def run_count_reads(target, output, bed_file, genome_sizes, use_fast_count):
             genome_sizes=genome_sizes,
             use_fast_count=use_fast_count,
         )
-    elif target.endswith(".tagAlign.gz") or target.endswith(".tagAlign.bgz"):
+    elif "tagAlign" in filename:
         count_tagalign(target, bed_file, output, genome_sizes)
-    elif isBigWigFile(target):
+    elif isBigWigFile(filename):
         count_bigwig(target, bed_file, output)
     else:
         raise ValueError(
@@ -457,21 +458,15 @@ def count_bam(
 
 def count_tagalign(tagalign, bed_file, output, genome_sizes):
     index_file = tagalign + ".tbi"
-    if os.path.exists(index_file):
-        command1 = ""
-    else:
-        command1 = "tabix -p bed {tagalign} | cut -f1-3".format(**locals())
+    if not os.path.exists(index_file):
+        cmd = f"tabix -p bed {tagalign} | cut -f1-3"
+        check_call(cmd, shell=True)
 
-    command2 = 'bedtools coverage -counts -b {tagalign} -a {bed_file} | awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\' '.format(
-        **locals()
-    )
-
-    p1 = Popen(command1, stdout=PIPE, shell=True)
+    cmd1 = f"bedtools coverage -counts -sorted -b {tagalign} -a {bed_file}"
+    coverage = Popen(cmd1, stdout=PIPE, shell=True)
     with open(output, "wb") as outfp:
-        p2 = check_call(command2, stdin=p1.stdout, stdout=outfp, shell=True)
-
-    if not p2 == 0:
-        print(p2.stderr)
+        cmd2 = 'awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\''
+        check_call(cmd2, stdin=coverage.stdout, stdout=outfp, shell=True)
 
 
 def count_bigwig(target, bed_file, output):
