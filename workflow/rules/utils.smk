@@ -39,7 +39,9 @@ def determine_filtered_prediction_file_format(config):
 	return FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE.format(threshold=threshold, separator=separator, other_flags=other_flags)
 
 def load_biosamples_config(config):
-	biosamples_config = pd.read_csv(config["biosamplesTable"], sep="\t", na_values="").replace([np.NaN], [None]).set_index("biosample", drop=False)
+	biosamples_config = pd.read_csv(
+		config["biosamplesTable"], sep="\t", na_values=""
+	).replace([np.NaN], [None]).set_index("biosample", drop=False)
 	biosamples_config["HiC_resolution"] = biosamples_config["HiC_resolution"].replace([None], [0]).astype(int)
 	_validate_biosamples_config(biosamples_config)
 	_configure_tss_and_gene_files(biosamples_config)

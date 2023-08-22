@@ -1,0 +1,2 @@
+biosample	DHS	ATAC	H3K27ac	default_accessibility_feature	HiC_dir	HiC_type	HiC_resolution	HiC_gamma	HiC_scale	alt_TSS	alt_genes
+K562	/oak/stanford/groups/engreitz/Projects/Benchmarking/Predictors/K562_ABC/ENCFF860XAE.sorted.se.bam		/oak/stanford/groups/engreitz/Projects/Benchmarking/Predictors/K562_ABC/ENCFF790GFL.sorted.se.bam	DHS	/oak/stanford/groups/engreitz/Projects/ABC/HiC/K562_intact_Hi-C	juicebox	5000	1.0044322152129264	5.522049023040861		
