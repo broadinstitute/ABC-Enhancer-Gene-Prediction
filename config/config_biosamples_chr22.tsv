@@ -1,0 +1,2 @@
+biosample	DHS	ATAC	H3K27ac	default_accessibility_feature	HiC_dir	HiC_type	HiC_resolution	HiC_gamma	HiC_scale	alt_TSS	alt_genes
+K562_chr22	example_chr/chr22/ENCFF860XAE.chr22.sorted.se.bam		example_chr/chr22/ENCFF790GFL.chr22.sorted.se.bam	DHS	example_chr/HiC_K562	juicebox	5000	1.0044322152129264	5.522049023040861	example_chr/chr22/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.hg38.TSS500bp.bed	example_chr/chr22/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.hg38.bed
