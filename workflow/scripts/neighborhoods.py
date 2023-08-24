@@ -426,7 +426,17 @@ def run_count_reads(target, output, bed_file, genome_sizes, use_fast_count):
         raise ValueError(
             "File {} name was not in .bam, .tagAlign.gz, .bw".format(target)
         )
+    double_sex_chrom_counts(output)
+    
 
+def double_sex_chrom_counts(output):
+    # Double the count values for X chromosomes to make it seem like it has
+    # 2 copies
+    awk_command = r'''awk 'BEGIN {FS=OFS="\t"} substr($1, length($1)) == "X" { $4 *= 2 } 1' '''
+    file_creation_command = f"{output} > {output}.tmp && mv {output}.tmp {output}"
+    p = check_call(awk_command + file_creation_command, shell=True)
+    if p != 0:
+        print(p.stderr)
 
 def count_bam(
     bamfile, bed_file, output, genome_sizes, use_fast_count=True, verbose=True
