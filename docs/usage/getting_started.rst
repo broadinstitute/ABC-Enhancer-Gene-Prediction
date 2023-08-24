@@ -30,9 +30,16 @@ By default, ABC is configured to run on a a K562 cell type for chromosome 22 usi
 
 .. code-block:: console
 
-	# (abc-env) atan5133@NGPFWJVWWQ ABC-Enhancer-Gene-Prediction % snakemake -j1
+	$ (abc-env) atan5133@NGPFWJVWWQ ABC-Enhancer-Gene-Prediction % snakemake -j1
 
-To see the multiple steps that snakemake performs, check out :ref:`ABC-methods`
+You can see what commands snakemake will run
+
+.. code-block:: console
+
+	$ (abc-env) atan5133@NGPFWJVWWQ ABC-Enhancer-Gene-Prediction % snakemake -n -p
+
+To read about each step, check out :ref:`ABC-methods`
+
 
 Configuring ABC
 ---------------
@@ -51,20 +58,33 @@ The primary configuration file for ABC is `config/config.yaml
 
 To run ABC with your own specified data, create a **config-biosamples.tsv** file and replace ``"config/config-biosamples-chr22.tsv"`` with your file name. See section below for more info on how to create the biosample tsv file
 
-The other params in the config.yaml file are programmed for hg38 with corresponding reference files. To use a different genome, change the reference file and specify the genomize size parameter under `params_macs`.
+Reference files
+	- chrom_sizes: size of chromosomes
+	- regions_blocklist: enhancer/promoter sequences to exclude from the model
+	- ubiquitous_genes: genes that are always expressed, regardless of cell type
+	- genes: list of genes corresponding with the genome 
+	- genome_tss: 500bp TSS region for each gene in the genes file (Andreas to provide more info on this file format and gene file format)
+
+
+
+The default reference file params in the config.yaml file are programmed for hg38 genome. To use a different genome, change the reference files and specify the genomize size parameter under `params_macs`.
+
+The rule specific params are explained in the :ref:`ABC-methods` section.
+
+
 
 BiosampleTable Specifications
 -----------------------------
-`chr22 example <https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction/blob/dev/config/config-biosamples-chr22.tsv>`_
+`chr22 example <https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction/blob/dev/config/config_biosamples_chr22.tsv>`_
 
 biosamples config is a tsv separated file with the following columns
 
 #. Biosample 
 	- Name to associate with your sample. e.g K562
 #. DHS
-	- DNAse-seq BAM file (indexed and sorted)
+	- DNAse-seq BAM file (sorted w/ index file existence)
 #. ATAC
-	- ATAC-seq BAM file (indexed and sorted)
+	- ATAC-seq BAM/TagAlign file (sorted w/ index file existence)
 #. H3K27ac
 	- H3K27ac ChIP seq BAM file
 #. default_accessibility_feature
@@ -79,21 +99,20 @@ biosamples config is a tsv separated file with the following columns
 	- represents the HiC data powerlaw fit slope
 #. HiC_scale (float)
 	- represents the HiC data powerlaw fit intercept
-#. alt_TSS
+#. alt_TSS (optional; not recommended to fill)
 	- Alternative TSS reference file 
-#. alt_genes
+#. alt_genes (optional; not recommended to fill)
 	- Alternative Gene bound reference file
 
 Required columns
-- biosample
-- DHS or ATAC
-- default_accessibility_feature
-- either HiC info (dir, type, resolution) and/or HiC gamma and scale
+	- biosample
+	- DHS or ATAC
+	- default_accessibility_feature
+	- either HiC info (dir, type, resolution) and/or HiC gamma and scale
 
 There is validation in Snakemake to make sure you provide the required inputs when running. 
-
 The rest of the columns are optional, but providing them may help improve prediction performance.
 
-You can run ABC on multiple biosamples by inputting multiple rows in the tsv file. 
+You can run ABC on multiple biosamples via multiple rows in the tsv file. 
 
 
