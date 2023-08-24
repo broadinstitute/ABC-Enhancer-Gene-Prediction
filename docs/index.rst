@@ -3,20 +3,20 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to ABC-Enhancer-Gene-Prediction's documentation!
+The Activity-by-Contact (ABC) Model for predicting enhancer-gene regulatory interactions
 ========================================================
 
-The Activity-by-Contact (ABC) model predicts which enhancers regulate which genes on a cell type specific basis.
+The Activity-by-Contact (ABC) model predicts which enhancers regulate which genes in a given cell type, based on a combination of input datasets representing enhancer activity and 3D enhancer-promoter contact frequency [1].
 
-The Activity by Contact (ABC) model is designed to represent a mechanistic model in which enhancers activate gene transcription upon enhancer-promoter contact. In a simple conception of such a model, the quantitative effect of an enhancer depends on the frequency with which it contacts a promoter multiplied by the strength of the enhancer (i.e., the ability of the enhancer to activate transcription upon contacting a promoter). Moreover, the contribution of a specific enhancer to a gene’s expression should depend on the surrounding context (ie, the strength and contact frequency of other enhancers for the gene).
-
-To convert this conceptual framework into a practical score (which can be applied genome-wide), we formulated the ABC score:
+The ABC model was initially designed to represent a mechanistic model in which enhancers activate gene transcription upon enhancer-promoter contact. In a simple conception of such a model, the quantitative effect of an enhancer depends on the frequency with which it contacts a promoter multiplied by the strength of the enhancer (i.e., the ability of the enhancer to activate transcription upon contacting a promoter). Moreover, the contribution of a specific enhancer to a gene’s expression should depend on the surrounding context (ie, the strength and contact frequency of other enhancers for the gene).  To convert this conceptual framework into a practical score (which can be applied genome-wide), we formulated the ABC score:
 
 ABC score for effect of element E on gene G = Activity of E × Contact frequency between E and G / Sum of (Activity × Contact Frequency) over all candidate elements within 5 Mb.
 
-Operationally, Activity (A) is defined as the geometric mean of the read counts of DNase-seq and H3K27ac ChIP-seq at an element E, and Contact (C) as the KR normalized Hi-C contact frequency between E and the promoter of gene G. Elements are defined as ~500bp regions centered on DHS peaks.
+Operationally, Activity (A) is defined based on read counts of ATAC-seq, DNase-seq, and/or H3K27ac ChIP-seq at an element E, and Contact (C) as the Hi-C contact frequency between E and the promoter of gene G. Elements are defined as ~500bp regions centered on DHS or ATAC peaks.
 
-Note that the ABC model only considers candidate elements and genes on the same chromosome. It does not make interchromosomal predictions.
+Note that the ABC model only considers candidate elements and genes on the same chromosome, within 5 Mb of each other. It does not make interchromosomal predictions.
+
+The accuracy of the ABC model has been benchmarked in several ways, including through comparison to CRISPR perturbations to enhancers, eQTL variants, and GWAS variants. For more information, please see the references below.
 
 If you use the ABC model in published research, please cite:
 
