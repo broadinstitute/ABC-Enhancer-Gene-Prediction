@@ -26,7 +26,7 @@ Creating the abc conda environment may take a while (~15min with mamba. > 1hr wi
 
 Running ABC
 -----------
-By default, ABC is configured to run on a a K562 cell type for chromosome 22 using reference genome hg38.
+By default, the snakemake config file will run a test of ABC using data from K562 cells on chromosome 22 using reference genome hg38.
 
 .. code-block:: console
 
@@ -58,10 +58,10 @@ The primary configuration file for ABC is `config/config.yaml
 
 To run ABC with your own specified data, create a **config-biosamples.tsv** file and replace ``"config/config-biosamples-chr22.tsv"`` with your file name. See section below for more info on how to create the biosample tsv file
 
-Reference files
-	- chrom_sizes: size of chromosomes
+Reference files (*please specify file formats for all of these?*)
+	- chrom_sizes: chromosome sizes file
 	- regions_blocklist: enhancer/promoter sequences to exclude from the model
-	- ubiquitous_genes: genes that are always expressed, regardless of cell type
+	- ubiquitous_genes: genes that are always expressed, regardless of cell type (these genes do not typically have distal enhancers and so are flagged by the pipeline)
 	- genes: list of genes corresponding with the genome 
 	- genome_tss: 500bp TSS region for each gene in the genes file (Andreas to provide more info on this file format and gene file format)
 
@@ -82,23 +82,23 @@ biosamples config is a tsv separated file with the following columns
 #. Biosample 
 	- Name to associate with your sample. e.g K562
 #. DHS
-	- DNAse-seq BAM file (sorted w/ index file existence)
+	- DNAse-seq BAM file (sorted w/ .bai index file existence)
 #. ATAC
-	- ATAC-seq BAM/TagAlign file (sorted w/ index file existence)
+	- ATAC-seq BAM/TagAlign file (sorted w/ Tabix .tbi index file existence)
 #. H3K27ac
-	- H3K27ac ChIP seq BAM file
+	- H3K27ac ChIP seq BAM file (sorted w/ .bai index file existence)
 #. default_accessibility_feature
-	- Either DHS or ATAC
+	- Either DHS or ATAC (*explain what this means*)
 #. HiC_dir
-	- HiC directory for the biosample cell type. If not provided, uses avg hi-c
+	- HiC directory for the biosample cell type. If not provided and using hg38, uses a default cell-type average Hi-C file (*anthony check behavior here - since we have average hi-c only for hg38 and hg19, selecting a different genome build should result in not using any average hi-c data*)
 #. HiC_type
-	- e.g juicebox, avg, bed
+	- e.g juicebox, avg, bed   (*explain what this means*)
 #. HiC_resolution (int)
-	- resolution of the HiC data
+	- resolution of the HiC data  (*explain what this means*)
 #. HiC_gamma (float)
-	- represents the HiC data powerlaw fit slope
+	- represents the HiC data powerlaw fit slope   (*explain what this means*)
 #. HiC_scale (float)
-	- represents the HiC data powerlaw fit intercept
+	- represents the HiC data powerlaw fit intercept   (*explain what this means*)
 #. alt_TSS (optional; not recommended to fill)
 	- Alternative TSS reference file 
 #. alt_genes (optional; not recommended to fill)
