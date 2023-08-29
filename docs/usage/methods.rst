@@ -18,34 +18,7 @@ Key concepts:
 1. Defining candidate elements
 ------------------------------
 
-'Candidate elements' are the set of putative enhancer elements for which ABC Scores will be computed. These include gene promoters. 
-
-The method of defining candidate elements includes the following steps:
-
-- Peak-calling with MACS2
-- Resizing and merging regions
-- Selecting the 150,000 strongest peaks (by read count)
-- Adding promoters
-
-1.1. Calling peaks with MACS2
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Rosa to add details about the MACS2 methods calling
-
-  
-1.2. Defining gene promoters
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Defining the promoter region for a gene has a strong influence on the ABC computation.
-
-describe how it is important how promoters are selected, and how changing the promoter list can impact ABC scores 
-- First, the exact promoter used affects the ABC score for the gene corresponding to that promoter, because of 3D contacts (which can differ depending on the location of the promoter) and whether that promoter is in fact the dominant element used (the promoter is included as a candidate "enhancer" for itself, and contributes to the denominator of the ABC score)
-- Second, the promoter list used affects the ABC scores for other nearby genes, because force inclusion of these regions leads to more/larger regions being used which affects the ABC denominator
-- Third, the promoter list used can affect downstream benchmarking analyses. For example, benchmarks that filter to just 'distal elements' that are not promoter might filter out elements called as promoters that are actually enhancers (e.g. promoters of lncRNAs that act as enhancers)
-
-In practice, we provide a gene promoter file that we have used for various purposes that selects a single canonical promoter per gene. 
-- describe provenance of the gene promoter file(s) including in ABC repo (for human and mouse)
-- Changing the promoter for a single gene, e.g. to accommodate a specific alternative transcription start site of a gene of interest, is likely to be okay and not globally affect predictions
-- However, caution is warranting in making more extensive changes to the promoter list. Note again that including a much larger promoter list, e.g. including lncRNAs or including all possible transcription start sites for all isoforms for a gene, is likely to change the global properties of the ABC score and is not recommended without calibration of scores (see section on Interpreting the ABC score below)
-
+'Candidate elements' are the set of putative enhancer elements for which ABC Scores will be computed. These include gene promoters. This step is encoded in the makeCnadidateRegions.py script.
 
 Main inputs
 	- narrowPeak file from MACS2 
@@ -75,11 +48,53 @@ Description:
 		--peakExtendFromSummit 250 \
 		--nStrongestPeak 150000
 
+The method of defining candidate elements includes the following steps:
+
+- Peak-calling with MACS2
+- Resizing and merging regions
+- Selecting the 150,000 strongest peaks (by read count)
+- Adding promoters
+
+1.1. Calling peaks with MACS2 [Rosa please edit]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Rosa to add details about the MACS2 methods calling
+
+
+1.2. Resizing and merging regions [Rosa + Maya please edit]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+e.g. explain the logic:  We resize to 500 bp to count reads in and around peaks (esp. e.g. H3K27ac signal is surrounding the peak); peak callers are sensitive; 500 bp also a reasonable window for interpreting variants, since they're typically within this distance of a peak
+
+Maya do you ahve a figure showing GWAS performance as a function of window size?
+
+
+1.3. Selecting the top N peaks [Rosa please edit]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+explain the logic of this step, e.g. because experiments of different sequencing depths can have large differences in numbers of peaks; this affects ABC score via the denominator; so we include top 150K
+
+  
+1.4. Defining and adding gene promoters [Andreas please edit]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Finally, we force the inclusion of gene promoters in the set of candidate elements. This is done because include promoters in the calculation; but sometimes the promoters of genes do not pass the threshold for the top 150,000 genes, which has a large effect on ABC due to the promoter receiving a high "3D contact" value in the ABC computation.
+
+Note that the exact method of defining the promoter region for a gene has a strong influence on the ABC computation.
+
+Describe how it is important how promoters are selected, and how changing the promoter list can impact ABC scores
+	- First, the exact promoter used affects the ABC score for the gene corresponding to that promoter, because of 3D contacts (which can differ depending on the location of the promoter) and whether that promoter is in fact the dominant element used (the promoter is included as a candidate "enhancer" for itself, and contributes to the denominator of the ABC score).
+	- Second, the promoter list used affects the ABC scores for other nearby genes, because force inclusion of these regions leads to more/larger regions being used which affects the ABC denominator.
+	- Third, the promoter list used can affect downstream benchmarking analyses. For example, benchmarks that filter to just 'distal elements' that are not promoter might filter out elements called as promoters that are actually enhancers (e.g. promoters of lncRNAs that act as enhancers).
+
+In practice, we provide a gene promoter file that we have used for various purposes that selects a single canonical promoter per gene. 
+	- describe provenance of the gene promoter file(s) including in ABC repo (for human and mouse)
+	- Changing the promoter for a single gene, e.g. to accommodate a specific alternative transcription start site of a gene of interest, is likely to be okay and not globally affect predictions
+	- However, caution is warranting in making more extensive changes to the promoter list. Note again that including a much larger promoter list, e.g. including lncRNAs or including all possible transcription start sites for all isoforms for a gene, is likely to change the global properties of the ABC score and is not recommended without calibration of scores (see section on Interpreting the ABC score below)
+
+
 
 
 2. Estimating enhancer activity
 -------------------------------
 
+In this step, we estimate the 'enhancer activity' of candidate elements by counting reads from ATAC, DNase-seq, and/or H3K27ac ChIP-seq in each candidate element.
 
 Main inputs
 	- Candidate regions BED file
@@ -108,10 +123,37 @@ Description:
 		--qnorm reference/EnhancersQNormRef.K562.txt \
 		--H3K27ac example_chr/chr22/ENCFF790GFL.chr22.sorted.se.bam
 
-                                                                                       
+Key concepts to explain in this section:
+- Activity is estimated by read count
+- Quantile normalization of activity
+- Which assays perform well for estimating activity
 
-3. Estimating enhancer-promoter 3D contact
+
+
+2.1. Activity scales with read counts [Jesse to add]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+2.2. Quantile normalization [Jesse to add]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+2.3. Using different combinations of assays to estimate enhancer activity [Andreas to add]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+e.g. note differences in perofrmanc eofr ATAC, DHS, H3K27ac, possibly add the ENCODE activity assay figure here
+
+
+3. Estimating enhancer-promoter 3D contact (Jesse to edit)
 ------------------------------------------
+Intro about concept of estimating enhancer-promoter 3D contact frequency by counting reads in Hi-C
+
+We have different ways of estimating contact
+	- Cell type specific Hi-C
+	- Cell type average Hi-C
+	- Power-law function of distance
+
+Importance of Hi-C and how a lot is coming as a function of distance
+
+
+Example code for each:
 
 3.1. Cell-type average Hi-C data (recommended)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -146,8 +188,10 @@ Powerlaw will be fit to the HiC dir if you use snakemake. If you wish to fit man
 
 
 
-4. Making predictions with different combinations of input datasets
+4. Making predictions with different combinations of input datasets  (Andreas to add performance comparison plots)
 ------------------------------------------------------------------------
+
+Note: This code should really be moved elsewhere e.g. to a new section, like 'computing the ABC score'.  Need to explain somewhere the denominator of the ABC score
 
 Main inputs
 	- EnhancerList.txt
@@ -182,7 +226,7 @@ Description:
 
 
 
-5. Interpreting the ABC score
+5. Interpreting the ABC score (Andreas to add)
 ------------------------------------
 
 - Benchmark against the CRISPR data
