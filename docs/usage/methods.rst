@@ -56,9 +56,22 @@ The method of defining candidate elements includes the following steps:
 - Adding promoters
 
 1.1. Calling peaks with MACS2 [Rosa please edit]
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Rosa to add details about the MACS2 methods calling
+------------------------------
+Main inputs
+	- ATAC-Seq:
+		- Sorted tagalign file. The sorted tagalign file should be free of PCR duplicates, and sorted according to the chromosome order in the *chrom.sizes.tsv file; the file name must end in “.tagAlign.gz”. 
+	- DNAse-Seq:
+		- Single-ended BAM file. 
 
+Output
+	- narrowPeak file
+
+Description:
+	- To identify enriched cutting sites in DNase-Seq and ATAC-Seq datasets, we shift the 5’ ends of all reads by 75 bp towards the 3’ direction and extend them by 150 bp in the 5’ direction following the `ENCODE ATACSeq pipeline <https://docs.google.com/document/d/1f0Cm4vRyDQDu0bMehHD7P7KOMxTOP-HiNoIvL1VcBt8/edit#heading=h.9ecc41kilcvq>`_.
+
+	- Because (single-nucleus) ATAC-Seq is mostly paired-end, and MACS2 cannot call peaks using all the reads in paired-end BAM files, we recommend that ATAC-Seq input should be in the tagAlign format. Specifically, when using the “—format BAM” flag with paired-end BAM files, MACS only considers reads with R1 tags. Alternatively, the “—format BAMPE” flag would allow MACS2 to use all paired-end reads; however, “—format BAMPE”  cannot be performed with the reads shift and extension described above. 
+
+	- Since most DNase-Seq is single ended, and the ”—format BAM” option is compatible with shift and extension, DNase-Seq input can be supplied in the BAM format.
 
 1.2. Resizing and merging regions [Rosa + Maya please edit]
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
