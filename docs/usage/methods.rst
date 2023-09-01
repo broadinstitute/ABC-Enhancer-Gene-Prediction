@@ -82,6 +82,7 @@ Maya do you ahve a figure showing GWAS performance as a function of window size?
 
 1.3. Selecting the top N peaks [Rosa please edit]
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Description: To define the candidate regions, for genome-wide analyses, we retain the top 150,000 peaks with the most read counts. A fixed number is chosen here because the numbers of peaks called vary with sequencing depths, but imprically we discovered that picking the peaks with the most reads counts can effectively remove the noise coming from weak peaks and variable sequencing quality. Additionally, the number of total peaks also affect the denominator of ABC score calculation; a fixed number of peaks also make ABC scores comparable across inputs of variable sequencing qualities and depths. For genome-wide analyses, 150K is a reasonable number because ENCODE analysis has previously estimated `a mean of 205,109 DHSs per cell type <https://www.nature.com/articles/nature11247>`, the majority of which are enhancers. 
 explain the logic of this step, e.g. because experiments of different sequencing depths can have large differences in numbers of peaks; this affects ABC score via the denominator; so we include top 150K
 
   
