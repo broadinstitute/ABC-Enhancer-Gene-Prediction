@@ -425,7 +425,7 @@ def run_count_reads(target, output, bed_file, genome_sizes, use_fast_count):
         count_bigwig(target, bed_file, output)
     else:
         raise ValueError(
-            "File {} name was not in .bam, .tagAlign.gz, .bw".format(target)
+            "File {} name format doesn't match bam, tagAlign, or bigWig".format(target)
         )
     double_sex_chrom_counts(output)
 
@@ -462,8 +462,8 @@ def count_tagalign(tagalign, bed_file, output, genome_sizes):
         cmd = f"tabix -p bed {tagalign} | cut -f1-3"
         check_call(cmd, shell=True)
 
-    cmd1 = f"bedtools coverage -counts -sorted -b {tagalign} -a {bed_file}"
-    coverage = Popen(cmd1, stdout=PIPE, shell=True)
+    coverage_cmd = f"bedtools coverage -counts -b {tagalign} -a {bed_file}"
+    coverage = Popen(coverage_cmd, stdout=PIPE, shell=True)
     with open(output, "wb") as outfp:
         cmd2 = 'awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\''
         check_call(cmd2, stdin=coverage.stdout, stdout=outfp, shell=True)
@@ -556,7 +556,6 @@ def count_single_feature_for_bed(
     feature_outfile = os.path.join(
         directory, "{}.{}.CountReads.bedgraph".format(filebase, feature_name)
     )
-
     if (
         force
         or (not os.path.exists(feature_outfile))
@@ -711,11 +710,12 @@ def count_bigwig_total(bw_file):
 
 
 def count_total(infile):
-    if infile.endswith(".tagAlign.gz") or infile.endswith(".tagAlign.bgz"):
+    filename = os.path.basename(infile)
+    if "tagAlign" in filename:
         total_counts = count_tagalign_total(infile)
-    elif infile.endswith(".bam"):
+    elif filename.endswith(".bam"):
         total_counts = count_bam_mapped(infile)
-    elif isBigWigFile(infile):
+    elif isBigWigFile(filename):
         total_counts = count_bigwig_total(infile)
     else:
         raise RuntimeError("Did not recognize file format of: " + infile)
