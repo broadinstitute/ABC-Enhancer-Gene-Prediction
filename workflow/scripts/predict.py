@@ -190,23 +190,18 @@ def main():
     print("reading enhancers")
     enhancers_full = pd.read_csv(args.enhancers, sep="\t")
     enhancers_column_names = ["chr", "start", "end", "name", "class", "activity_base"]
-    try:
-        ["ATAC", "DHS"].index(args.accessibility_feature)
-    except ValueError:
-        print("The feature has to be either ATAC or DHS!")
-    else:
-        if args.accessibility_feature == "ATAC":
-            subset_columns = genes_columns_to_subset + ["ATAC.RPKM.quantile.TSS1Kb"]
-            genes = genes.loc[:, subset_columns]
-            genes.columns = genes_column_names + ["normalized_atac"]
-            subset_columns = enhancers_column_names + ["normalized_atac"]
-            enhancers = enhancers_full.loc[:, subset_columns]
-        elif args.accessibility_feature == "DHS":
-            subset_columns = genes_columns_to_subset + ["DHS.RPKM.quantile.TSS1Kb"]
-            genes = genes.loc[:, subset_columns]
-            genes.columns = genes_column_names + ["normalized_dhs"]
-            subset_columns = enhancers_column_names + ["normalized_dhs"]
-            enhancers = enhancers_full.loc[:, subset_columns]
+    if args.accessibility_feature not in {"ATAC", "DHS"}:
+        raise ValueError("The feature has to be either ATAC or DHS!")
+
+    genes_subset_columns = genes_columns_to_subset
+    genes = genes.loc[:, genes_subset_columns]
+    genes.columns = genes_column_names
+
+    normalized_activity_cols = [
+        col for col in enhancers_full.columns if col.startswith("normalized_")
+    ]
+    enh_subset_columns = enhancers_column_names + normalized_activity_cols
+    enhancers = enhancers_full.loc[:, enh_subset_columns]
 
     enhancers["activity_base_squared"] = enhancers["activity_base"] ** 2
     # Initialize Prediction files
