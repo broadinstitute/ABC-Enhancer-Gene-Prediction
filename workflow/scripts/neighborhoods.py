@@ -5,11 +5,9 @@ import time
 import traceback
 from subprocess import (
     PIPE,
-    CalledProcessError,
     Popen,
     check_call,
     check_output,
-    getoutput,
 )
 
 import numpy as np
@@ -17,7 +15,7 @@ import pandas as pd
 import pyranges as pr
 import pysam
 from scipy import interpolate
-from tools import *
+from tools import run_command, df_to_pyranges
 
 pd.options.display.max_colwidth = (
     10000  # seems to be necessary for pandas to read long file names... strange
@@ -195,11 +193,6 @@ def make_tss_region_file(genes, outdir, sizes, chrom_sizes_map, tss_slop=500):
         **locals()
     )
     run_command(sort_command)
-
-    # p = Popen(sort_command, stdout=PIPE, stderr=PIPE, shell=True)
-    # print("Sorting Genes.TSS1kb file. \n Running: " + sort_command + "\n")
-    # (stdoutdata, stderrdata) = p.communicate()
-    # err = str(stderrdata, 'utf-8')
 
     return tss1kb
 
@@ -435,9 +428,7 @@ def double_sex_chrom_counts(output):
     # like they have 2 copies
     awk_command = r"""awk 'BEGIN {FS=OFS="\t"} (substr($1, length($1)) == "X" || substr($1, length($1)) == "Y") { $4 *= 2 } 1' """
     file_creation_command = f"{output} > {output}.tmp && mv {output}.tmp {output}"
-    p = check_call(awk_command + file_creation_command, shell=True)
-    if p != 0:
-        print(p.stderr)
+    run_command(awk_command + file_creation_command)
 
 
 def count_bam(
@@ -460,7 +451,7 @@ def count_tagalign(tagalign, bed_file, output, genome_sizes):
     index_file = tagalign + ".tbi"
     if not os.path.exists(index_file):
         cmd = f"tabix -p bed {tagalign} | cut -f1-3"
-        check_call(cmd, shell=True)
+        run_command(cmd)
 
     coverage_cmd = f"bedtools coverage -counts -b {tagalign} -a {bed_file}"
     coverage = Popen(coverage_cmd, stdout=PIPE, shell=True)
@@ -685,7 +676,6 @@ def count_bam_mapped(bam_file):
 
 
 def count_tagalign_total(tagalign):
-    # result = int(check_output("zcat " + tagalign + " | wc -l", shell=True))
     result = int(
         check_output(
             "zcat {} | grep -E 'chr[1-9]|chr1[0-9]|chr2[0-2]|chrX|chrY' | wc -l".format(

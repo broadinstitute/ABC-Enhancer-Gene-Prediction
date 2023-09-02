@@ -1,6 +1,5 @@
 import argparse
 import os
-from subprocess import getoutput
 
 import pandas as pd
 from neighborhoods import *
