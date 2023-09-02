@@ -35,6 +35,11 @@ def parseargs(required_args=True):
         required=required_args,
         help="File listing chromosome size annotaions",
     )
+    parser.add_argument(
+        "--chrom_sizes_bed",
+        required=required_args,
+        help="File listing chromosome size annotaions",
+    )
     parser.add_argument("--outDir", required=required_args)
 
     parser.add_argument(
@@ -83,6 +88,7 @@ def processCellType(args):
             macs_peaks=args.narrowPeak,
             accessibility_file=args.bam,
             genome_sizes=args.chrom_sizes,
+            genome_sizes_bed=args.chrom_sizes_bed,
             regions_includelist=args.regions_includelist,
             regions_blocklist=args.regions_blocklist,
             n_enhancers=args.nStrongestPeaks,
@@ -94,6 +100,7 @@ def processCellType(args):
             macs_peaks=args.narrowPeak,
             accessibility_file=args.bam,
             genome_sizes=args.chrom_sizes,
+            genome_sizes_bed=args.chrom_sizes_bed,
             regions_includelist=args.regions_includelist,
             regions_blocklist=args.regions_blocklist,
             n_enhancers=args.nStrongestPeaks,

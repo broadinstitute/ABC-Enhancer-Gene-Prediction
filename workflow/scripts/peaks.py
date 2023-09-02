@@ -9,6 +9,7 @@ def make_candidate_regions_from_summits(
     macs_peaks,
     accessibility_file,
     genome_sizes,
+    genome_sizes_bed,
     regions_includelist,
     regions_blocklist,
     n_enhancers,
@@ -28,7 +29,7 @@ def make_candidate_regions_from_summits(
         + ".Counts.bed",
     )
     if regions_includelist:
-        includelist_command = "(bedtools intersect -a {regions_includelist} -b {genome_sizes}.bed -wa | cut -f 1-3 && cat) |"
+        includelist_command = "(bedtools intersect -a {regions_includelist} -b {genome_sizes_bed} -wa | cut -f 1-3 && cat) |"
     else:
         includelist_command = ""
 
@@ -77,6 +78,7 @@ def make_candidate_regions_from_peaks(
     macs_peaks,
     accessibility_file,
     genome_sizes,
+    genome_sizes_bed,
     regions_includelist,
     regions_blocklist,
     n_enhancers,
@@ -96,7 +98,7 @@ def make_candidate_regions_from_peaks(
         + ".Counts.bed",
     )
     if regions_includelist:
-        includelist_command = "(bedtools intersect -a {regions_includelist} -b {genome_sizes}.bed -wa | cut -f 1-3 && cat) |"
+        includelist_command = "(bedtools intersect -a {regions_includelist} -b {genome_sizes_bed} -wa | cut -f 1-3 && cat) |"
     else:
         includelist_command = ""
 
