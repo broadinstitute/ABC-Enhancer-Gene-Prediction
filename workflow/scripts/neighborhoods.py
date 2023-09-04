@@ -15,7 +15,7 @@ import pandas as pd
 import pyranges as pr
 import pysam
 from scipy import interpolate
-from tools import run_command, df_to_pyranges
+from tools import run_command, run_piped_commands, df_to_pyranges
 
 pd.options.display.max_colwidth = (
     10000  # seems to be necessary for pandas to read long file names... strange
@@ -114,6 +114,7 @@ def load_genes(
 def annotate_genes_with_features(
     genes,
     genome_sizes,
+    genome_sizes_bed,
     chrom_sizes_map,
     features={},
     outdir=".",
@@ -131,6 +132,7 @@ def annotate_genes_with_features(
         genes,
         bounds_bed,
         genome_sizes,
+        genome_sizes_bed,
         features,
         outdir,
         "Genes",
@@ -141,6 +143,7 @@ def annotate_genes_with_features(
         tss1kb,
         tss1kb_file,
         genome_sizes,
+        genome_sizes_bed,
         features,
         outdir,
         "Genes.TSS1kb",
@@ -265,6 +268,7 @@ def assert_bed3(df):
 def load_enhancers(
     outdir=".",
     genome_sizes="",
+    genome_sizes_bed="",
     features={},
     genes=None,
     force=False,
@@ -285,6 +289,7 @@ def load_enhancers(
         enhancers,
         candidate_peaks,
         genome_sizes,
+        genome_sizes_bed,
         features,
         outdir,
         "Enhancers",
@@ -402,7 +407,7 @@ def assign_enhancer_classes(enhancers, genes, chrom_sizes_map, tss_slop=500):
     return enhancers
 
 
-def run_count_reads(target, output, bed_file, genome_sizes, use_fast_count):
+def run_count_reads(target, output, bed_file, genome_sizes, genome_sizes_bed, use_fast_count):
     filename = os.path.basename(target)
     if filename.endswith(".bam"):
         count_bam(
@@ -413,7 +418,7 @@ def run_count_reads(target, output, bed_file, genome_sizes, use_fast_count):
             use_fast_count=use_fast_count,
         )
     elif "tagAlign" in filename:
-        count_tagalign(target, bed_file, output, genome_sizes)
+        count_tagalign(target, bed_file, output, genome_sizes, genome_sizes_bed)
     elif isBigWigFile(filename):
         count_bigwig(target, bed_file, output)
     else:
@@ -447,17 +452,17 @@ def count_bam(
     bed_regions.to_csv(output, header=None, index=None, sep="\t")
 
 
-def count_tagalign(tagalign, bed_file, output, genome_sizes):
+def count_tagalign(tagalign, bed_file, output, genome_sizes, genome_sizes_bed):
     index_file = tagalign + ".tbi"
     if not os.path.exists(index_file):
         cmd = f"tabix -p bed {tagalign} | cut -f1-3"
         run_command(cmd)
 
-    coverage_cmd = f"bedtools coverage -counts -b {tagalign} -a {bed_file}"
-    coverage = Popen(coverage_cmd, stdout=PIPE, shell=True)
-    with open(output, "wb") as outfp:
-        cmd2 = 'awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\''
-        check_call(cmd2, stdin=coverage.stdout, stdout=outfp, shell=True)
+    remove_alt_chr_cmd = f"bedtools intersect -u -a {tagalign} -b {genome_sizes_bed}"
+    coverage_cmd = f"bedtools coverage -counts -sorted -g {genome_sizes} -b - -a {bed_file}"
+    awk_cmd = 'awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\'' + f' > {output}'
+    piped_cmds = [remove_alt_chr_cmd, coverage_cmd, awk_cmd]
+    run_piped_commands(piped_cmds)
 
 
 def count_bigwig(target, bed_file, output):
@@ -495,6 +500,7 @@ def count_features_for_bed(
     df,
     bed_file,
     genome_sizes,
+    genome_sizes_bed,
     features,
     directory,
     filebase,
@@ -512,6 +518,7 @@ def count_features_for_bed(
                 df,
                 bed_file,
                 genome_sizes,
+                genome_sizes_bed,
                 feature_bam,
                 feature,
                 directory,
@@ -534,6 +541,7 @@ def count_single_feature_for_bed(
     df,
     bed_file,
     genome_sizes,
+    genome_sizes_bed,
     feature_bam,
     feature,
     directory,
@@ -555,7 +563,7 @@ def count_single_feature_for_bed(
         print("Regenerating", feature_outfile)
         print("Counting coverage for {}".format(filebase + "." + feature_name))
         run_count_reads(
-            feature_bam, feature_outfile, bed_file, genome_sizes, use_fast_count
+            feature_bam, feature_outfile, bed_file, genome_sizes, genome_sizes_bed, use_fast_count
         )
     else:
         print(

@@ -117,7 +117,12 @@ def parseargs(required_args=True):
     parser.add_argument(
         "--chrom_sizes",
         required=required_args,
-        help="Genome file listing chromosome sizes. Also requires associated .bed file",
+        help="Genome file listing chromosome sizes",
+    )
+    parser.add_argument(
+        "--chrom_sizes_bed",
+        required=required_args,
+        help="Associated .bed file of chrom_sizes",
     )
     parser.add_argument(
         "--enhancer_class_override",
@@ -166,6 +171,7 @@ def processCellType(args):
         annotate_genes_with_features(
             genes=genes,
             genome_sizes=args.chrom_sizes,
+            genome_sizes_bed=args.chrom_sizes_bed,
             chrom_sizes_map=chrom_sizes_map,
             use_fast_count=(not args.use_secondary_counting_method),
             default_accessibility_feature=params["default_accessibility_feature"],
@@ -177,6 +183,7 @@ def processCellType(args):
     load_enhancers(
         genes=genes_for_class_assignment,
         genome_sizes=args.chrom_sizes,
+        genome_sizes_bed=args.chrom_sizes_bed,
         candidate_peaks=args.candidate_enhancer_regions,
         skip_rpkm_quantile=args.skip_rpkm_quantile,
         qnorm=args.qnorm,

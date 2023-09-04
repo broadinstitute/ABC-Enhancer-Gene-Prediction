@@ -45,6 +45,7 @@ def make_candidate_regions_from_summits(
         raw_counts_outfile,
         macs_peaks,
         genome_sizes,
+        genome_sizes_bed,
         use_fast_count=True,
     )
 
@@ -111,6 +112,7 @@ def make_candidate_regions_from_peaks(
         raw_counts_outfile,
         macs_peaks,
         genome_sizes,
+        genome_sizes_bed,
         use_fast_count=True,
     )
 

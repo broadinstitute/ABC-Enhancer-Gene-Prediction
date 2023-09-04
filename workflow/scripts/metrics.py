@@ -206,13 +206,15 @@ def PlotDistribution(
 def HiCQC(df, gamma, scale, pdf_writer):
     # filter for e-g distances of >10kb and <1Mb
     df = df.loc[(df["distance"] > 10000) & (df["distance"] < 1000000)]
+
     max_samples = 10000
     df = df.sample(min(max_samples, len(df)))
-    pdf_writer.savefig(
-        PlotPowerLawRelationship(
-            df, "distance", "hic_contact", "E-G Pair HiC Powerlaw Fit", gamma, scale
+    if df:
+        pdf_writer.savefig(
+            PlotPowerLawRelationship(
+                df, "distance", "hic_contact", "E-G Pair HiC Powerlaw Fit", gamma, scale
+            )
         )
-    )
 
 
 def PlotPowerLawRelationship(df, x_axis_col, y_axis_col, title, gamma, scale):
@@ -225,7 +227,6 @@ def PlotPowerLawRelationship(df, x_axis_col, y_axis_col, title, gamma, scale):
     log_y_axis_label = f"natural log ({y_axis_col})"
     log_x_vals = np.log(df[x_axis_col])
     log_y_vals = np.log(df[y_axis_col])
-
     values = np.vstack([log_x_vals, log_y_vals])
     kernel = stats.gaussian_kde(values)(values)
     ax = sns.scatterplot(x=log_x_vals, y=log_y_vals, c=kernel, cmap="viridis")

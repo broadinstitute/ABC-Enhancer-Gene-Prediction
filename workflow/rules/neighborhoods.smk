@@ -34,6 +34,7 @@ rule create_neighborhoods:
 			--ATAC {params.ATAC} \
 			--default_accessibility_feature {params.default} \
 			--chrom_sizes {params.chrom_sizes} \
+			--chrom_sizes_bed {input.chrom_sizes_bed} \
 			--outdir {output.neighborhoodDirectory} \
 			--genes {output.processed_genes_file} \
 			--ubiquitously_expressed_genes {params.ubiquitous_genes} \
