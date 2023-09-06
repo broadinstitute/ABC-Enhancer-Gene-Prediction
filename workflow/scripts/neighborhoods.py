@@ -118,7 +118,6 @@ def annotate_genes_with_features(
     chrom_sizes_map,
     features={},
     outdir=".",
-    force=False,
     use_fast_count=True,
     default_accessibility_feature="",
 ):
@@ -136,7 +135,6 @@ def annotate_genes_with_features(
         features,
         outdir,
         "Genes",
-        force=force,
         use_fast_count=use_fast_count,
     )
     tsscounts = count_features_for_bed(
@@ -147,7 +145,6 @@ def annotate_genes_with_features(
         features,
         outdir,
         "Genes.TSS1kb",
-        force=force,
         use_fast_count=use_fast_count,
     )
     tsscounts = tsscounts.drop(["chr", "start", "end", "score", "strand"], axis=1)
@@ -271,7 +268,6 @@ def load_enhancers(
     genome_sizes_bed="",
     features={},
     genes=None,
-    force=False,
     candidate_peaks="",
     skip_rpkm_quantile=False,
     cellType=None,
@@ -294,7 +290,6 @@ def load_enhancers(
         outdir,
         "Enhancers",
         skip_rpkm_quantile,
-        force,
         use_fast_count,
     )
 
@@ -505,7 +500,6 @@ def count_features_for_bed(
     directory,
     filebase,
     skip_rpkm_quantile=False,
-    force=False,
     use_fast_count=True,
 ):
     for feature, feature_bam_list in features.items():
@@ -524,7 +518,6 @@ def count_features_for_bed(
                 directory,
                 filebase,
                 skip_rpkm_quantile,
-                force,
                 use_fast_count,
             )
 
@@ -547,7 +540,6 @@ def count_single_feature_for_bed(
     directory,
     filebase,
     skip_rpkm_quantile,
-    force,
     use_fast_count,
 ):
     orig_shape = df.shape[0]
@@ -555,22 +547,12 @@ def count_single_feature_for_bed(
     feature_outfile = os.path.join(
         directory, "{}.{}.CountReads.bedgraph".format(filebase, feature_name)
     )
-    if (
-        force
-        or (not os.path.exists(feature_outfile))
-        or (os.path.getsize(feature_outfile) == 0)
-    ):
-        print("Regenerating", feature_outfile)
-        print("Counting coverage for {}".format(filebase + "." + feature_name))
-        run_count_reads(
-            feature_bam, feature_outfile, bed_file, genome_sizes, genome_sizes_bed, use_fast_count
-        )
-    else:
-        print(
-            "Loading coverage from pre-calculated file for {}".format(
-                filebase + "." + feature_name
-            )
-        )
+
+    print("Generating", feature_outfile)
+    print("Counting coverage for {}".format(filebase + "." + feature_name))
+    run_count_reads(
+        feature_bam, feature_outfile, bed_file, genome_sizes, genome_sizes_bed, use_fast_count
+    )
 
     domain_counts = read_bed(feature_outfile)
     score_column = domain_counts.columns[-1]
