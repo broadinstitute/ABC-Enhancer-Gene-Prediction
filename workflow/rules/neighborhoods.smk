@@ -19,7 +19,7 @@ rule create_neighborhoods:
 		neighborhoodDirectory = directory(os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods")),
 		processed_genes_file = os.path.join(RESULTS_DIR, "{biosample}", "processed_genes_file.bed"),
 	resources:
-		mem_mb=128*1000  # 128 GB
+		mem_mb=32*1000
 	shell:
 		"""
 		# get sorted & unique gene list
