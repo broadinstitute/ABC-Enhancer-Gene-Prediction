@@ -1,6 +1,7 @@
 import argparse
 import os
-from peaks import make_candidate_regions_from_summits, make_candidate_regions_from_peaks
+
+from peaks import make_candidate_regions_from_peaks, make_candidate_regions_from_summits
 from tools import write_params
 
 
@@ -27,10 +28,15 @@ def parseargs(required_args=True):
         "--bam",
         required=required_args,
         nargs="?",
-        help="DNAase-Seq or ATAC-Seq bam file",
+        help="DNAase-Seq or ATAC-Seq bam/tagalign file",
     )
     parser.add_argument(
         "--chrom_sizes",
+        required=required_args,
+        help="File listing chromosome size annotaions",
+    )
+    parser.add_argument(
+        "--chrom_sizes_bed",
         required=required_args,
         help="File listing chromosome size annotaions",
     )
@@ -82,6 +88,7 @@ def processCellType(args):
             macs_peaks=args.narrowPeak,
             accessibility_file=args.bam,
             genome_sizes=args.chrom_sizes,
+            genome_sizes_bed=args.chrom_sizes_bed,
             regions_includelist=args.regions_includelist,
             regions_blocklist=args.regions_blocklist,
             n_enhancers=args.nStrongestPeaks,
@@ -93,6 +100,7 @@ def processCellType(args):
             macs_peaks=args.narrowPeak,
             accessibility_file=args.bam,
             genome_sizes=args.chrom_sizes,
+            genome_sizes_bed=args.chrom_sizes_bed,
             regions_includelist=args.regions_includelist,
             regions_blocklist=args.regions_blocklist,
             n_enhancers=args.nStrongestPeaks,

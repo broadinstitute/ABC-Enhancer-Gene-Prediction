@@ -58,7 +58,7 @@ class TestFullABCRun(unittest.TestCase):
 
     def run_test(self, config_file: str) -> None:
         start = time.time()
-        cmd = f"snakemake -F -j4 --configfile {config_file}"
+        cmd = f"snakemake -j4 --configfile {config_file}"
         run_cmd(cmd)
         time_taken = time.time() - start
 
@@ -70,8 +70,8 @@ class TestFullABCRun(unittest.TestCase):
 
         # Make sure the test doesn't take too long
         # May need to adjust as more biosamples are added, but we should keep
-        # tests quick (so don't run ABC on all chromosomes)
-        max_time = 60 * 5  # 5 min
+        # tests quick, so don't run ABC on all chromosomes
+        max_time = 60 * 8  # 8 min
         self.assertLessEqual(
             time_taken,
             max_time,

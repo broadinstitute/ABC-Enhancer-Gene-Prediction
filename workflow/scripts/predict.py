@@ -192,15 +192,15 @@ def main():
     enhancers_column_names = ["chr", "start", "end", "name", "class", "activity_base"]
     if args.accessibility_feature not in {"ATAC", "DHS"}:
         raise ValueError("The feature has to be either ATAC or DHS!")
+    normalized_activity_col = f"normalized_{args.accessibility_feature.lower()}"
 
-    genes_subset_columns = genes_columns_to_subset
-    genes = genes.loc[:, genes_subset_columns]
-    genes.columns = genes_column_names
-
-    normalized_activity_cols = [
-        col for col in enhancers_full.columns if col.startswith("normalized_")
+    genes_subset_columns = genes_columns_to_subset + [
+        f"{args.accessibility_feature}.RPKM.quantile.TSS1Kb"
     ]
-    enh_subset_columns = enhancers_column_names + normalized_activity_cols
+    genes = genes.loc[:, genes_subset_columns]
+    genes.columns = genes_column_names + [normalized_activity_col]
+
+    enh_subset_columns = enhancers_column_names + [normalized_activity_col]
     enhancers = enhancers_full.loc[:, enh_subset_columns]
 
     enhancers["activity_base_squared"] = enhancers["activity_base"] ** 2

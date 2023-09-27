@@ -8,7 +8,7 @@ wildcard_constraints:
 
 FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE = "threshold{threshold}{separator}{other_flags}"
 
-MAX_MEM_MB = 256 * 1000  # 256GB
+MAX_MEM_MB = 250 * 1000  # 250GB
 
 def determine_mem_mb(wildcards, input, attempt, min_gb=8):
 	# Memory resource calculator for snakemake rules
