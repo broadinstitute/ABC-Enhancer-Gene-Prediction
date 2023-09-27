@@ -402,7 +402,9 @@ def assign_enhancer_classes(enhancers, genes, chrom_sizes_map, tss_slop=500):
     return enhancers
 
 
-def run_count_reads(target, output, bed_file, genome_sizes, genome_sizes_bed, use_fast_count):
+def run_count_reads(
+    target, output, bed_file, genome_sizes, genome_sizes_bed, use_fast_count
+):
     filename = os.path.basename(target)
     if filename.endswith(".bam"):
         count_bam(
@@ -454,8 +456,10 @@ def count_tagalign(tagalign, bed_file, output, genome_sizes, genome_sizes_bed):
         run_command(cmd)
 
     remove_alt_chr_cmd = f"bedtools intersect -u -a {tagalign} -b {genome_sizes_bed}"
-    coverage_cmd = f"bedtools coverage -counts -sorted -g {genome_sizes} -b - -a {bed_file}"
-    awk_cmd = 'awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\'' + f' > {output}'
+    coverage_cmd = (
+        f"bedtools coverage -counts -sorted -g {genome_sizes} -b - -a {bed_file}"
+    )
+    awk_cmd = 'awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\'' + f" > {output}"
     piped_cmds = [remove_alt_chr_cmd, coverage_cmd, awk_cmd]
     run_piped_commands(piped_cmds)
 
@@ -551,7 +555,12 @@ def count_single_feature_for_bed(
     print("Generating", feature_outfile)
     print("Counting coverage for {}".format(filebase + "." + feature_name))
     run_count_reads(
-        feature_bam, feature_outfile, bed_file, genome_sizes, genome_sizes_bed, use_fast_count
+        feature_bam,
+        feature_outfile,
+        bed_file,
+        genome_sizes,
+        genome_sizes_bed,
+        use_fast_count,
     )
 
     domain_counts = read_bed(feature_outfile)

@@ -1,6 +1,7 @@
 narrowPeak tests/test_output/generic/K562_chr22_tagAlign/Peaks/macs2_peaks.narrowPeak.sorted
 bam example_chr/chr22/chr22.sorted.tagAlign.gz
 chrom_sizes reference/hg38/GRCh38_EBV.no_alt.chrom.sizes.tsv
+chrom_sizes_bed tests/test_output/generic/tmp/reference/hg38/GRCh38_EBV.no_alt.chrom.sizes.tsv.bed
 outDir tests/test_output/generic/K562_chr22_tagAlign/Peaks
 nStrongestPeaks 150000
 peakExtendFromSummit 250

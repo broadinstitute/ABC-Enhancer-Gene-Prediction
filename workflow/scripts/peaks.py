@@ -100,9 +100,7 @@ def make_candidate_regions_from_peaks(
         includelist_command = ""
 
     if regions_blocklist:
-        blocklist_command = (
-            f"bedtools intersect -v -wa -a stdin -b {regions_blocklist}"
-        )
+        blocklist_command = f"bedtools intersect -v -wa -a stdin -b {regions_blocklist}"
     else:
         blocklist_command = ""
 
@@ -131,7 +129,7 @@ def make_candidate_regions_from_peaks(
         blocklist_command,
         "cut -f 1-3",
         includelist_command,
-        f"bedtools sort -i stdin -faidx {genome_sizes} | bedtools merge -i stdin > {outfile}"
+        f"bedtools sort -i stdin -faidx {genome_sizes} | bedtools merge -i stdin > {outfile}",
     ]
 
     run_piped_commands(piped_cmds)

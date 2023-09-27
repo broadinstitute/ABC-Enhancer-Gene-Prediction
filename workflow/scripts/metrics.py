@@ -209,7 +209,7 @@ def HiCQC(df, gamma, scale, pdf_writer):
 
     max_samples = 10000
     df = df.sample(min(max_samples, len(df)))
-    if df:
+    if len(df):
         pdf_writer.savefig(
             PlotPowerLawRelationship(
                 df, "distance", "hic_contact", "E-G Pair HiC Powerlaw Fit", gamma, scale
