@@ -14,19 +14,24 @@ rule call_macs_peaks:
 		mem_mb=determine_mem_mb
 	shell: 
 		"""
-		macs2 callpeak -f AUTO -g {params.genome_size} -p {params.pval} -n macs2 --call-summits --outdir {params.out_dir}/{wildcards.biosample}/Peaks -t {input.accessibility}
-		#macs2 callpeak \
-		#-f AUTO \
-		#-g {params.genome_size} \
-		#-p {params.pval} \
-		#-n macs2 \
-		#--shift -75 \
-		#--extsize 150 \
-		#--nomodel \
-		#--keep-dup all \
-		#--call-summits \
-		#--outdir {params.out_dir}/{wildcards.biosample}/Peaks \
-		#-t {input.accessibility} 
+		if [[ {input.accessibility} == *tagAlign* ]]; then
+			FORMAT="BED"
+		else
+			FORMAT="AUTO"
+		fi
+
+		macs2 callpeak \
+		-f $FORMAT \
+		-g {params.genome_size} \
+		-p {params.pval} \
+		-n macs2 \
+		--shift -75 \
+		--extsize 150 \
+		--nomodel \
+		--keep-dup all \
+		--call-summits \
+		--outdir {params.out_dir}/{wildcards.biosample}/Peaks \
+		-t {input.accessibility} 
 		"""
 
 rule generate_chrom_sizes_bed_file:

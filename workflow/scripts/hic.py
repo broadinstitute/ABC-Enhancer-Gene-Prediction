@@ -94,10 +94,13 @@ def load_hic_bedpe(hic_file):
 
 def load_hic_avg(hic_file, hic_resolution):
     print("Loading HiC avg")
-
-    HiC = pd.read_csv(hic_file, sep="\t", names=["x1", "x2", "hic_contact"])
-    HiC["bin1"] = np.floor(HiC["x1"] / hic_resolution).astype(int)
-    HiC["bin2"] = np.floor(HiC["x2"] / hic_resolution).astype(int)
+    cols = {"x1": np.int64, "x2": np.int64, "hic_contact": np.float64}
+    HiC = pd.read_csv(
+        hic_file, sep="\t", names=cols.keys(), usecols=cols.keys(), dtype=cols
+    )
+    HiC["x1"] = np.floor(HiC["x1"] / hic_resolution).astype(int)
+    HiC["x2"] = np.floor(HiC["x2"] / hic_resolution).astype(int)
+    HiC.rename(columns={"x1": "bin1", "x2": "bin2"}, inplace=True)
     return HiC
 
 

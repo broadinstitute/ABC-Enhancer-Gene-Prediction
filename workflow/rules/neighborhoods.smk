@@ -16,16 +16,17 @@ rule create_neighborhoods:
 	output: 
 		enhList = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "EnhancerList.txt"),
 		geneList = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "GeneList.txt"),
-		neighborhoodDirectory = directory(os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods"))
+		neighborhoodDirectory = directory(os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods")),
+		processed_genes_file = os.path.join(RESULTS_DIR, "{biosample}", "processed_genes_file.bed"),
 	resources:
-		mem_mb=128*1000  # 128 GB
+		mem_mb=32*1000
 	shell:
 		"""
 		# get sorted & unique gene list
 		# intersect first to remove alternate chromosomes
 		bedtools intersect -u -a {params.genes} -b {input.chrom_sizes_bed} | \
 		bedtools sort -faidx {params.chrom_sizes} -i stdin | \
-		uniq > {params.genes}.sorted.uniq
+		uniq > {output.processed_genes_file}
 						
 		python workflow/scripts/run.neighborhoods.py \
 			--candidate_enhancer_regions {input.candidateRegions} \
@@ -33,8 +34,9 @@ rule create_neighborhoods:
 			--ATAC {params.ATAC} \
 			--default_accessibility_feature {params.default} \
 			--chrom_sizes {params.chrom_sizes} \
+			--chrom_sizes_bed {input.chrom_sizes_bed} \
 			--outdir {output.neighborhoodDirectory} \
-			--genes {params.genes}.sorted.uniq \
+			--genes {output.processed_genes_file} \
 			--ubiquitously_expressed_genes {params.ubiquitous_genes} \
 			--qnorm {params.qnorm} \
 			--H3K27ac {params.H3K27ac}

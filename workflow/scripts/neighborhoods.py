@@ -5,11 +5,9 @@ import time
 import traceback
 from subprocess import (
     PIPE,
-    CalledProcessError,
     Popen,
     check_call,
     check_output,
-    getoutput,
 )
 
 import numpy as np
@@ -17,7 +15,7 @@ import pandas as pd
 import pyranges as pr
 import pysam
 from scipy import interpolate
-from tools import *
+from tools import run_command, run_piped_commands, df_to_pyranges
 
 pd.options.display.max_colwidth = (
     10000  # seems to be necessary for pandas to read long file names... strange
@@ -116,10 +114,10 @@ def load_genes(
 def annotate_genes_with_features(
     genes,
     genome_sizes,
+    genome_sizes_bed,
     chrom_sizes_map,
     features={},
     outdir=".",
-    force=False,
     use_fast_count=True,
     default_accessibility_feature="",
 ):
@@ -133,20 +131,20 @@ def annotate_genes_with_features(
         genes,
         bounds_bed,
         genome_sizes,
+        genome_sizes_bed,
         features,
         outdir,
         "Genes",
-        force=force,
         use_fast_count=use_fast_count,
     )
     tsscounts = count_features_for_bed(
         tss1kb,
         tss1kb_file,
         genome_sizes,
+        genome_sizes_bed,
         features,
         outdir,
         "Genes.TSS1kb",
-        force=force,
         use_fast_count=use_fast_count,
     )
     tsscounts = tsscounts.drop(["chr", "start", "end", "score", "strand"], axis=1)
@@ -195,11 +193,6 @@ def make_tss_region_file(genes, outdir, sizes, chrom_sizes_map, tss_slop=500):
         **locals()
     )
     run_command(sort_command)
-
-    # p = Popen(sort_command, stdout=PIPE, stderr=PIPE, shell=True)
-    # print("Sorting Genes.TSS1kb file. \n Running: " + sort_command + "\n")
-    # (stdoutdata, stderrdata) = p.communicate()
-    # err = str(stderrdata, 'utf-8')
 
     return tss1kb
 
@@ -272,9 +265,9 @@ def assert_bed3(df):
 def load_enhancers(
     outdir=".",
     genome_sizes="",
+    genome_sizes_bed="",
     features={},
     genes=None,
-    force=False,
     candidate_peaks="",
     skip_rpkm_quantile=False,
     cellType=None,
@@ -292,11 +285,11 @@ def load_enhancers(
         enhancers,
         candidate_peaks,
         genome_sizes,
+        genome_sizes_bed,
         features,
         outdir,
         "Enhancers",
         skip_rpkm_quantile,
-        force,
         use_fast_count,
     )
 
@@ -409,8 +402,11 @@ def assign_enhancer_classes(enhancers, genes, chrom_sizes_map, tss_slop=500):
     return enhancers
 
 
-def run_count_reads(target, output, bed_file, genome_sizes, use_fast_count):
-    if target.endswith(".bam"):
+def run_count_reads(
+    target, output, bed_file, genome_sizes, genome_sizes_bed, use_fast_count
+):
+    filename = os.path.basename(target)
+    if filename.endswith(".bam"):
         count_bam(
             target,
             bed_file,
@@ -418,13 +414,13 @@ def run_count_reads(target, output, bed_file, genome_sizes, use_fast_count):
             genome_sizes=genome_sizes,
             use_fast_count=use_fast_count,
         )
-    elif target.endswith(".tagAlign.gz") or target.endswith(".tagAlign.bgz"):
-        count_tagalign(target, bed_file, output, genome_sizes)
-    elif isBigWigFile(target):
+    elif "tagAlign" in filename:
+        count_tagalign(target, bed_file, output, genome_sizes, genome_sizes_bed)
+    elif isBigWigFile(filename):
         count_bigwig(target, bed_file, output)
     else:
         raise ValueError(
-            "File {} name was not in .bam, .tagAlign.gz, .bw".format(target)
+            "File {} name format doesn't match bam, tagAlign, or bigWig".format(target)
         )
     double_sex_chrom_counts(output)
 
@@ -434,9 +430,7 @@ def double_sex_chrom_counts(output):
     # like they have 2 copies
     awk_command = r"""awk 'BEGIN {FS=OFS="\t"} (substr($1, length($1)) == "X" || substr($1, length($1)) == "Y") { $4 *= 2 } 1' """
     file_creation_command = f"{output} > {output}.tmp && mv {output}.tmp {output}"
-    p = check_call(awk_command + file_creation_command, shell=True)
-    if p != 0:
-        print(p.stderr)
+    run_command(awk_command + file_creation_command)
 
 
 def count_bam(
@@ -455,23 +449,19 @@ def count_bam(
     bed_regions.to_csv(output, header=None, index=None, sep="\t")
 
 
-def count_tagalign(tagalign, bed_file, output, genome_sizes):
+def count_tagalign(tagalign, bed_file, output, genome_sizes, genome_sizes_bed):
     index_file = tagalign + ".tbi"
-    if os.path.exists(index_file):
-        command1 = ""
-    else:
-        command1 = "tabix -p bed {tagalign} | cut -f1-3".format(**locals())
+    if not os.path.exists(index_file):
+        cmd = f"tabix -p bed {tagalign} | cut -f1-3"
+        run_command(cmd)
 
-    command2 = 'bedtools coverage -counts -b {tagalign} -a {bed_file} | awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\' '.format(
-        **locals()
+    remove_alt_chr_cmd = f"bedtools intersect -u -a {tagalign} -b {genome_sizes_bed}"
+    coverage_cmd = (
+        f"bedtools coverage -counts -sorted -g {genome_sizes} -b - -a {bed_file}"
     )
-
-    p1 = Popen(command1, stdout=PIPE, shell=True)
-    with open(output, "wb") as outfp:
-        p2 = check_call(command2, stdin=p1.stdout, stdout=outfp, shell=True)
-
-    if not p2 == 0:
-        print(p2.stderr)
+    awk_cmd = 'awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\'' + f" > {output}"
+    piped_cmds = [remove_alt_chr_cmd, coverage_cmd, awk_cmd]
+    run_piped_commands(piped_cmds)
 
 
 def count_bigwig(target, bed_file, output):
@@ -509,11 +499,11 @@ def count_features_for_bed(
     df,
     bed_file,
     genome_sizes,
+    genome_sizes_bed,
     features,
     directory,
     filebase,
     skip_rpkm_quantile=False,
-    force=False,
     use_fast_count=True,
 ):
     for feature, feature_bam_list in features.items():
@@ -526,12 +516,12 @@ def count_features_for_bed(
                 df,
                 bed_file,
                 genome_sizes,
+                genome_sizes_bed,
                 feature_bam,
                 feature,
                 directory,
                 filebase,
                 skip_rpkm_quantile,
-                force,
                 use_fast_count,
             )
 
@@ -548,12 +538,12 @@ def count_single_feature_for_bed(
     df,
     bed_file,
     genome_sizes,
+    genome_sizes_bed,
     feature_bam,
     feature,
     directory,
     filebase,
     skip_rpkm_quantile,
-    force,
     use_fast_count,
 ):
     orig_shape = df.shape[0]
@@ -562,22 +552,16 @@ def count_single_feature_for_bed(
         directory, "{}.{}.CountReads.bedgraph".format(filebase, feature_name)
     )
 
-    if (
-        force
-        or (not os.path.exists(feature_outfile))
-        or (os.path.getsize(feature_outfile) == 0)
-    ):
-        print("Regenerating", feature_outfile)
-        print("Counting coverage for {}".format(filebase + "." + feature_name))
-        run_count_reads(
-            feature_bam, feature_outfile, bed_file, genome_sizes, use_fast_count
-        )
-    else:
-        print(
-            "Loading coverage from pre-calculated file for {}".format(
-                filebase + "." + feature_name
-            )
-        )
+    print("Generating", feature_outfile)
+    print("Counting coverage for {}".format(filebase + "." + feature_name))
+    run_count_reads(
+        feature_bam,
+        feature_outfile,
+        bed_file,
+        genome_sizes,
+        genome_sizes_bed,
+        use_fast_count,
+    )
 
     domain_counts = read_bed(feature_outfile)
     score_column = domain_counts.columns[-1]
@@ -691,7 +675,6 @@ def count_bam_mapped(bam_file):
 
 
 def count_tagalign_total(tagalign):
-    # result = int(check_output("zcat " + tagalign + " | wc -l", shell=True))
     result = int(
         check_output(
             "zcat {} | grep -E 'chr[1-9]|chr1[0-9]|chr2[0-2]|chrX|chrY' | wc -l".format(
@@ -716,11 +699,12 @@ def count_bigwig_total(bw_file):
 
 
 def count_total(infile):
-    if infile.endswith(".tagAlign.gz") or infile.endswith(".tagAlign.bgz"):
+    filename = os.path.basename(infile)
+    if "tagAlign" in filename:
         total_counts = count_tagalign_total(infile)
-    elif infile.endswith(".bam"):
+    elif filename.endswith(".bam"):
         total_counts = count_bam_mapped(infile)
-    elif isBigWigFile(infile):
+    elif isBigWigFile(filename):
         total_counts = count_bigwig_total(infile)
     else:
         raise RuntimeError("Did not recognize file format of: " + infile)

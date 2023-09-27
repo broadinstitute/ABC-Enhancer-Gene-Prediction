@@ -1,7 +1,7 @@
 import os
 import re
 import sys
-from subprocess import check_call
+from subprocess import PIPE, Popen, check_output
 from typing import Dict, Optional
 
 import numpy as np
@@ -13,9 +13,25 @@ import pyranges as pr
 pd.set_option("mode.chained_assignment", "raise")
 
 
-def run_command(command, **args):
-    print("Running command: " + command)
-    return check_call(command, shell=True, **args)
+def run_command(command):
+    print(f"Running command: {command}")
+    return check_output(command, shell=True)
+
+
+def run_piped_commands(piped_commands):
+    print(f"Running piped cmds: {piped_commands}")
+    # Initialize the first subprocess
+    current_process = Popen(piped_commands[0], stdout=PIPE, shell=True)
+
+    # Iterate through the remaining commands and pipe them together
+    for cmd in piped_commands[1:]:
+        current_process = Popen(
+            cmd, stdin=current_process.stdout, stdout=PIPE, shell=True
+        )
+
+    # Get the final output
+    final_output, _ = current_process.communicate()
+    return final_output
 
 
 def write_connections_bedpe_format(pred, outfile, score_column):

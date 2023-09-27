@@ -20,6 +20,7 @@ dependencies:
   - seaborn
   - snakemake>=7.0
   - sphinx
+  - tabix
   - yaml
   - pip:
     - sphinx_rtd_theme
