@@ -58,12 +58,17 @@ The primary configuration file for ABC is `config/config.yaml
 
 To run ABC with your own specified data, create a **config-biosamples.tsv** file and replace ``"config/config-biosamples-chr22.tsv"`` with your file name. See section below for more info on how to create the biosample tsv file
 
-Reference files (*please specify file formats for all of these?*)
+Reference files
 	- chrom_sizes: chromosome sizes file
+		- FORMAT: TSV with 2 columns: chromsome (str), size (int) 
 	- regions_blocklist: enhancer/promoter sequences to exclude from the model
+		- FORMAT: BED 
 	- ubiquitous_genes: genes that are always expressed, regardless of cell type (these genes do not typically have distal enhancers and so are flagged by the pipeline)
-	- genes: list of genes corresponding with the genome 
-	- genome_tss: 500bp TSS region for each gene in the genes file (Andreas to provide more info on this file format and gene file format)
+		- FORMAT: TSV with 1 column: gene name (str)
+	- genes: list of genes corresponding with the genome
+		- FORMAT: BED6 with ENSEMBL_ID as 7th column 
+	- genome_tss: 500bp TSS region for each gene in the genes file
+		- FORMAT: BED6 with ENSEMBL_ID as 7th column 
 
 
 
@@ -84,13 +89,13 @@ biosamples config is a tsv separated file with the following columns
 #. DHS
 	- DNAse-seq BAM file (sorted w/ .bai index file existence)
 #. ATAC
-	- ATAC-seq BAM/TagAlign file (sorted w/ Tabix .tbi index file existence)
+	- ATAC-seq TagAlign file (sorted w/ Tabix .tbi index file existence)
 #. H3K27ac
 	- H3K27ac ChIP seq BAM file (sorted w/ .bai index file existence)
 #. default_accessibility_feature
-	- Either DHS or ATAC (*explain what this means*)
+	- Choice: "DHS", "ATAC" (If you provided DHS BAM file, you would put "DHS" here)
 #. HiC_dir
-	- HiC directory for the biosample cell type. If not provided and using hg38, uses a default cell-type average Hi-C file (*anthony check behavior here - since we have average hi-c only for hg38 and hg19, selecting a different genome build should result in not using any average hi-c data*)
+	- HiC directory for the biosample cell type. If not provided, powerlaw is used to approximate contact
 #. HiC_type
 	- e.g juicebox, avg, bed   (*explain what this means*)
 #. HiC_resolution (int)
@@ -108,7 +113,7 @@ Required columns
 	- biosample
 	- DHS or ATAC
 	- default_accessibility_feature
-	- either HiC info (dir, type, resolution) and/or HiC gamma and scale
+	- HiC info (dir, type, resolution) or powerlaw params (HiC gamma and scale)
 
 There is validation in Snakemake to make sure you provide the required inputs when running. 
 The rest of the columns are optional, but providing them may help improve prediction performance.
