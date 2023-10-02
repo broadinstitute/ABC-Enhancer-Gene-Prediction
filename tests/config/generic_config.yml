@@ -9,11 +9,13 @@ biosamplesTable: "tests/config/test_biosamples.tsv"  # replace with your own con
 predictions_results_dir: "tests/test_output/generic"
 
 ### REFERENCE FILES
-chrom_sizes: "reference/hg38/GRCh38_EBV.no_alt.chrom.sizes.tsv"
-regions_blocklist: "reference/hg38/GRCh38_unified_blacklist.bed"
-ubiquitous_genes: "reference/UbiquitouslyExpressedGenes.txt"
-genes: "reference/hg38/CollapsedGeneBounds.hg38.bed"
-genome_tss: "reference/hg38/CollapsedGeneBounds.hg38.TS500bp.bed"
+ref:
+        chrom_sizes: "reference/hg38/GRCh38_EBV.no_alt.chrom.sizes.tsv"
+        regions_blocklist: "reference/hg38/GRCh38_unified_blacklist.bed"
+        ubiquitous_genes: "reference/UbiquitouslyExpressedGenes.txt"
+        genes: "reference/hg38/CollapsedGeneBounds.hg38.bed"
+        genome_tss: "reference/hg38/CollapsedGeneBounds.hg38.TS500bp.bed"
+        qnorm: "reference/EnhancersQNormRef.K562.txt"
 
 
 ### RULE SPECIFIC PARAMS
@@ -29,7 +31,7 @@ params_candidate:
 
 # These parameters are used to run the Run Neighborhoods portion of the abc code
 params_neighborhoods:
-        qnorm: "reference/EnhancersQNormRef.K562.txt"
+        use_qnorm: True
         
 # These parameters are used to run the Predictions portion of the abc code
 params_predict:
@@ -39,4 +41,10 @@ params_filter_predictions:
         score_column: 'ABC.Score'
         threshold: .02
         include_self_promoter: True
-        only_expressed_genes: True
+        only_expressed_genes: False
+
+### INTERNAL USE ONLY
+
+# ABS path to prepend to reference and script files
+# Only relevant when using ABC as a submodule
+ABC_DIR_PATH: ""

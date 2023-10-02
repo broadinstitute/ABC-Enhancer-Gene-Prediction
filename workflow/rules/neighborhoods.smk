@@ -1,16 +1,17 @@
 rule create_neighborhoods:
 	input:		
 		candidateRegions = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed"),
-		chrom_sizes_bed = os.path.join(RESULTS_DIR, "tmp", config['chrom_sizes'] + '.bed')
+		chrom_sizes_bed = os.path.join(RESULTS_DIR, "tmp", config['ref']['chrom_sizes'] + '.bed')
 	params:
 		DHS = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, "DHS"] or '',
 		ATAC = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, "ATAC"] or '',
 		default = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'default_accessibility_feature'],
 		H3K27ac = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, "H3K27ac"] or '',
 		genes = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'genes'],
-		ubiquitous_genes = config['ubiquitous_genes'],
-		chrom_sizes = config['chrom_sizes'],
-		qnorm = config['params_neighborhoods']['qnorm'],
+		ubiquitous_genes = config['ref']['ubiquitous_genes'],
+		chrom_sizes = config['ref']['chrom_sizes'],
+		qnorm = config['ref']['qnorm'] if config['params_neighborhoods']['use_qnorm'] else None,
+		scripts_dir = SCRIPTS_DIR
 	conda:
 		"../envs/abcenv.yml"
 	output: 
@@ -28,7 +29,7 @@ rule create_neighborhoods:
 		bedtools sort -faidx {params.chrom_sizes} -i stdin | \
 		uniq > {output.processed_genes_file}
 						
-		python workflow/scripts/run.neighborhoods.py \
+		python {params.scripts_dir}/run.neighborhoods.py \
 			--candidate_enhancer_regions {input.candidateRegions} \
 			--DHS {params.DHS} \
 			--ATAC {params.ATAC} \

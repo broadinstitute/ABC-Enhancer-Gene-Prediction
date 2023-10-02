@@ -14,7 +14,8 @@ def _get_write_powerlaw_params(wildcards) -> str:
 	
 rule write_powerlaw_params:
 	params:
-		params = _get_write_powerlaw_params
+		params = _get_write_powerlaw_params,
+		scripts_dir = SCRIPTS_DIR
 	conda:
 		"../envs/abcenv.yml"
 	output:
@@ -23,7 +24,7 @@ rule write_powerlaw_params:
 		mem_mb=determine_mem_mb
 	shell:
 		"""
-		python workflow/scripts/write_powerlaw_params.py \
+		python {params.scripts_dir}/write_powerlaw_params.py \
 			{params.params} \
 			--output_file {output.powerlaw_params_tsv}
 		"""
