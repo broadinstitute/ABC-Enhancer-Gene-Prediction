@@ -14,7 +14,8 @@ RESULTS_DIR = config['predictions_results_dir']
 HIC_COLUMNS = ["HiC_dir", "HiC_type", "HiC_resolution", "HiC_gamma", "HiC_scale"]
 BIOSAMPLES_CONFIG = load_biosamples_config(config)
 HIC_HASHES = configure_hic_hashes(BIOSAMPLES_CONFIG)
-
+config = convert_reference_files(config)
+SCRIPTS_DIR = os.path.join(config["ABC_DIR_PATH"], "workflow/scripts")
 include: "rules/macs2.smk"
 include: "rules/candidate_regions.smk"
 include: "rules/neighborhoods.smk"

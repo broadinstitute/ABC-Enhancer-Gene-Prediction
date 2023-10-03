@@ -28,7 +28,9 @@ COLUMNS_TO_COMPARE: Dict[str, type] = {
 TEST_OUTPUT_DIR = CONFIG["predictions_results_dir"]
 EXPECTED_OUTPUT_DIR = f"tests/expected_output/{CONFIG['TEST_CONFIG_NAME']}"
 ALL_PUTATIVE_PRED_FILE = "Predictions/EnhancerPredictionsAllPutative.tsv.gz"
-POSITIVES_PRED_FILE = "Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter__only_expr_genes.tsv"
+POSITIVES_PRED_FILE = (
+    "Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter.tsv"
+)
 INTERMEDIATE_FILES = [
     # EnhancerList is not good to compare b/c genicSymbol column isn't deterministic
     # "Neighborhoods/EnhancerList.txt",
@@ -58,7 +60,7 @@ class TestFullABCRun(unittest.TestCase):
 
     def run_test(self, config_file: str) -> None:
         start = time.time()
-        cmd = f"snakemake -j4 --configfile {config_file}"
+        cmd = f"snakemake -j4 -F --configfile {config_file}"
         run_cmd(cmd)
         time_taken = time.time() - start
 
