@@ -4,10 +4,11 @@ rule generate_qc_plot_and_summary:
 		candidateRegions = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed"),
 		neighborhoodDirectory = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods"),
 		enhPredictionsFull = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", f"EnhancerPredictionsFull_{FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE}.tsv"),
-		chrom_sizes = config['chrom_sizes'],
+		chrom_sizes = config['ref']['chrom_sizes'],
 		powerlaw_params_tsv = get_hic_powerlaw_fit_file
 	params:
-		output_dir = os.path.join(RESULTS_DIR, "{biosample}", "Metrics")
+		output_dir = os.path.join(RESULTS_DIR, "{biosample}", "Metrics"),
+		scripts_dir = SCRIPTS_DIR
 	conda:
 		"../envs/abcenv.yml"
 	output:
@@ -17,7 +18,7 @@ rule generate_qc_plot_and_summary:
 		mem_mb=determine_mem_mb
 	shell:
 		"""
-		python workflow/scripts/grabMetrics.py \
+		python {params.scripts_dir}/grabMetrics.py \
 			--outdir {params.output_dir} \
 			--output_qc_summary {output.qc_summary} \
 			--output_qc_plots {output.qc_plots} \

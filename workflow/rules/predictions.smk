@@ -17,9 +17,10 @@ rule create_predictions:
 		output_dir = lambda wildcards: os.path.join(RESULTS_DIR, wildcards.biosample, "Predictions"),
 		score_column = config['params_filter_predictions']['score_column'],
 		hic_params = _get_run_predictions_hic_params,
-		chrom_sizes = config['chrom_sizes'],
+		chrom_sizes = config['ref']['chrom_sizes'],
 		flags = config['params_predict']['flags'],
 		accessibility_feature = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'default_accessibility_feature'],
+		scripts_dir = SCRIPTS_DIR
 	conda:
 		"../envs/abcenv.yml"
 	output: 
@@ -29,7 +30,7 @@ rule create_predictions:
 		mem_mb=64*1000
 	shell:
 		"""
-		python workflow/scripts/predict.py \
+		python {params.scripts_dir}/predict.py \
 			--enhancers {input.enhancers} \
 			--outdir {params.output_dir} \
 			--powerlaw_params_tsv {input.powerlaw_params_tsv} \
@@ -50,7 +51,8 @@ rule filter_predictions:
 		score_column = config['params_filter_predictions']['score_column'],
 		threshold = config['params_filter_predictions']['threshold'],
 		include_self_promoter = config['params_filter_predictions']['include_self_promoter'],
-		only_expressed_genes = config['params_filter_predictions']['only_expressed_genes']
+		only_expressed_genes = config['params_filter_predictions']['only_expressed_genes'],
+		scripts_dir = SCRIPTS_DIR
 	conda:
 		"../envs/abcenv.yml"
 	output:
@@ -62,7 +64,7 @@ rule filter_predictions:
 		mem_mb=determine_mem_mb
 	shell:
 		"""
-		python workflow/scripts/filter_predictions.py \
+		python {params.scripts_dir}/filter_predictions.py \
 			--output_tsv_file {output.enhPredictionsFull} \
 			--output_slim_tsv_file {output.enhPredictionsSlim} \
 			--output_bed_file {output.enhPredictionsFullBed} \
