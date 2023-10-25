@@ -9,7 +9,7 @@ Installation
 	- Utilize the **dev** branch: ``git checkout dev``
 #. Make sure you have conda & mamba installed
 	- `<https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_
-	- To install mamba: ``conda install -n base -c conda-forge mamba``
+	- To install mamba: ``conda install -n mamba -c conda-forge mamba``
 		- We recommend mamba as using conda can take 1hr+ for setup
 
 
@@ -19,6 +19,7 @@ Creating the abc conda environment may take a while (~15min with mamba. > 1hr wi
 
 .. code-block:: console
 
+	$ conda activate mamba
 	$ mamba env create -f workflow/envs/abcenv.yml
 	$ conda activate abc-env
 
