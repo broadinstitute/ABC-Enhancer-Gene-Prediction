@@ -9,7 +9,7 @@ Installation
 	- Utilize the **dev** branch: ``git checkout dev``
 #. Make sure you have conda & mamba installed
 	- `<https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_
-	- To install mamba: ``conda install -n mamba -c conda-forge mamba``
+	- To install mamba: ``conda create -n mamba -c conda-forge mamba -y``
 		- We recommend mamba as using conda can take 1hr+ for setup
 
 
