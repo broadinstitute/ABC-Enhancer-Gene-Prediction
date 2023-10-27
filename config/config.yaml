@@ -14,7 +14,7 @@ ref:
         regions_blocklist: "reference/hg38/GRCh38_unified_blacklist.bed"
         ubiquitous_genes: "reference/UbiquitouslyExpressedGenes.txt"
         genes: "reference/hg38/CollapsedGeneBounds.hg38.bed"
-        genome_tss: "reference/hg38/CollapsedGeneBounds.hg38.TS500bp.bed"
+        genome_tss: "reference/hg38/CollapsedGeneBounds.hg38.TSS500bp.bed"
         qnorm: "reference/EnhancersQNormRef.K562.txt"
 
 ### RULE SPECIFIC PARAMS
