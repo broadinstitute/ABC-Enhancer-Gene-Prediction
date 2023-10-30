@@ -1,4 +1,4 @@
-[![CircleCI](https://dl.circleci.com/status-badge/img/gh/broadinstitute/ABC-Enhancer-Gene-Prediction/tree/dev.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/broadinstitute/ABC-Enhancer-Gene-Prediction/tree/dev)
+CircleCI [![CircleCI](https://dl.circleci.com/status-badge/img/gh/broadinstitute/ABC-Enhancer-Gene-Prediction/tree/dev.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/broadinstitute/ABC-Enhancer-Gene-Prediction/tree/dev)
 
 Check out [Read The Docs](https://abc-enhancer-gene-prediction.readthedocs.io/en/latest/) for the most up to date information
 
