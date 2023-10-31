@@ -1,9 +1,8 @@
 def _get_run_predictions_hic_params(wildcards):
-	hic_dir = BIOSAMPLES_CONFIG.loc[wildcards.biosample, "HiC_dir"]
-	hic_type = BIOSAMPLES_CONFIG.loc[wildcards.biosample, "HiC_type"]
+	hic_file = BIOSAMPLES_CONFIG.loc[wildcards.biosample, "HiC_file"]
 	hic_resolution = BIOSAMPLES_CONFIG.loc[wildcards.biosample, "HiC_resolution"]
-	if hic_dir:
-		return f"--hic_dir {hic_dir} --hic_type {hic_type} --hic_resolution {hic_resolution}"
+	if hic_file:
+		return f"--hic_file {hic_file} --hic_resolution {hic_resolution}"
 	else:
 		return "--score_column powerlaw.Score"
 

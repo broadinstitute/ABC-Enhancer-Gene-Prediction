@@ -1,7 +1,7 @@
 def _get_write_powerlaw_params(wildcards) -> str:
 	if wildcards.KEY in HIC_HASHES:
-		hic_dir, hic_type, hic_resolution, hic_gamma, hic_scale = HIC_HASHES[wildcards.KEY]
-		params = f"--hic_dir {hic_dir} --hic_type {hic_type} --hic_resolution {hic_resolution}"
+		hic_file, hic_resolution, hic_gamma, hic_scale = HIC_HASHES[wildcards.KEY]
+		params = f"--hic_file {hic_file} --hic_resolution {hic_resolution}"
 		if hic_gamma and hic_scale:
 			params += f" --hic_gamma {hic_gamma} --hic_scale {hic_scale}"
 		return params

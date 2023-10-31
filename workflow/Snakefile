@@ -12,7 +12,7 @@ include: "rules/utils.smk"
 config = convert_reference_files(config)
 RESULTS_DIR = config['predictions_results_dir']
 ## Load biosamples and hic_hash dictionary
-HIC_COLUMNS = ["HiC_dir", "HiC_type", "HiC_resolution", "HiC_gamma", "HiC_scale"]
+HIC_COLUMNS = ["HiC_file", "HiC_resolution", "HiC_gamma", "HiC_scale"]
 BIOSAMPLES_CONFIG = load_biosamples_config(config)
 HIC_HASHES = configure_hic_hashes(BIOSAMPLES_CONFIG)
 SCRIPTS_DIR = os.path.join(config["ABC_DIR_PATH"], "workflow/scripts")
