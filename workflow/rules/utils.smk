@@ -99,14 +99,14 @@ def _validate_accessibility_feature(row: pd.Series):
 		raise InvalidConfig("Must provide either DHS or ATAC accessibility file")
 
 def _validate_hic_info(row: pd.Series):
-	if row["HiC_dir"]:
-		if not (row["HiC_type"] and row["HiC_resolution"]):
+	if row["HiC_file"]:
+		if not row["HiC_resolution"]:
 			raise InvalidConfig("Must provide HiC type and resolution with directory")
 	else:
 		if not (row["HiC_gamma"] and row["HiC_scale"]):
 			raise InvalidConfig(
-				"If HiC dir not provided, you must provide HiC gamma and scale "
-				"for powerlaw estimate for contact"
+				"If HiC not provided, you must provide HiC gamma and scale "
+				"for powerlaw estimates for contact"
 			)
 
 def _validate_biosamples_config(biosamples_config):

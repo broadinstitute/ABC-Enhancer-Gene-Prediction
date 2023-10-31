@@ -48,6 +48,7 @@ def get_model_argument_parser():
 
     # hic
     parser.add_argument("--hic_dir", default=None, help="HiC directory")
+    parser.add_argument("--hic_file", default=None, help="HiC file (can be web link)")
     parser.add_argument("--hic_resolution", type=int, help="HiC resolution")
     parser.add_argument(
         "--hic_pseudocount_distance",
@@ -218,6 +219,7 @@ def main():
         chromosomes = set(genes["chr"]).intersection(set(enhancers["chr"]))
         if not args.include_chrY:
             chromosomes.discard("chrY")
+        chromosomes = sorted(chromosomes)
     else:
         chromosomes = args.chromosomes.split(",")
 
@@ -282,14 +284,14 @@ def main():
 
 
 def validate_args(args):
-    if args.hic_dir and args.hic_type == "juicebox":
-        assert (
-            args.hic_resolution is not None
-        ), "HiC resolution must be provided if hic_type is juicebox"
+    # if args.hic_dir and args.hic_type == "juicebox":
+    #     assert (
+    #         args.hic_resolution is not None
+    #     ), "HiC resolution must be provided if hic_type is juicebox"
 
-    if not args.hic_dir:
+    if not args.hic_file:
         print(
-            "WARNING: Hi-C directory not provided. Model will only compute ABC score using powerlaw!"
+            "WARNING: Hi-C not provided. Model will only compute ABC score using powerlaw!"
         )
 
 

@@ -23,6 +23,11 @@ dependencies:
   - sphinx
   - tabix
   - yaml
+  # The following 3 are needed to compile hic-straw in HPC
+  - gcc
+  - gxx
+  - zlib
   - pip:
     - sphinx_rtd_theme
+    - hic-straw
   

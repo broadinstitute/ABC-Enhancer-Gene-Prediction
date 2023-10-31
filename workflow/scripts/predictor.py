@@ -3,15 +3,11 @@ import sys
 import time
 from typing import Dict
 
+import hicstraw
 import numpy as np
 import pandas as pd
-from hic import (
-    get_hic_file,
-    get_powerlaw_at_distance,
-    load_hic_avg,
-    load_hic_bedpe,
-    load_hic_juicebox,
-)
+from hic import (get_hic_file, get_powerlaw_at_distance, load_hic_avg,
+                 load_hic_bedpe, load_hic_juicebox)
 from tools import df_to_pyranges
 
 
@@ -22,17 +18,13 @@ def make_predictions(
     pred = annotate_predictions(pred, args.tss_slop)
     pred = add_powerlaw_to_predictions(pred, args, hic_gamma, hic_scale)
     # if Hi-C directory is not provided, only powerlaw model will be computed
-    if args.hic_dir:
-        hic_file, hic_norm_file, hic_is_vc = get_hic_file(
-            chromosome, args.hic_dir, hic_type=args.hic_type
-        )
+    if args.hic_file:
         pred = add_hic_to_enh_gene_table(
+            chromosome,
             enhancers,
             genes,
             pred,
-            hic_file,
-            hic_norm_file,
-            hic_is_vc,
+            args.hic_file,
             args,
             hic_gamma,
             hic_scale,
@@ -84,14 +76,50 @@ def make_pred_table(chromosome, enh, genes, window, chrom_sizes_map: Dict[str, i
 
     return pred
 
+def create_df_from_records(records, hic_resolution):
+    bin_data = [[r.binX, r.binY, r.counts] for r in records]
+    df = pd.DataFrame(bin_data, columns=['binX', 'binY', 'counts'])
+    df["binX"] = np.floor(df["binX"] / hic_resolution).astype(int)
+    df["binY"] = np.floor(df["binY"] / hic_resolution).astype(int)
+    return df
+
+def fill_hic_contact_values(pred, hic_file, chromosome, hic_resolution, window):
+    pred["enh_bin"] = np.floor(pred["enh_midpoint"] / hic_resolution).astype(
+        int
+    )
+    pred["tss_bin"] = np.floor(pred["TargetGeneTSS"] / hic_resolution).astype(
+        int
+    )
+    pred["binX"] = np.min(pred[["enh_bin", "tss_bin"]], axis=1)
+    pred["binY"] = np.max(pred[["enh_bin", "tss_bin"]], axis=1)
+    hic = hicstraw.HiCFile(hic_file)
+    matrix_object = hic.getMatrixZoomData(chromosome, chromosome, "observed", "SCALE", "BP", hic_resolution)
+    start_loci = pred["end"].min()
+    end_loci = pred["end"].max()
+    step_size = 10000 * hic_resolution  # ~10k bins at a time
+    for i in range(start_loci, end_loci, step_size):
+        start = i
+        end = start + step_size
+        records = matrix_object.getRecords(start, end, start - window, end + window)
+        df = create_df_from_records(records, hic_resolution)
+        pred = pred.merge(
+            df,
+            how="left",
+            on=["binX", "binY"],
+            suffixes=(None, "_")
+        )
+        if "counts_" in pred:
+            pred["counts"] = np.max(pred[["counts", "counts_"]], axis=1)
+            pred.drop("counts_", inplace=True, axis=1)
+    
+    return pred.rename(columns={"counts": "hic_contact"})
 
 def add_hic_to_enh_gene_table(
+    chromosome,
     enh,
     genes,
     pred,
     hic_file,
-    hic_norm_file,
-    hic_is_vc,
     args,
     hic_gamma,
     hic_scale,
@@ -105,118 +133,118 @@ def add_hic_to_enh_gene_table(
     # But more generally we do not want to assume constant resolution. In this case hic should be provided in bedpe format
 
     t = time.time()
-    if args.hic_type == "bedpe":
-        HiC = load_hic_bedpe(hic_file)
-        # Use pyranges to compute overlaps between enhancers/genes and hic bedpe table
-        # Consider each range of the hic matrix separately - and merge each range into both enhancers and genes.
-        # Then remerge on hic index
+    # if args.hic_type == "bedpe":
+    #     HiC = load_hic_bedpe(hic_file)
+    #     # Use pyranges to compute overlaps between enhancers/genes and hic bedpe table
+    #     # Consider each range of the hic matrix separately - and merge each range into both enhancers and genes.
+    #     # Then remerge on hic index
 
-        HiC["hic_idx"] = HiC.index
-        hic1 = df_to_pyranges(HiC, start_col="x1", end_col="x2", chr_col="chr1")
-        hic2 = df_to_pyranges(HiC, start_col="y1", end_col="y2", chr_col="chr2")
+    #     HiC["hic_idx"] = HiC.index
+    #     hic1 = df_to_pyranges(HiC, start_col="x1", end_col="x2", chr_col="chr1")
+    #     hic2 = df_to_pyranges(HiC, start_col="y1", end_col="y2", chr_col="chr2")
 
-        # Overlap in one direction
-        enh_hic1 = (
-            df_to_pyranges(
-                enh,
-                start_col="enh_midpoint",
-                end_col="enh_midpoint",
-                end_slop=1,
-                chrom_sizes_map=chrom_sizes_map,
-            )
-            .join(hic1)
-            .df
-        )
-        genes_hic2 = (
-            df_to_pyranges(
-                genes,
-                start_col="TargetGeneTSS",
-                end_col="TargetGeneTSS",
-                end_slop=1,
-                chrom_sizes_map=chrom_sizes_map,
-            )
-            .join(hic2)
-            .df
-        )
-        ovl12 = enh_hic1[["enh_idx", "hic_idx", "hic_contact"]].merge(
-            genes_hic2[["gene_idx", "hic_idx"]], on="hic_idx"
-        )
+    #     # Overlap in one direction
+    #     enh_hic1 = (
+    #         df_to_pyranges(
+    #             enh,
+    #             start_col="enh_midpoint",
+    #             end_col="enh_midpoint",
+    #             end_slop=1,
+    #             chrom_sizes_map=chrom_sizes_map,
+    #         )
+    #         .join(hic1)
+    #         .df
+    #     )
+    #     genes_hic2 = (
+    #         df_to_pyranges(
+    #             genes,
+    #             start_col="TargetGeneTSS",
+    #             end_col="TargetGeneTSS",
+    #             end_slop=1,
+    #             chrom_sizes_map=chrom_sizes_map,
+    #         )
+    #         .join(hic2)
+    #         .df
+    #     )
+    #     ovl12 = enh_hic1[["enh_idx", "hic_idx", "hic_contact"]].merge(
+    #         genes_hic2[["gene_idx", "hic_idx"]], on="hic_idx"
+    #     )
 
-        # Overlap in the other direction
-        enh_hic2 = (
-            df_to_pyranges(
-                enh,
-                start_col="enh_midpoint",
-                end_col="enh_midpoint",
-                end_slop=1,
-                chrom_sizes_map=chrom_sizes_map,
-            )
-            .join(hic2)
-            .df
-        )
-        genes_hic1 = (
-            df_to_pyranges(
-                genes,
-                start_col="TargetGeneTSS",
-                end_col="TargetGeneTSS",
-                end_slop=1,
-                chrom_sizes_map=chrom_sizes_map,
-            )
-            .join(hic1)
-            .df
-        )
-        ovl21 = enh_hic2[["enh_idx", "hic_idx", "hic_contact"]].merge(
-            genes_hic1[["gene_idx", "hic_idx"]], on=["hic_idx"]
-        )
+    #     # Overlap in the other direction
+    #     enh_hic2 = (
+    #         df_to_pyranges(
+    #             enh,
+    #             start_col="enh_midpoint",
+    #             end_col="enh_midpoint",
+    #             end_slop=1,
+    #             chrom_sizes_map=chrom_sizes_map,
+    #         )
+    #         .join(hic2)
+    #         .df
+    #     )
+    #     genes_hic1 = (
+    #         df_to_pyranges(
+    #             genes,
+    #             start_col="TargetGeneTSS",
+    #             end_col="TargetGeneTSS",
+    #             end_slop=1,
+    #             chrom_sizes_map=chrom_sizes_map,
+    #         )
+    #         .join(hic1)
+    #         .df
+    #     )
+    #     ovl21 = enh_hic2[["enh_idx", "hic_idx", "hic_contact"]].merge(
+    #         genes_hic1[["gene_idx", "hic_idx"]], on=["hic_idx"]
+    #     )
 
-        # Concatenate both directions and merge into preditions
-        ovl = pd.concat([ovl12, ovl21]).drop_duplicates()
-        pred = pred.merge(ovl, on=["enh_idx", "gene_idx"], how="left")
-    elif args.hic_type == "juicebox" or args.hic_type == "avg":
-        if args.hic_type == "juicebox":
-            HiC = load_hic_juicebox(
-                hic_file=hic_file,
-                hic_norm_file=hic_norm_file,
-                hic_is_vc=hic_is_vc,
-                hic_resolution=args.hic_resolution,
-                tss_hic_contribution=args.tss_hic_contribution,
-                window=args.window,
-                min_window=0,
-                gamma=hic_gamma,
-                scale=hic_scale,
-            )
-        else:
-            HiC = load_hic_avg(hic_file, args.hic_resolution)
+    #     # Concatenate both directions and merge into preditions
+    #     ovl = pd.concat([ovl12, ovl21]).drop_duplicates()
+    #     pred = pred.merge(ovl, on=["enh_idx", "gene_idx"], how="left")
+    # elif args.hic_type == "juicebox" or args.hic_type == "avg":
+    #     if args.hic_type == "juicebox":
+    #         HiC = load_hic_juicebox(
+    #             hic_file=hic_file,
+    #             hic_norm_file=hic_norm_file,
+    #             hic_is_vc=hic_is_vc,
+    #             hic_resolution=args.hic_resolution,
+    #             tss_hic_contribution=args.tss_hic_contribution,
+    #             window=args.window,
+    #             min_window=0,
+    #             gamma=hic_gamma,
+    #             scale=hic_scale,
+    #         )
+    #     else:
+    #         HiC = load_hic_avg(hic_file, args.hic_resolution)
 
-        # Merge directly using indices
-        # Could also do this by indexing into the sparse matrix (instead of merge) but this seems to be slower
-        # Index into sparse matrix
-        # pred['hic_contact'] = [HiC[i,j] for (i,j) in pred[['enh_bin','tss_bin']].values.tolist()]
+    #     # Merge directly using indices
+    #     # Could also do this by indexing into the sparse matrix (instead of merge) but this seems to be slower
+    #     # Index into sparse matrix
+    #     # pred['hic_contact'] = [HiC[i,j] for (i,j) in pred[['enh_bin','tss_bin']].values.tolist()]
 
-        pred["enh_bin"] = np.floor(pred["enh_midpoint"] / args.hic_resolution).astype(
-            int
-        )
-        pred["tss_bin"] = np.floor(pred["TargetGeneTSS"] / args.hic_resolution).astype(
-            int
-        )
-        if not hic_is_vc:
-            # in this case the matrix is upper triangular.
-            #
-            pred["bin1"] = np.amin(pred[["enh_bin", "tss_bin"]], axis=1)
-            pred["bin2"] = np.amax(pred[["enh_bin", "tss_bin"]], axis=1)
-            pred = pred.merge(HiC, how="left", on=["bin1", "bin2"])
-        else:
-            # The matrix is not triangular, its full
-            # For VC assume genes correspond to rows and columns to enhancers
-            pred = pred.merge(
-                HiC,
-                how="left",
-                left_on=["tss_bin", "enh_bin"],
-                right_on=["bin1", "bin2"],
-            )
-        # QC juicebox HiC
-        pred = qc_hic(pred)
-
+    #     pred["enh_bin"] = np.floor(pred["enh_midpoint"] / args.hic_resolution).astype(
+    #         int
+    #     )
+    #     pred["tss_bin"] = np.floor(pred["TargetGeneTSS"] / args.hic_resolution).astype(
+    #         int
+    #     )
+    #     if not hic_is_vc:
+    #         # in this case the matrix is upper triangular.
+    #         #
+    #         pred["bin1"] = np.amin(pred[["enh_bin", "tss_bin"]], axis=1)
+    #         pred["bin2"] = np.amax(pred[["enh_bin", "tss_bin"]], axis=1)
+    #         pred = pred.merge(HiC, how="left", on=["bin1", "bin2"])
+    #     else:
+    #         # The matrix is not triangular, its full
+    #         # For VC assume genes correspond to rows and columns to enhancers
+    #         pred = pred.merge(
+    #             HiC,
+    #             how="left",
+    #             left_on=["tss_bin", "enh_bin"],
+    #             right_on=["bin1", "bin2"],
+    #         )
+    #     # QC juicebox HiC
+    #     pred = qc_hic(pred)
+    pred = fill_hic_contact_values(pred, hic_file, chromosome, args.hic_resolution, args.window)
     # Remove all NaN values so we have valid scores
     pred.fillna(value={"hic_contact": 0}, inplace=True)
     pred.drop(
@@ -225,8 +253,8 @@ def add_hic_to_enh_gene_table(
             "x2",
             "y1",
             "y2",
-            "bin1",
-            "bin2",
+            "binX",
+            "binY",
             "enh_idx",
             "gene_idx",
             "hic_idx",
