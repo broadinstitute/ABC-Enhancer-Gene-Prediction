@@ -57,7 +57,7 @@ rule filter_predictions:
 		"../envs/abcenv.yml"
 	output:
 		enhPredictionsFull = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", f"EnhancerPredictionsFull_{FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE}.tsv"),
-		enhPredictionsFullBed = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", f"EnhancerPredictionsFull_{FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE}.bed"),
+		enhPredictionsFullBedpe = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", f"EnhancerPredictionsFull_{FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE}.bedpe"),
 		enhPredictionsSlim = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", f"EnhancerPredictions_{FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE}.tsv"),
 		genePredictionsStats = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", f"GenePredictionStats_{FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE}.tsv")
 	resources:
@@ -67,7 +67,7 @@ rule filter_predictions:
 		python {params.scripts_dir}/filter_predictions.py \
 			--output_tsv_file {output.enhPredictionsFull} \
 			--output_slim_tsv_file {output.enhPredictionsSlim} \
-			--output_bed_file {output.enhPredictionsFullBed} \
+			--output_bed_file {output.enhPredictionsFullBedpe} \
 			--output_gene_stats_file {output.genePredictionsStats} \
 			--pred_file {input.allPutative} \
 			--pred_nonexpressed_file {input.allPutativeNonExpressed} \
