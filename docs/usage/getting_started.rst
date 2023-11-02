@@ -77,7 +77,23 @@ The default reference file params in the config.yaml file are programmed for hg3
 
 The rule specific params are explained in the :ref:`ABC-methods` section.
 
+Average Hi-C
+------------
 
+If you don't have hic contact specific to your cell type, you may wish to use average Hi-C.
+
+The celltypes used for averaging are: GM12878, NHEK, HMEC, RPE1, THP1, IMR90, HUVEC, HCT116, K562, KBM7.
+
+Average Hi-C data can be downloaded from: ftp://ftp.broadinstitute.org/outgoing/lincRNA/average_hic/average_hic.v2.191020.tar.gz (20 GB)
+
+You'll want to fill in the following params into your config_biosamples file
+
+.. code-block::
+
+	HiC_type: avg	
+	HiC_resolution: 5000	
+	HiC_gamma: 1.024238616787792
+	HiC_scale: 5.9594510043736655
 
 BiosampleTable Specifications
 -----------------------------
