@@ -1,2 +1,2 @@
-biosample	DHS	ATAC	H3K27ac	default_accessibility_feature	HiC_file	HiC_resolution	HiC_gamma	HiC_scale	alt_TSS	alt_genes
-K562	/oak/stanford/groups/engreitz/Projects/Benchmarking/Predictors/K562_ABC/ENCFF860XAE.sorted.se.bam		/oak/stanford/groups/engreitz/Projects/Benchmarking/Predictors/K562_ABC/ENCFF790GFL.sorted.se.bam	DHS	https://hicfiles.s3.amazonaws.com/hiseq/k562/in-situ/combined_30.hic	5000	1.0044322152129300	5.522049023040860	
+biosample	DHS	ATAC	H3K27ac	default_accessibility_feature	hic_config	alt_TSS	alt_genes
+K562	/oak/stanford/groups/engreitz/Projects/Benchmarking/Predictors/K562_ABC/ENCFF860XAE.sorted.se.bam		/oak/stanford/groups/engreitz/Projects/Benchmarking/Predictors/K562_ABC/ENCFF790GFL.sorted.se.bam	DHS	config/hic_config.yaml	

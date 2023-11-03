@@ -1,0 +1,8 @@
+# Can be a directory, file, or website link
+hic_file: https://s3.us-central-1.wasabisys.com/aiden-encode-hic-mirror/bifocals_iter2/tissues.hic
+normalization: "SCALE"
+resolution: 5000
+
+# Powerlaw fit for HiC. If hic_file not provided, gamma/scale must be provided
+gamma: 1.0044322152129300
+scale: 5.522049023040860

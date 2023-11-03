@@ -87,11 +87,10 @@ def fill_hic_contact_values(pred, hic_file, chromosome, hic_resolution, window):
     pred["binX"] = np.min(pred[["enh_bin", "tss_bin"]], axis=1)
     pred["binY"] = np.max(pred[["enh_bin", "tss_bin"]], axis=1)
     hic = hicstraw.HiCFile(hic_file)
-    chrom_num = chromosome.split('chr')[1]
-    matrix_object = hic.getMatrixZoomData(chrom_num, chrom_num, "interscale", "KR", "BP", hic_resolution)
+    matrix_object = hic.getMatrixZoomData(chromosome, chromosome, "observed", "SCALE", "BP", hic_resolution)
     start_loci = pred["end"].min()
     end_loci = pred["end"].max()
-    step_size = 1000 * hic_resolution  # ~1k bins at a time
+    step_size = 10000 * hic_resolution  # ~10k bins at a time
     for i in range(start_loci, end_loci, step_size):
         start = i
         end = start + step_size

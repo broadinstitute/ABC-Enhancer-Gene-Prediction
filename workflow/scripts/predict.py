@@ -219,6 +219,7 @@ def main():
         chromosomes = set(genes["chr"]).intersection(set(enhancers["chr"]))
         if not args.include_chrY:
             chromosomes.discard("chrY")
+        chromosomes = sorted(chromosomes)
     else:
         chromosomes = args.chromosomes.split(",")
 

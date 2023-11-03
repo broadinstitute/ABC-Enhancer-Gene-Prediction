@@ -49,31 +49,28 @@ def load_biosamples_config(config):
 	biosamples_config = pd.read_csv(
 		config["biosamplesTable"], sep="\t", na_values=""
 	).replace([np.NaN], [None]).set_index("biosample", drop=False)
-	biosamples_config["HiC_resolution"] = biosamples_config["HiC_resolution"].replace([None], [0]).astype(int)
-	_validate_biosamples_config(biosamples_config)
-	_configure_tss_and_gene_files(biosamples_config)
+	# biosamples_config["HiC_resolution"] = biosamples_config["HiC_resolution"].replace([None], [0]).astype(int)
+	# _validate_biosamples_config(biosamples_config)
+	# _configure_tss_and_gene_files(biosamples_config)
 	return biosamples_config
 
 def configure_hic_hashes(biosamples_config):
 	"""
-	Create a Map[hash(hic_dir), HIC_COLUMNS]
+	Create a Map[hash(hic_dir), hic_config]
 	This is done so that we don't recompute hic powerlaw fit
-	when multiple biosamples have the same hic_info
+	when multiple biosamples have the same hic_config
 	"""
 	hic_hashes = {}
-	hic_pairs = biosamples_config[HIC_COLUMNS].drop_duplicates()	
-	for row in hic_pairs.values:
-		hic_dir = row[0]
-		if hic_dir:
-			# Map only contains values with hic_directories
-			hic_hashes[get_hic_dir_hash(row)] = row
+	hic_configs = biosamples_config["hic_config"].drop_duplicates()	
+	for config in hic_configs:
+		hic_hashes[get_hic_config_hash(config)] = config
 	return hic_hashes
 
 def get_accessibility_file(wildcards):
 	# Inputs have been validated so only DHS or ATAC is provided
 	return BIOSAMPLES_CONFIG.loc[wildcards.biosample, "DHS"] or BIOSAMPLES_CONFIG.loc[wildcards.biosample, "ATAC"]
 
-def get_hic_dir_hash(hic_info_row):
+def get_hic_config_hash(hic_info_row):
 	return hashlib.sha1(str(hic_info_row).encode()).hexdigest()[:8]
 
 
@@ -88,7 +85,7 @@ def _get_hic_powerlaw_fit_dir(wildcards):
 	row = BIOSAMPLES_CONFIG.loc[wildcards.biosample, HIC_COLUMNS].values
 	hic_dir = row[0]
 	if hic_dir:
-		return os.path.join(RESULTS_DIR, "HiC_Powerlaw", get_hic_dir_hash(row))
+		return os.path.join(RESULTS_DIR, "HiC_Powerlaw", get_hic_config_hash(row))
 	else:
 		return os.path.join(RESULTS_DIR, "HiC_Powerlaw", wildcards.biosample)
 
