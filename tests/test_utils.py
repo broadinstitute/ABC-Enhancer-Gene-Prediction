@@ -26,7 +26,7 @@ def get_filtered_dataframe(file: str, cols_to_compare: Dict[str, type]) -> pd.Da
 
 def run_cmd(cmd: str, raise_ex: bool = True) -> bool:
     try:
-        subprocess.check_output(cmd, shell=True)
+        subprocess.run(cmd, shell=True, check=True)
     except subprocess.CalledProcessError as e:
         logging.error(f"Error: {e}")
         if raise_ex:

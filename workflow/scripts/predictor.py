@@ -39,10 +39,16 @@ def make_predictions(
             chrom_sizes_map,
         )
         pred = compute_score(
-            pred, [pred["activity_base"], pred["hic_contact_pl_scaled_adj"]], "ABC"
+            pred,
+            [pred["activity_base"], pred["hic_contact_pl_scaled_adj"]],
+            "ABC",
+            adjust_self_promoters=True,
         )
     pred = compute_score(
-        pred, [pred["activity_base"], pred["powerlaw_contact_reference"]], "powerlaw"
+        pred,
+        [pred["activity_base"], pred["powerlaw_contact_reference"]],
+        "powerlaw",
+        adjust_self_promoters=True,
     )
     return pred
 
@@ -301,7 +307,7 @@ def qc_hic(pred, threshold=0.01):
     return pred
 
 
-def compute_score(enhancers, product_terms, prefix):
+def compute_score(enhancers, product_terms, prefix, adjust_self_promoters=True):
     scores = np.column_stack(product_terms).prod(axis=1)
 
     enhancers[prefix + ".Score.Numerator"] = scores
@@ -312,6 +318,12 @@ def compute_score(enhancers, product_terms, prefix):
     ].transform(
         "sum"
     )
+
+    # Self promoters by definition regulate the gene, so we
+    # want to make sure they have a high score
+    if adjust_self_promoters:
+        self_promoters = enhancers[enhancers["isSelfPromoter"]]
+        enhancers.loc[self_promoters.index, prefix + ".Score"] = 1
 
     return enhancers
 
