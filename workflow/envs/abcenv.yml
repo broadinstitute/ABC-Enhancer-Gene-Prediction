@@ -6,6 +6,7 @@ channels:
   - anaconda
 dependencies:
   - bedtools=2.26.0
+  - black
   - click
   - macs2
   - matplotlib
