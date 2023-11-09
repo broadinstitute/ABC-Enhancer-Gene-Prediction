@@ -46,7 +46,7 @@ def make_predictions(
         )
     pred = compute_score(
         pred,
-        [pred["activity_base"], pred["powerlaw_contact_reference"]],
+        [pred["activity_base"], pred["powerlaw_contact"]],
         "powerlaw",
         adjust_self_promoters=True,
     )
