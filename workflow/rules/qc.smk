@@ -5,10 +5,11 @@ rule generate_qc_plot_and_summary:
 		neighborhoodDirectory = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods"),
 		enhPredictionsFull = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", f"EnhancerPredictionsFull_{FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE}.tsv"),
 		chrom_sizes = config['ref']['chrom_sizes'],
-		powerlaw_params_tsv = get_hic_powerlaw_fit_file
 	params:
 		output_dir = os.path.join(RESULTS_DIR, "{biosample}", "Metrics"),
-		scripts_dir = SCRIPTS_DIR
+		scripts_dir = SCRIPTS_DIR,
+		gamma = config['params_predict']['hic_gamma'],
+		scale = config['params_predict']['hic_scale'],
 	conda:
 		"../envs/abcenv.yml"
 	output:
@@ -26,5 +27,6 @@ rule generate_qc_plot_and_summary:
 			--neighborhood_outdir {input.neighborhoodDirectory} \
 			--preds_file {input.enhPredictionsFull} \
 			--chrom_sizes {input.chrom_sizes} \
-			--powerlaw_params_tsv {input.powerlaw_params_tsv}
+			--hic_gamma {params.gamma} \
+			--hic_scale {params.scale} 
 		"""

@@ -77,24 +77,6 @@ The default reference file params in the config.yaml file are programmed for hg3
 
 The rule specific params are explained in the :ref:`ABC-methods` section.
 
-Average Hi-C
-------------
-
-If you don't have hic contact specific to your cell type, you may wish to use average Hi-C.
-
-The celltypes used for averaging are: GM12878, NHEK, HMEC, RPE1, THP1, IMR90, HUVEC, HCT116, K562, KBM7.
-
-Average Hi-C data can be downloaded from: ftp://ftp.broadinstitute.org/outgoing/lincRNA/average_hic/average_hic.v2.191020.tar.gz (20 GB)
-
-You'll want to fill in the following params into your config_biosamples file
-
-.. code-block::
-
-	HiC_type: avg	
-	HiC_resolution: 5000	
-	HiC_gamma: 1.024238616787792
-	HiC_scale: 5.9594510043736655
-
 BiosampleTable Specifications
 -----------------------------
 `chr22 example <https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction/blob/dev/config/config_biosamples_chr22.tsv>`_
@@ -110,17 +92,21 @@ biosamples config is a tsv separated file with the following columns
 #. H3K27ac
 	- H3K27ac ChIP seq BAM file (sorted w/ .bai index file existence)
 #. default_accessibility_feature
-	- Choice: "DHS", "ATAC" (If you provided DHS BAM file, you would put "DHS" here)
-#. HiC_dir
-	- HiC directory for the biosample cell type. If not provided, powerlaw is used to approximate contact
+	- Choices: "DHS", "ATAC" (If you provided DHS BAM file, you would put "DHS" here)
+#. HiC_file
+	- Filepath/link to .hic file (easiest) or hic directory for the biosample cell type. 
+	- If not provided, powerlaw is used to approximate contact
+	- Example: 
+		- filepath: `/path/to/k562.hic`
+		- link: `https://www.encodeproject.org/files/ENCFF621AIY/@@download/ENCFF621AIY.hic`
+		- Directory: `/path/to/HiC/avg_track`
 #. HiC_type
-	- e.g juicebox, avg, bed   (*explain what this means*)
+	- Choices: hic, juicebox, avg, bedpe
+	- If you passed in a .hic file, use `hic`
+	- If you dumped hic into a directory via JuicerTools, use `juicebox`
+	- If you have a bedpe file for contact, it should be a tab delimited file containing 8 columns (chr1,start1,end1,chr2,start2,end2,name,score)
 #. HiC_resolution (int)
-	- resolution of the HiC data  (*explain what this means*)
-#. HiC_gamma (float)
-	- represents the HiC data powerlaw fit slope   (*explain what this means*)
-#. HiC_scale (float)
-	- represents the HiC data powerlaw fit intercept   (*explain what this means*)
+	- Resolution of the HiC data. 5KB is typically a good choice (*explain what this means*)
 #. alt_TSS (optional; not recommended to fill)
 	- Alternative TSS reference file 
 #. alt_genes (optional; not recommended to fill)
@@ -130,7 +116,10 @@ Required columns
 	- biosample
 	- DHS or ATAC
 	- default_accessibility_feature
-	- HiC info (dir, type, resolution) or powerlaw params (HiC gamma and scale)
+
+If you don't have any cell specific HiC data, the recommendation is to not fill in any of the HiC columns, which will 
+lead to using the powerlaw as the contact metric.
+
 
 There is validation in Snakemake to make sure you provide the required inputs when running. 
 The rest of the columns are optional, but providing them may help improve prediction performance.

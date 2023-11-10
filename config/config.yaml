@@ -2,7 +2,7 @@
 
 ### INPUT DATA
 # Add your inputs here
-biosamplesTable: "config/config_biosamples_chr22.tsv"  # replace with your own config/config_biosamples.tsv
+biosamplesTable: "config/config_biosamples.tsv"  # replace with your own config/config_biosamples.tsv
 
 ### OUTPUT DATA
 predictions_results_dir: "results"
@@ -35,6 +35,8 @@ params_neighborhoods:
 # These parameters are used to run the Predictions portion of the abc code
 params_predict:
         flags: "--scale_hic_using_powerlaw"
+        hic_gamma: 1.024238616787792  # avg hic gamma
+        hic_scale: 5.9594510043736655  # avg hic scale
 
 params_filter_predictions:
         score_column: 'ABC.Score'

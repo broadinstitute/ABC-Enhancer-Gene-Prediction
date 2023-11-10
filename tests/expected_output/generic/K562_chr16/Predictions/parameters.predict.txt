@@ -5,13 +5,14 @@ accessibility_feature DHS
 outdir tests/test_output/generic/K562_chr16/Predictions
 cellType K562_chr16
 chrom_sizes reference/hg38/GRCh38_EBV.no_alt.chrom.sizes.tsv
-hic_dir example_chr/HiC_K562
+hic_file example_chr/HiC_K562
 hic_resolution 5000
 hic_pseudocount_distance 1000000.0
 hic_type juicebox
 hic_is_doubly_stochastic False
 scale_hic_using_powerlaw True
-powerlaw_params_tsv tests/test_output/generic/HiC_Powerlaw/b08206e1/hic.powerlaw.tsv
+hic_gamma 1.024238616787792
+hic_scale 5.9594510043736655
 hic_gamma_reference 0.87
 expression_cutoff 1
 promoter_activity_quantile_cutoff 0.4
