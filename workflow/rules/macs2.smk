@@ -1,7 +1,8 @@
 ## call macs2 -- if multiple accessibility inputs for one biosample, will aggregate into one output
 rule call_macs_peaks: 
 	input:
-		accessibility = get_accessibility_file
+		accessibility = get_accessibility_files,
+		test = "workflow/scripts/predict.py"
 	params:
 		pval = config['params_macs']['pval'],
 		genome_size = config['params_macs']['genome_size'],
@@ -14,7 +15,7 @@ rule call_macs_peaks:
 		mem_mb=determine_mem_mb
 	shell: 
 		"""
-		if [[ {input.accessibility} == *tagAlign* ]]; then
+		if [[ "{input.accessibility}" == *tagAlign* ]]; then
 			FORMAT="BED"
 		else
 			FORMAT="AUTO"
