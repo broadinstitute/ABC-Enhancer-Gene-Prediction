@@ -27,9 +27,14 @@ def parse_args():
     parser.add_argument("--output_qc_summary", required=True)
     parser.add_argument("--output_qc_plots", required=True)
     parser.add_argument(
-        "--powerlaw_params_tsv",
-        type=str,
-        help="TSV file containing gamma/scale values according to powerlaw fit",
+        "--hic_gamma",
+        type=float,
+        help="Powerlaw exponent (gamma) to scale to. Must be positive",
+    )
+    parser.add_argument(
+        "--hic_scale",
+        type=float,
+        help="scale of hic data. Must be positive",
     )
     args = parser.parse_args()
     return args
@@ -45,14 +50,7 @@ def generateQCMetrics(args):
             prediction_df, chrom_order, args.outdir, pdf_writer
         )
         pred_metrics = PeakFileQC(pred_metrics, args.macs_peaks, pdf_writer)
-
-        if args.powerlaw_params_tsv:
-            powerlaw_params = pd.read_csv(args.powerlaw_params_tsv, sep="\t").iloc[0]
-            hic_gamma, hic_scale = (
-                powerlaw_params["hic_gamma"],
-                powerlaw_params["hic_scale"],
-            )
-            HiCQC(prediction_df, hic_gamma, hic_scale, pdf_writer)
+        HiCQC(prediction_df, args.hic_gamma, args.hic_scale, pdf_writer)
 
     # Appends Percentage Counts in Promoters into PeakFileQCSummary.txt
     potential_features = ["DHS", "H3K27ac", "ATAC"]

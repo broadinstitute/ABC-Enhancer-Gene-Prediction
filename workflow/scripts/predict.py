@@ -47,7 +47,9 @@ def get_model_argument_parser():
     parser.add_argument("--chrom_sizes", required=True, help="Chromosome sizes file")
 
     # hic
-    parser.add_argument("--hic_dir", default=None, help="HiC directory")
+    parser.add_argument(
+        "--hic_file", default=None, help="HiC file: (file, web link, or directory)"
+    )
     parser.add_argument("--hic_resolution", type=int, help="HiC resolution")
     parser.add_argument(
         "--hic_pseudocount_distance",
@@ -57,8 +59,8 @@ def get_model_argument_parser():
     )
     parser.add_argument(
         "--hic_type",
-        default="juicebox",
-        choices=["juicebox", "bedpe", "avg"],
+        default="hic",
+        choices=["hic", "juicebox", "bedpe", "avg"],
         help="format of hic files",
     )
     parser.add_argument(
@@ -74,9 +76,14 @@ def get_model_argument_parser():
         help="Quantile normalize Hi-C values using powerlaw relationship. This parameter will rescale Hi-C contacts from the input Hi-C data (specified by --hic_gamma and --hic_scale) to match the power-law relationship of a reference cell type (specified by --hic_gamma_reference)",
     )
     parser.add_argument(
-        "--powerlaw_params_tsv",
-        type=str,
-        help="TSV file containing gamma/scale values according to powerlaw fit",
+        "--hic_gamma",
+        type=float,
+        help="Powerlaw exponent (gamma) to scale to. Must be positive",
+    )
+    parser.add_argument(
+        "--hic_scale",
+        type=float,
+        help="scale of hic data. Must be positive",
     )
     parser.add_argument(
         "--hic_gamma_reference",
@@ -218,6 +225,7 @@ def main():
         chromosomes = set(genes["chr"]).intersection(set(enhancers["chr"]))
         if not args.include_chrY:
             chromosomes.discard("chrY")
+        chromosomes = sorted(chromosomes)
     else:
         chromosomes = args.chromosomes.split(",")
 
@@ -225,8 +233,6 @@ def main():
         args.chrom_sizes, sep="\t", header=None, index_col=0
     ).to_dict()[1]
 
-    powerlaw_params = pd.read_csv(args.powerlaw_params_tsv, sep="\t").iloc[0]
-    hic_gamma, hic_scale = powerlaw_params["hic_gamma"], powerlaw_params["hic_scale"]
     for chromosome in chromosomes:
         print("Making predictions for chromosome: {}".format(chromosome))
         t = time.time()
@@ -238,8 +244,8 @@ def main():
             this_enh,
             this_genes,
             args,
-            hic_gamma,
-            hic_scale,
+            args.hic_gamma,
+            args.hic_scale,
             chrom_sizes_map,
         )
         all_putative_list.append(this_chr)
@@ -254,7 +260,7 @@ def main():
     print("Writing output files...")
     all_putative = pd.concat(all_putative_list)
     all_putative["CellType"] = args.cellType
-    if args.hic_dir:
+    if args.hic_file:
         all_putative["hic_contact_squared"] = all_putative["hic_contact"] ** 2
 
     all_putative.loc[all_putative.TargetGeneIsExpressed, :].to_csv(
@@ -282,14 +288,14 @@ def main():
 
 
 def validate_args(args):
-    if args.hic_dir and args.hic_type == "juicebox":
+    if args.hic_file and (args.hic_type == "juicebox" or args.hic_type == "hic"):
         assert (
             args.hic_resolution is not None
-        ), "HiC resolution must be provided if hic_type is juicebox"
+        ), "HiC resolution must be provided if hic_type is hic or juicebox"
 
-    if not args.hic_dir:
+    if not args.hic_file:
         print(
-            "WARNING: Hi-C directory not provided. Model will only compute ABC score using powerlaw!"
+            "WARNING: Hi-C not provided. Model will only compute ABC score using powerlaw!"
         )
 
 

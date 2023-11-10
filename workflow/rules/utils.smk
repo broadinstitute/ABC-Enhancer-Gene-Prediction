@@ -54,43 +54,10 @@ def load_biosamples_config(config):
 	_configure_tss_and_gene_files(biosamples_config)
 	return biosamples_config
 
-def configure_hic_hashes(biosamples_config):
-	"""
-	Create a Map[hash(hic_dir), HIC_COLUMNS]
-	This is done so that we don't recompute hic powerlaw fit
-	when multiple biosamples have the same hic_info
-	"""
-	hic_hashes = {}
-	hic_pairs = biosamples_config[HIC_COLUMNS].drop_duplicates()	
-	for row in hic_pairs.values:
-		hic_dir = row[0]
-		if hic_dir:
-			# Map only contains values with hic_directories
-			hic_hashes[get_hic_dir_hash(row)] = row
-	return hic_hashes
-
 def get_accessibility_file(wildcards):
 	# Inputs have been validated so only DHS or ATAC is provided
 	return BIOSAMPLES_CONFIG.loc[wildcards.biosample, "DHS"] or BIOSAMPLES_CONFIG.loc[wildcards.biosample, "ATAC"]
 
-def get_hic_dir_hash(hic_info_row):
-	return hashlib.sha1(str(hic_info_row).encode()).hexdigest()[:8]
-
-
-def get_hic_powerlaw_fit_file(wildcards):
-	return os.path.join(_get_hic_powerlaw_fit_dir(wildcards), "hic.powerlaw.tsv")
-
-def _get_hic_powerlaw_fit_dir(wildcards):
-	"""
-	If HiC is provided, we store the fit in the HiC hash folder. Otherwise
-	we store under the biosamples folder
-	"""
-	row = BIOSAMPLES_CONFIG.loc[wildcards.biosample, HIC_COLUMNS].values
-	hic_dir = row[0]
-	if hic_dir:
-		return os.path.join(RESULTS_DIR, "HiC_Powerlaw", get_hic_dir_hash(row))
-	else:
-		return os.path.join(RESULTS_DIR, "HiC_Powerlaw", wildcards.biosample)
 
 def _validate_accessibility_feature(row: pd.Series):
 	if row["DHS"] and row["ATAC"]:
@@ -99,15 +66,9 @@ def _validate_accessibility_feature(row: pd.Series):
 		raise InvalidConfig("Must provide either DHS or ATAC accessibility file")
 
 def _validate_hic_info(row: pd.Series):
-	if row["HiC_dir"]:
+	if row["HiC_file"]:
 		if not (row["HiC_type"] and row["HiC_resolution"]):
-			raise InvalidConfig("Must provide HiC type and resolution with directory")
-	else:
-		if not (row["HiC_gamma"] and row["HiC_scale"]):
-			raise InvalidConfig(
-				"If HiC dir not provided, you must provide HiC gamma and scale "
-				"for powerlaw estimate for contact"
-			)
+			raise InvalidConfig("Must provide HiC type and resolution with file")
 
 def _validate_biosamples_config(biosamples_config):
 	"""

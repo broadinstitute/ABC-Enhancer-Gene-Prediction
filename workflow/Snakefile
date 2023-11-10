@@ -11,15 +11,11 @@ conda: "mamba"
 include: "rules/utils.smk"
 config = convert_reference_files(config)
 RESULTS_DIR = config['predictions_results_dir']
-## Load biosamples and hic_hash dictionary
-HIC_COLUMNS = ["HiC_dir", "HiC_type", "HiC_resolution", "HiC_gamma", "HiC_scale"]
 BIOSAMPLES_CONFIG = load_biosamples_config(config)
-HIC_HASHES = configure_hic_hashes(BIOSAMPLES_CONFIG)
 SCRIPTS_DIR = os.path.join(config["ABC_DIR_PATH"], "workflow/scripts")
 include: "rules/macs2.smk"
 include: "rules/candidate_regions.smk"
 include: "rules/neighborhoods.smk"
-include: "rules/write_powerlaw_params.smk"
 include: "rules/predictions.smk"
 include: "rules/qc.smk"
 
@@ -32,10 +28,6 @@ rule all:
 		allPutative = expand(
 			os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.tsv.gz"), biosample=BIOSAMPLES_CONFIG["biosample"]
 		),
-		enhPredictionsFull = expand(
-			os.path.join(RESULTS_DIR, "{biosample}", "Predictions", f"EnhancerPredictionsFull_{filtered_prediction_file_format}.tsv"), biosample=BIOSAMPLES_CONFIG["biosample"]
-		),
 		qcPlots = expand(
 			os.path.join(RESULTS_DIR, "{biosample}", "Metrics", f"QCSummary_{filtered_prediction_file_format}.tsv"), biosample=BIOSAMPLES_CONFIG["biosample"]
 		)
-

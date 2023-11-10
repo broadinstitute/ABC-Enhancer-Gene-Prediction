@@ -1,1 +1,1 @@
-biosample	DHS	ATAC	H3K27ac	default_accessibility_feature	HiC_dir	HiC_type	HiC_resolution	HiC_gamma	HiC_scale	alt_TSS	alt_genes
+biosample	DHS	ATAC	H3K27ac	default_accessibility_feature	HiC_file	HiC_type	HiC_resolution	alt_TSS	alt_genes

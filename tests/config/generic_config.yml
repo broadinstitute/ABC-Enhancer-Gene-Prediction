@@ -17,7 +17,6 @@ ref:
         genome_tss: "reference/hg38/CollapsedGeneBounds.hg38.TSS500bp.bed"
         qnorm: "reference/EnhancersQNormRef.K562.txt"
 
-
 ### RULE SPECIFIC PARAMS
 params_macs:
         pval: 0.1
@@ -36,12 +35,15 @@ params_neighborhoods:
 # These parameters are used to run the Predictions portion of the abc code
 params_predict:
         flags: "--scale_hic_using_powerlaw"
+        hic_gamma: 1.024238616787792
+        hic_scale: 5.9594510043736655
 
 params_filter_predictions:
         score_column: 'ABC.Score'
         threshold: .02
         include_self_promoter: True
         only_expressed_genes: False
+
 
 ### INTERNAL USE ONLY
 

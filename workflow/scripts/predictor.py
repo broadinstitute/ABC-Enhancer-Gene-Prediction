@@ -3,6 +3,7 @@ import sys
 import time
 from typing import Dict
 
+import hicstraw
 import numpy as np
 import pandas as pd
 from hic import (
@@ -21,23 +22,33 @@ def make_predictions(
     pred = make_pred_table(chromosome, enhancers, genes, args.window, chrom_sizes_map)
     pred = annotate_predictions(pred, args.tss_slop)
     pred = add_powerlaw_to_predictions(pred, args, hic_gamma, hic_scale)
-    # if Hi-C directory is not provided, only powerlaw model will be computed
-    if args.hic_dir:
-        hic_file, hic_norm_file, hic_is_vc = get_hic_file(
-            chromosome, args.hic_dir, hic_type=args.hic_type
-        )
-        pred = add_hic_to_enh_gene_table(
-            enhancers,
-            genes,
-            pred,
-            hic_file,
-            hic_norm_file,
-            hic_is_vc,
-            args,
-            hic_gamma,
-            hic_scale,
-            chrom_sizes_map,
-        )
+    # if Hi-C file is not provided, only powerlaw model will be computed
+    if args.hic_file:
+        if args.hic_type == "hic":
+            pred = add_hic_from_hic_file(
+                pred, args.hic_file, chromosome, args.hic_resolution, args.window
+            )
+        else:
+            pred = add_hic_from_directory(
+                chromosome,
+                enhancers,
+                genes,
+                pred,
+                args.hic_file,
+                args,
+                hic_gamma,
+                hic_scale,
+                chrom_sizes_map,
+            )
+
+        # Remove all NaN values so we have valid scores
+        pred.fillna(value={"hic_contact": 0}, inplace=True)
+        # Add powerlaw scaling
+        pred = scale_hic_with_powerlaw(pred, args)
+        # Add pseudocount
+        pred = add_hic_pseudocount(pred)
+        print("HiC Complete")
+
         pred = compute_score(
             pred,
             [pred["activity_base"], pred["hic_contact_pl_scaled_adj"]],
@@ -85,18 +96,82 @@ def make_pred_table(chromosome, enh, genes, window, chrom_sizes_map: Dict[str, i
     return pred
 
 
-def add_hic_to_enh_gene_table(
+def create_df_from_records(records, hic_resolution):
+    bin_data = [[r.binX, r.binY, r.counts] for r in records]
+    df = pd.DataFrame(bin_data, columns=["binX", "binY", "counts"])
+    df["binX"] = np.floor(df["binX"] / hic_resolution).astype(int)
+    df["binY"] = np.floor(df["binY"] / hic_resolution).astype(int)
+    return df
+
+
+def get_chrom_format(hic: hicstraw.HiCFile, chromosome):
+    """
+    hic files can have 'chr1' or just '1' as the chromosome name
+    we need to make sure we're using the format consistent with
+    the hic file
+    """
+    hic_chrom_names = [chrom.name for chrom in hic.getChromosomes()]
+    if hic_chrom_names[1].startswith("chr"):  # assume index 1 should be chr1
+        return chromosome
+    else:
+        return chromosome[3:]
+
+
+def add_hic_from_hic_file(pred, hic_file, chromosome, hic_resolution, window):
+    pred["enh_bin"] = np.floor(pred["enh_midpoint"] / hic_resolution).astype(int)
+    pred["tss_bin"] = np.floor(pred["TargetGeneTSS"] / hic_resolution).astype(int)
+    pred["binX"] = np.min(pred[["enh_bin", "tss_bin"]], axis=1)
+    pred["binY"] = np.max(pred[["enh_bin", "tss_bin"]], axis=1)
+    hic = hicstraw.HiCFile(hic_file)
+    chromosome = get_chrom_format(hic, chromosome)
+    matrix_object = hic.getMatrixZoomData(
+        chromosome, chromosome, "observed", "SCALE", "BP", hic_resolution
+    )
+    start_loci = pred["end"].min()
+    end_loci = pred["end"].max()
+    step_size = 10000 * hic_resolution  # ~10k bins at a time
+    for i in range(start_loci, end_loci, step_size):
+        start = i
+        end = start + step_size
+        records = matrix_object.getRecords(start, end, start - window, end + window)
+        df = create_df_from_records(records, hic_resolution)
+        pred = pred.merge(df, how="left", on=["binX", "binY"], suffixes=(None, "_"))
+        if "counts_" in pred:
+            pred["counts"] = np.max(pred[["counts", "counts_"]], axis=1)
+            pred.drop("counts_", inplace=True, axis=1)
+
+    pred.drop(
+        [
+            "binX",
+            "binY",
+            "enh_idx",
+            "gene_idx",
+            "enh_midpoint",
+            "tss_bin",
+            "enh_bin",
+        ],
+        inplace=True,
+        axis=1,
+        errors="ignore",
+    )
+
+    return pred.rename(columns={"counts": "hic_contact"})
+
+
+def add_hic_from_directory(
+    chromosome,
     enh,
     genes,
     pred,
-    hic_file,
-    hic_norm_file,
-    hic_is_vc,
+    hic_dir,
     args,
     hic_gamma,
     hic_scale,
     chrom_sizes_map,
 ):
+    hic_file, hic_norm_file, hic_is_vc = get_hic_file(
+        chromosome, hic_dir, hic_type=args.hic_type
+    )
     print("Begin HiC")
     # Add hic to pred table
     # At this point we have a table where each row is an enhancer/gene pair.
@@ -217,8 +292,6 @@ def add_hic_to_enh_gene_table(
         # QC juicebox HiC
         pred = qc_hic(pred)
 
-    # Remove all NaN values so we have valid scores
-    pred.fillna(value={"hic_contact": 0}, inplace=True)
     pred.drop(
         [
             "x1",
@@ -240,15 +313,6 @@ def add_hic_to_enh_gene_table(
     )
 
     print("HiC added to predictions table. Elapsed time: {}".format(time.time() - t))
-    # Add powerlaw scaling
-    pred = scale_hic_with_powerlaw(pred, args)
-
-    # Add pseudocount
-    pred = add_hic_pseudocount(pred)
-
-    print("HiC Complete")
-    # print('Elapsed time: {}'.format(time.time() - t))
-
     return pred
 
 
