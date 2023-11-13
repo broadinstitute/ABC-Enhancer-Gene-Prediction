@@ -54,7 +54,7 @@ rule sort_narrowpeaks:
 	params:
 		chrom_sizes = config['ref']['chrom_sizes']
 	conda:
-		"../envs/abcenv.yml"
+		os.path.join(config["env"],"abcenv.yml")
 	output:
 		narrowPeakSorted = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted")
 	resources:

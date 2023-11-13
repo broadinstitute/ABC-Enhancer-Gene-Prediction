@@ -13,7 +13,7 @@ rule create_neighborhoods:
 		qnorm = config['ref']['qnorm'] if config['params_neighborhoods']['use_qnorm'] else None,
 		scripts_dir = SCRIPTS_DIR
 	conda:
-		"../envs/abcenv.yml"
+		os.path.join(config["env"],"abcenv.yml")
 	output: 
 		enhList = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "EnhancerList.txt"),
 		geneList = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "GeneList.txt"),

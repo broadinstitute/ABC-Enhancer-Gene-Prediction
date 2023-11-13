@@ -23,7 +23,7 @@ rule create_predictions:
 		accessibility_feature = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'default_accessibility_feature'],
 		scripts_dir = SCRIPTS_DIR
 	conda:
-		"../envs/abcenv.yml"
+		os.path.join(config["env"],"abcenv.yml")
 	output: 
 		allPutative = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.tsv.gz"),
 		allPutativeNonExpressed = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz"),
@@ -56,7 +56,7 @@ rule filter_predictions:
 		only_expressed_genes = config['params_filter_predictions']['only_expressed_genes'],
 		scripts_dir = SCRIPTS_DIR
 	conda:
-		"../envs/abcenv.yml"
+		os.path.join(config["env"],"abcenv.yml")
 	output:
 		enhPredictionsFull = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", f"EnhancerPredictionsFull_{FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE}.tsv"),
 		enhPredictionsFullBedpe = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", f"EnhancerPredictionsFull_{FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE}.bedpe"),

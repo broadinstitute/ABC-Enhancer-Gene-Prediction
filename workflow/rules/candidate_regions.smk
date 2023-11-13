@@ -12,7 +12,7 @@ rule make_candidate_regions:
 		output_dir = os.path.join(RESULTS_DIR, "{biosample}", "Peaks"),
 		scripts_dir = SCRIPTS_DIR
 	conda:
-		"../envs/abcenv.yml"
+		os.path.join(config["env"],"abcenv.yml")
 	output: 
 		candidateRegions = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed")
 	resources:
