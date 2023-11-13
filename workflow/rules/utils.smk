@@ -13,9 +13,8 @@ MAX_MEM_MB = 250 * 1000  # 250GB
 def determine_mem_mb(wildcards, input, attempt, min_gb=8):
 	# Memory resource calculator for snakemake rules
 	input_size_mb = input.size_mb
-	for _, file in input.items():
-		if file.endswith('gz'):
-			input_size_mb *= 5  # assume gz compressesed the file <= 5x
+	if ".gz" in str(input):
+		input_size_mb *= 5  # assume gz compressesed the file <= 5x
 	attempt_multiplier = 2 ** (attempt - 1)  # Double memory for each retry
 	mem_to_use_mb = attempt_multiplier *  max(4 * input_size_mb, min_gb * 1000)
 	return min(mem_to_use_mb, MAX_MEM_MB)
@@ -54,9 +53,10 @@ def load_biosamples_config(config):
 	_configure_tss_and_gene_files(biosamples_config)
 	return biosamples_config
 
-def get_accessibility_file(wildcards):
+def get_accessibility_files(wildcards):
 	# Inputs have been validated so only DHS or ATAC is provided
-	return BIOSAMPLES_CONFIG.loc[wildcards.biosample, "DHS"] or BIOSAMPLES_CONFIG.loc[wildcards.biosample, "ATAC"]
+	files = BIOSAMPLES_CONFIG.loc[wildcards.biosample, "DHS"] or BIOSAMPLES_CONFIG.loc[wildcards.biosample, "ATAC"]
+	return files.split(",")
 
 
 def _validate_accessibility_feature(row: pd.Series):

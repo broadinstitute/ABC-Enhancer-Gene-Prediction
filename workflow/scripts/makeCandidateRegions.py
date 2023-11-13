@@ -25,10 +25,10 @@ def parseargs(required_args=True):
         help="narrowPeak file output by macs2. Must include summits (--call-summits)",
     )
     parser.add_argument(
-        "--bam",
+        "--accessibility",
         required=required_args,
-        nargs="?",
-        help="DNAase-Seq or ATAC-Seq bam/tagalign file",
+        nargs="+",
+        help="List of DNAase-Seq or ATAC-Seq bam/tagalign files",
     )
     parser.add_argument(
         "--chrom_sizes",
@@ -86,7 +86,7 @@ def processCellType(args):
     if not args.ignoreSummits:
         make_candidate_regions_from_summits(
             macs_peaks=args.narrowPeak,
-            accessibility_file=args.bam,
+            accessibility_files=args.accessibility,
             genome_sizes=args.chrom_sizes,
             genome_sizes_bed=args.chrom_sizes_bed,
             regions_includelist=args.regions_includelist,
@@ -98,7 +98,7 @@ def processCellType(args):
     else:
         make_candidate_regions_from_peaks(
             macs_peaks=args.narrowPeak,
-            accessibility_file=args.bam,
+            accessibility_files=args.accessibility,
             genome_sizes=args.chrom_sizes,
             genome_sizes_bed=args.chrom_sizes_bed,
             regions_includelist=args.regions_includelist,

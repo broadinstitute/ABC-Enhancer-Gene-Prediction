@@ -87,10 +87,13 @@ biosamples config is a tsv separated file with the following columns
 	- Name to associate with your sample. e.g K562
 #. DHS
 	- DNAse-seq BAM file (sorted w/ .bai index file existence)
+	- Can pass in multiple files separated by ','
 #. ATAC
 	- ATAC-seq TagAlign file (sorted w/ Tabix .tbi index file existence)
+	- Can pass in multiple files separated by ','
 #. H3K27ac
 	- H3K27ac ChIP seq BAM file (sorted w/ .bai index file existence)
+	- Can pass in multiple files separated by ','
 #. default_accessibility_feature
 	- Choices: "DHS", "ATAC" (If you provided DHS BAM file, you would put "DHS" here)
 #. HiC_file
