@@ -2,7 +2,6 @@
 rule call_macs_peaks: 
 	input:
 		accessibility = get_accessibility_files,
-		test = "workflow/scripts/predict.py"
 	params:
 		pval = config['params_macs']['pval'],
 		genome_size = config['params_macs']['genome_size'],
