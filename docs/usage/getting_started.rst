@@ -11,6 +11,7 @@ Installation
 	- `<https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_
 	- To install mamba: ``conda create -n mamba -c conda-forge mamba -y``
 		- We recommend mamba as using conda can take 1hr+ for setup
+	- Make sure you're not using strict channel priorities: ``conda config --set channel_priority flexible``
 
 
 Setup Conda Environment
@@ -22,6 +23,7 @@ Creating the abc conda environment may take a while (~15min with mamba. > 1hr wi
 	$ conda activate mamba
 	$ mamba env create -f workflow/envs/abcenv.yml
 	$ conda activate abc-env
+
 
 - Use `workflow/envs/release.yml` if you'd like the same exact conda environment
 
