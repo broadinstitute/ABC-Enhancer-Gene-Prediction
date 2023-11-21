@@ -2,9 +2,9 @@ class InvalidConfig(Exception):
 	pass 
 
 wildcard_constraints:
-    threshold="\d+\.\d+",
-	separator=".{0}|_",
-	other_flags=".{0}|[^0-9]+"  # match empty strings or more flags
+	threshold=r"\d+\.\d+",
+	separator=r".{0}|_",
+	other_flags=r".{0}|[^0-9]+"  # match empty strings or more flags
 
 FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE = "threshold{threshold}{separator}{other_flags}"
 
