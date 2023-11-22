@@ -102,7 +102,7 @@ def get_model_argument_parser():
     parser.add_argument(
         "--promoter_activity_quantile_cutoff",
         type=float,
-        default=0.29,
+        default=0.30,
         help="Quantile cutoff on promoter activity. Used to consider a gene 'expressed' in the absence of expression data",
     )
 

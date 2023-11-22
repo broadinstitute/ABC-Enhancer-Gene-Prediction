@@ -15,7 +15,7 @@ hic_gamma 1.024238616787792
 hic_scale 5.9594510043736655
 hic_gamma_reference 0.87
 expression_cutoff 1
-promoter_activity_quantile_cutoff 0.29
+promoter_activity_quantile_cutoff 0.3
 make_all_putative False
 use_hdf5 False
 window 5000000
