@@ -43,6 +43,10 @@ You can see what commands snakemake will run
 
 To read about each step, check out :ref:`ABC-methods`
 
+To sanity check your output from ABC, you can check out the QC metrics in the ``{ABC_DIR}/results/{biosample_name}/Metrics`` folder. 
+For comparison, you can find the QC plots for our K562 run `here <https://drive.google.com/file/d/1fyd7ONKDgP646fOIafJhXcXnAk_6LCi1/view?usp=sharing>`_.
+The metrics includes plots of things such as number of enhancers per gene and number of enhancer-genes per chromosome.
+
 
 Configuring ABC
 ---------------
