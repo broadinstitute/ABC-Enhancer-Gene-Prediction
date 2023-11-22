@@ -89,29 +89,30 @@ biosamples config is a tsv separated file with the following columns
 	- Name to associate with your sample. e.g K562
 #. DHS
 	- DNAse-seq BAM file (sorted w/ .bai index file existence)
-	- Can pass in multiple files separated by ','
+	- Can pass in multiple files separated by ``,``
 #. ATAC
-	- ATAC-seq TagAlign file (sorted w/ Tabix .tbi index file existence)
-	- Can pass in multiple files separated by ','
+	- Bulk or single cell ATAC-seq TagAlign file (sorted w/ Tabix .tbi index file existence)
+	- Can pass in multiple files separated by ``,``
 #. H3K27ac
 	- H3K27ac ChIP seq BAM file (sorted w/ .bai index file existence)
-	- Can pass in multiple files separated by ','
+	- Can pass in multiple files separated by ``,``
 #. default_accessibility_feature
 	- Choices: "DHS", "ATAC" (If you provided DHS BAM file, you would put "DHS" here)
 #. HiC_file
-	- Filepath/link to .hic file (easiest) or hic directory for the biosample cell type. 
+	- Filepath/link to a .hic file (recommended) or hic directory for the biosample cell type. 
 	- If not provided, powerlaw is used to approximate contact
-	- Example: 
-		- filepath: `/path/to/k562.hic`
-		- link: `https://www.encodeproject.org/files/ENCFF621AIY/@@download/ENCFF621AIY.hic`
-		- Directory: `/path/to/HiC/avg_track`
+	- Examples: 
+		- if filepath: `/path/to/k562.hic`
+		- if link: `https://www.encodeproject.org/files/ENCFF621AIY/@@download/ENCFF621AIY.hic`
+		- if directory: `/path/to/HiC`
 #. HiC_type
 	- Choices: hic, juicebox, avg, bedpe
-	- If you passed in a .hic file, use `hic`
-	- If you dumped hic into a directory via JuicerTools, use `juicebox`
+	- If you passed in a .hic file, use ``hic``
+	- If you dumped hic into a directory via JuicerTools, use ``juicebox``
 	- If you have a bedpe file for contact, it should be a tab delimited file containing 8 columns (chr1,start1,end1,chr2,start2,end2,name,score)
 #. HiC_resolution (int)
-	- Resolution of the HiC data. 5KB is typically a good choice (*explain what this means*)
+	- Recommended to use 5KB (kilobases)
+	- 5KB means dna regions are bucketed into 5KB bins and we measure contact between those bins
 #. alt_TSS (optional; not recommended to fill)
 	- Alternative TSS reference file 
 #. alt_genes (optional; not recommended to fill)
@@ -119,7 +120,7 @@ biosamples config is a tsv separated file with the following columns
 
 Required columns
 	- biosample
-	- DHS or ATAC
+	- DHS or ATAC file
 	- default_accessibility_feature
 
 If you don't have any cell specific HiC data, the recommendation is to not fill in any of the HiC columns, which will 
