@@ -3,9 +3,7 @@
 Detailed Methods
 ================
 
-To-do:  This page should include detailed methods for each of the main operations for ABC
-
-We may want to include benchmarking figures or other methodological details e.g. from previous papers
+This section describes in more detail the key steps involved in calculating the ABC score, and discusses considerations around implementation choices that may be of interest to users and developers of ABC.
 
 Key concepts:
 
@@ -14,6 +12,7 @@ Key concepts:
 - Estimating enhancer-promoter 3D contact
 - Making predictions with different combinations of input datasets
 - Interpreting the ABC score
+
 
 1. Defining candidate elements
 ------------------------------
