@@ -17,15 +17,11 @@ Let's download an example fragment file from the internet
 
 .. code-block:: bash
 
-    (abc-env) [atan5133@sh03-04n23 /oak/stanford/groups/engreitz/Users/atan5133/data] 
-    (job 37050919) $ wget https://www.encodeproject.org/files/ENCFF794UXO/
-    @@download/ENCFF794UXO.tar.gz
+    (abc-env) [atan5133@sh03-04n23 /oak/stanford/groups/engreitz/Users/atan5133/data] (job 37050919) $ wget https://www.encodeproject.org/files/ENCFF794UXO/@@download/ENCFF794UXO.tar.gz
     
-    (abc-env) [atan5133@sh03-04n23 /oak/stanford/groups/engreitz/Users/atan5133/data] 
-    (job 37050919) $ tar -xf ENCFF794UXO.tar.gz
+    (abc-env) [atan5133@sh03-04n23 /oak/stanford/groups/engreitz/Users/atan5133/data] (job 37050919) $ tar -xf ENCFF794UXO.tar.gz
 
-    (abc-env) [atan5133@sh03-04n23 /oak/stanford/groups/engreitz/Users/atan5133/data] 
-    (job 37050919) $ ls encode_scatac_dcc_2/results/ENCSR308ZGJ-1/fragments/
+    (abc-env) [atan5133@sh03-04n23 /oak/stanford/groups/engreitz/Users/atan5133/data] (job 37050919) $ ls encode_scatac_dcc_2/results/ENCSR308ZGJ-1/fragments/
         fragments.tsv.gz  fragments.tsv.gz.tbi
 
 
@@ -33,19 +29,15 @@ Let's convert the fragment file to .tagAlign and index it
 
 .. code-block:: bash
 
-    (abc-env) [atan5133@sh03-04n23 /oak/stanford/groups/engreitz/Users/atan5133/data] 
-    (job 37050919) $ cd encode_scatac_dcc_2/results/ENCSR308ZGJ-1/fragments
+    (abc-env) [atan5133@sh03-04n23 /oak/stanford/groups/engreitz/Users/atan5133/data] (job 37050919) $ cd encode_scatac_dcc_2/results/ENCSR308ZGJ-1/fragments
 
-    (abc-env) [atan5133@sh03-04n23 /oak/stanford/groups/engreitz/Users/atan5133/data] 
-    (job 37050919) $ export LC_ALL=C  # This makes sorting faster
+    (abc-env) [atan5133@sh03-04n23 /oak/stanford/groups/engreitz/Users/atan5133/data/encode_scatac_dcc_2/results/ENCSR308ZGJ-1/fragments] (job 37050919) $ export LC_ALL=C  # This makes sorting faster
     
-    (abc-env) [atan5133@sh03-04n23 /oak/stanford/groups/engreitz/Users/atan5133/data/
-    encode_scatac_dcc_2/results/ENCSR308ZGJ-1/fragments] (job 37050919) $ zcat 
-    fragments.tsv.gz | sed '/^#/d' | awk -v OFS='\t' '{mid=int(($2+$3)/2); print $1,
-    $2,mid,"N",1000,"+"; print $1,mid,$3,"N",1000,"-"}' | sort -k 1,1V -k 2,2n -k3,3n --parallel 5 | bgzip -c > 
-    tagAlign.gz  # Adjust --parallel 5 based on number of cpus you have. The more cpus, the faster
+    (abc-env) [atan5133@sh03-04n23 /oak/stanford/groups/engreitz/Users/atan5133/data/encode_scatac_dcc_2/results/ENCSR308ZGJ-1/fragments] (job 37050919) $ zcat fragments.tsv.gz | sed '/^#/d' | awk -v OFS='\t' '{mid=int(($2+$3)/2); print $1,$2,mid,"N",1000,"+"; print $1,mid,$3,"N",1000,"-"}' | sort -k 1,1V -k 2,2n -k3,3n --parallel 5 | bgzip -c > tagAlign.gz  # Adjust --parallel 5 based on number of cpus you have. The more cpus, the faster
 
-The sort step of the last command typically takes a while.
+    (abc-env) [atan5133@sh03-04n24 /oak/stanford/groups/engreitz/Users/atan5133/data/encode_scatac_dcc_2/results/ENCSR308ZGJ-1/fragments] (job 37151429) $ tabix -p bed tagAlign.gz
+
+Sorting the tagAlign typically takes a while and varies based on the size of the file.
     
 
 2. Creating Your Config
@@ -92,4 +84,4 @@ Update the `ABC Config <https://github.com/broadinstitute/ABC-Enhancer-Gene-Pred
 
 
 All your results will go to the ``results`` directory of your ABC directory! 
-The actual predictions will be stored under the ``results/{biosample}/Predictions`` folder
+The actual predictions will be stored under the ``results/{biosample}/Predictions`` folder.
