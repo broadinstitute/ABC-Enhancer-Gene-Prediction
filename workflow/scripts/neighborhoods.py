@@ -3,19 +3,14 @@ import os
 import os.path
 import time
 import traceback
-from subprocess import (
-    PIPE,
-    Popen,
-    check_call,
-    check_output,
-)
+from subprocess import PIPE, Popen, check_call, check_output
 
 import numpy as np
 import pandas as pd
 import pyranges as pr
 import pysam
 from scipy import interpolate
-from tools import run_command, run_piped_commands, df_to_pyranges
+from tools import df_to_pyranges, run_command, run_piped_commands
 
 pd.options.display.max_colwidth = (
     10000  # seems to be necessary for pandas to read long file names... strange
@@ -452,7 +447,7 @@ def count_bam(
 def count_tagalign(tagalign, bed_file, output, genome_sizes, genome_sizes_bed):
     index_file = tagalign + ".tbi"
     if not os.path.exists(index_file):
-        cmd = f"tabix -p bed {tagalign} | cut -f1-3"
+        cmd = f"tabix -p bed {tagalign}"
         run_command(cmd)
 
     remove_alt_chr_cmd = f"bedtools intersect -u -a {tagalign} -b {genome_sizes_bed}"

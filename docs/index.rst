@@ -46,6 +46,7 @@ v0.2 (version for [1])
 
    usage/getting_started
    usage/methods
+   usage/scATAC
 
 
 .. toctree::
