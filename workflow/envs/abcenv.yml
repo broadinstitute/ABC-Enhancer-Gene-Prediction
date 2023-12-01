@@ -24,6 +24,7 @@ dependencies:
   - tabix
   - yaml
   # The following 3 are needed to compile hic-straw in HPC
+  # You may need to remove them if working on macosx
   - gcc
   - gxx
   - zlib
