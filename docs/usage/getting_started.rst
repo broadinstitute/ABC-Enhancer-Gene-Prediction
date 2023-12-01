@@ -11,9 +11,9 @@ Installation
 	- Utilize the **dev** branch: ``git checkout dev``
 #. Make sure you have conda & mamba installed
 	- `<https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_
+	- Make sure you're not using strict channel priorities: ``conda config --set channel_priority flexible``. Otherwise, you may encounter package conflicts later when installing abc. 
 	- To install mamba: ``conda create -n mamba -c conda-forge mamba -y``
 		- We recommend mamba as using conda can take 1hr+ for setup
-	- Make sure you're not using strict channel priorities: ``conda config --set channel_priority flexible``
 
 
 Setup Conda Environment
@@ -27,7 +27,7 @@ Creating the abc conda environment may take a while (~15min with mamba. > 1hr wi
 	$ conda activate abc-env
 
 
-- Use `workflow/envs/release.yml` if you'd like the same exact conda environment
+- Use `workflow/envs/release.yml` if you'd like the exact same abc conda environment as when ABC was released (we recommend using the abcenv.yml for most cases)
 
 Running ABC
 -----------
