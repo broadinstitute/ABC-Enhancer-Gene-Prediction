@@ -26,4 +26,7 @@ If you need to add images, videos, or make a lot of changes to different files, 
 #. Checkout the latest version of the `dev` branch
 #. Modify/add docs under the `docs` directory
 #. Preview your changes by running `make html` in the `docs` directory. Your built html files can be found under `docs/_build/html`. Open up `index.html` or any other html file
+   
+   Note: Make sure you're using the `abc-env` conda environment to avoid compilation errors.
+
 #. Push your code to github and make a PR
