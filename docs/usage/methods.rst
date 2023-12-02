@@ -145,9 +145,20 @@ Enhancer activity in the ABC model is estimated by counting reads in peaks (from
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Datasets such as DNase-seq, ATAC-seq, and H3K27ac ChIP-seq often have varying signal-to-noise ratios (e.g., % reads in peaks, TSS enrichment). This changes the performance and thresholds needed for ABC model. To account for this, we apply quantile normalization on input datasets to match a reference dataset. As reference, we currently use datasets in K562, because we have CRISPR data to benchmark the model in that system.
 
-2.3. Using different combinations of assays to estimate enhancer activity [Andreas to add]
+2.3. Using different chromatin assays to estimate enhancer activity [Andreas to add]
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-e.g. note differences in perofrmanc eofr ATAC, DHS, H3K27ac, possibly add the ENCODE activity assay figure here
+ABC uses DNase-seq and optionally H3K27ac ChIP-seq to estimate enhancer activity, but numerous other
+chromatin assays exist, including chromatin accessibility assays, TF ChIP-seq and histone ChIP-seq.
+To investigate which assays perform best in the ABC framework, we've built ABC models where activity
+was measured by one of 513 ENCODE 1D chromatin experiments that could represent enhancer activity.
+
+Among all assays, ABC models using DNase-seq or H3K27ac ChIP-seq ranked among the top 10 when
+benchmarking the performance of these models against CRISPR enhancer perturbation results. Given the
+availability of DNase-seq and H3K27ac ChIP-seq datasets (e.g. www.encodeproject.org), these two
+assays provide the best performance to build models that can be applied across different cell types
+and tissues. Of note, bulk ATAC-seq performed worse than DNase-seq in this comparison.
+
+.. image:: /images/abc_enh_assays_perf.png
 
 
 3. Estimating enhancer-promoter 3D contact
