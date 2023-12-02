@@ -3,7 +3,7 @@ scATAC Walkthrough
 
 About
 -------------------------
-ABC can predict cell-type-specific enhancer-gene interactions using only the chromatin accessibility profile obtained through scATAC-seq. Given the sparsity of scATAC data, we recommend pseudo-bulking the scATAC fragments by cell cluster. Each pseudo-bulked scATAC profile should contains at least 3 million (preferably 6 million) unique fragments to ensure optimal performance.
+ABC can predict cell-type-specific enhancer-gene interactions using only the chromatin accessibility profile obtained through scATAC-seq. Given the sparsity of scATAC data, we recommend pseudo-bulking the scATAC fragments by cell cluster. Each pseudo-bulked scATAC profile should contain at least 3 million (preferably 6 million) unique fragments to ensure optimal performance.
 
 .. admonition:: Prerequisite
 
