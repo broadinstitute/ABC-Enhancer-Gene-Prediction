@@ -122,34 +122,28 @@ Description:
 		--qnorm reference/EnhancersQNormRef.K562.txt \
 		--H3K27ac example_chr/chr22/ENCFF790GFL.chr22.sorted.se.bam
 
-Key concepts to explain in this section:
-- Activity is estimated by read count
-- Quantile normalization of activity
-- Which assays perform well for estimating activity
-
-
-
-2.1. Activity scales with read counts [Jesse to add]
+2.1. Activity scales with read counts 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Enhancer activity in the ABC model is estimated by counting reads in peaks (from DNase-seq, H3K27ac ChIP-seq, etc.) in peaks. The quantitative signal in these assays in informative regarding the strength of enhancers, and the ABC model assumes that this relationship is linear.
 
-2.2. Quantile normalization [Jesse to add]
+2.2. Quantile normalization for Activity
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Datasets such as DNase-seq, ATAC-seq, and H3K27ac ChIP-seq often have varying signal-to-noise ratios (e.g., % reads in peaks, TSS enrichment). This changes the performance and thresholds needed for ABC model. To account for this, we apply quantile normalization on input datasets to match a reference dataset. As reference, we currently use datasets in K562, because we have CRISPR data to benchmark the model in that system.
 
 2.3. Using different combinations of assays to estimate enhancer activity [Andreas to add]
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 e.g. note differences in perofrmanc eofr ATAC, DHS, H3K27ac, possibly add the ENCODE activity assay figure here
 
 
-3. Estimating enhancer-promoter 3D contact (Jesse to edit)
+3. Estimating enhancer-promoter 3D contact
 ------------------------------------------
-Intro about concept of estimating enhancer-promoter 3D contact frequency by counting reads in Hi-C
+The ABC model assumes that enhancer effects on gene expression vary linearly with 3D enhancer-promoter contact. In the initial version of the ABC model, we used quantitative observed signals from Hi-C datasets to estimate 3D contact (normalized by sequencing depth, but not by genomic distance). 
 
-We have different ways of estimating contact
-	- Cell type specific Hi-C
-	- Cell type average Hi-C
-	- Power-law function of distance
+We now recommend selecting from one of three strategies to estimate enhancer-promoter 3D contact:
 
-Importance of Hi-C and how a lot is coming as a function of distance
+- *Cell-type specific Hi-C data*. If you have high-resolution Hi-C data available (e.g., 2+ billion reads for a genome-wide map), then using this data provides best performance for the model (see more details below)
+- *A power law function of genomic distance*. If Hi-C data is not available, the simplest option that performs well is to estimate 3D contacts using a power law function of genomic distance. This power-law relationship explains >70% of the variance in Hi-C data (in situ Hi-C, 5-Kb resolution), and is sufficient for good performance, especially for shorter-range enhancer-gene pairs. This option should also be used when applying ABC to non-human organisms.
+- *Cell-type average Hi-C data*. Another option for human samples is to use a cell-type averaged Hi-C map, in which the value for a given enhancer-promoter pair represents the average across available cell types. This method captures the relationship with genomic distance plus cell-type invariant 3D features such as certain long-range CTCF-mediated loops or domain boundaries.
 
 
 Example code for each:
@@ -185,6 +179,26 @@ Powerlaw will be fit to the HiC dir if you use snakemake. If you wish to fit man
 		--hic_resolution 5000 \
 		--outDir example_chr22/input_data/HiC/raw/powerlaw/ \
 
+
+3.5. Detailed considerations regarding estimation of 3D contact from Hi-C data
+
+Starting from raw read counts in a Hi-C matrix, we perform several processing steps to normalize the data and handle missing or sparse data.
+
+Normalization:
+
+- We use SCALE or KR normalization to normalize by coverage in rows and columns
+- For rows and columns from ENCODE Hi-C experiments corresponding to SCALE normalization factors < 0.25, we did not use SCALE normalization (these typically correspond to 5-kb bins with very few reads). Instead, we linearly interpolated the Hi-C signal in these bins by calculating an expected value based on power-law fit
+- Each diagonal entry of the Hi-C matrix was replaced by the maximum of its four neighboring entries. This step is taken because the diagonal of the Hi-C contact map corresponds to the measured contact frequency between a 5-kb region of the genome and itself. The signal in bins on the diagonal can include restriction fragments that self-ligate to form a circle, or adjacent fragments that re-ligate, which are not representative of contact frequency. Empirically, we observed that the Hi-C signal in the diagonal bin was not well correlated with either of its neighboring bins and was influenced by the number of restriction sites contained in the bin.
+
+We then compute Contact for an element-gene pair by rescaling the data as follows: 
+
+- We set the Contact of the element-gene pair to the Hi-C signal at the bin of this row corresponding to the midpoint of E. For element-gene pairs that do not have a corresponding contact value (i.e., NaN), we set contact to zero. 
+- For distances greater than 5 kb, we added a small adjustment (pseudocount) based on the power law expected count at a given distance threshold (as predicted by the power-law relationship between contact frequency and genomic distance). The distance threshold is usually determined by the resolution of the Hi-C data used. Distances less than 5 kb were given the pseudocount computed at 5 kb. We compute the power law by utilizing the steps in Section 6.3. 
+- We found that different Hi-C datasets have slightly different power-law parameters. To weight all cell types equally in generating an average Hi-C profile, we scale the Hi-C profile in a given cell type by the cell-type specific gamma parameter from the power law relationship in that cell type. The scaling factor at distance d is given by d ^ (gamma_ref – gamma_celltype), where gamma_ref is the reference gamma parameter. 
+
+Other considerations:
+
+- We currently use Hi-C data at 5-Kb resolution.  Note that increasing the resolution is expected to affect the performance of the model both because of the potential sparsity in the data and because of the approach to normalizing Contact close to the TSS described above.
 
 
 4. Making predictions with different combinations of input datasets  (Andreas to add performance comparison plots)
