@@ -38,14 +38,15 @@ Description:
 .. code-block:: console
 
 	$ python workflow/scripts/makeCandidateRegions.py \
-		--narrowPeak results/K562_chr22/Peaks/macs2_peaks.narrowPeak.sorted \
-		--bam example_chr/chr22/ENCFF860XAE.chr22.sorted.se.bam \
-		--outDir results/K562_chr22/Peaks \
-		--chrom_sizes reference/hg38/GRCh38_EBV.no_alt.chrom.sizes.tsv \
-		--regions_blocklist reference/hg38/GRCh38_unified_blacklist.bed \
-		--regions_includelist example_chr/chr22/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.hg38.TSS500bp.bed \
-		--peakExtendFromSummit 250 \
-		--nStrongestPeak 150000
+	    --narrowPeak results/K562_chr22/Peaks/macs2_peaks.narrowPeak.sorted \
+	    --accessibility example_chr/chr22/ENCFF860XAE.chr22.sorted.se.bam \
+	    --outDir results/K562_chr22/Peaks \
+	    --chrom_sizes reference/hg38/GRCh38_EBV.no_alt.chrom.sizes.tsv \
+	    --chrom_sizes_bed results/tmp/reference/hg38/GRCh38_EBV.no_alt.chrom.sizes.tsv.bed \
+	    --regions_blocklist reference/hg38/GRCh38_unified_blacklist.bed \
+	    --regions_includelist example_chr/chr22/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.hg38.TSS500bp.bed \
+	    --peakExtendFromSummit 250 \
+	    --nStrongestPeak 150000
 
 The method of defining candidate elements includes the following steps:
 
@@ -112,15 +113,16 @@ Description:
 .. code-block:: console
 
 	$ python workflow/scripts/run.neighborhoods.py \
-		--candidate_enhancer_regions results/K562_chr22/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed  \
-		--DHS example_chr/chr22/ENCFF860XAE.chr22.sorted.se.bam \
-		--default_accessibility_feature DHS \
-		--chrom_sizes reference/hg38/GRCh38_EBV.no_alt.chrom.sizes.tsv \
-		--outdir results/K562_chr22/Neighborhoods \
-		--genes example_chr/chr22/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.hg38.bed.sorted.uniq \
-		--ubiquitously_expressed_genes reference/UbiquitouslyExpressedGenes.txt \
-		--qnorm reference/EnhancersQNormRef.K562.txt \
-		--H3K27ac example_chr/chr22/ENCFF790GFL.chr22.sorted.se.bam
+	    --candidate_enhancer_regions results/K562_chr22/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed \
+	    --DHS example_chr/chr22/ENCFF860XAE.chr22.sorted.se.bam \
+	    --default_accessibility_feature DHS \
+	    --chrom_sizes reference/hg38/GRCh38_EBV.no_alt.chrom.sizes.tsv \
+	    --chrom_sizes_bed results/tmp/reference/hg38/GRCh38_EBV.no_alt.chrom.sizes.tsv.bed \
+	    --outdir results/K562_chr22/Neighborhoods \
+	    --genes results/K562_chr22/processed_genes_file.bed \
+	    --ubiquitously_expressed_genes reference/UbiquitouslyExpressedGenes.txt \
+	    --qnorm reference/EnhancersQNormRef.K562.txt \
+	    --H3K27ac example_chr/chr22/ENCFF790GFL.chr22.sorted.se.bam
 
 2.1. Activity scales with read counts 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -146,41 +148,95 @@ We now recommend selecting from one of three strategies to estimate enhancer-pro
 - *Cell-type average Hi-C data*. Another option for human samples is to use a cell-type averaged Hi-C map, in which the value for a given enhancer-promoter pair represents the average across available cell types. This method captures the relationship with genomic distance plus cell-type invariant 3D features such as certain long-range CTCF-mediated loops or domain boundaries.
 
 
-Example code for each:
+Example biosample_config.tsv for each type:
 
-3.1. Cell-type average Hi-C data (recommended)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+3.1. Cell-type specific Hi-C data (best)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-3.2. Cell-type specific Hi-C data
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. list-table::
+   :header-rows: 1
+   :widths: auto
 
-3.3. Power-law function of distance
+   * - biosample
+     - DHS
+     - ATAC
+     - H3K27ac
+     - default_accessibility_feature
+     - HiC_file
+     - HiC_type
+     - HiC_resolution
+     - alt_TSS
+     - alt_genes
+   * - K562
+     - file/to/K562.bam
+     - 
+     - 
+     - DHS
+     - https://www.encodeproject.org/files/ENCFF621AIY/@@download/ENCFF621AIY.hic
+     - hic
+     - 5000
+     - 
+     - 
+
+3.2. Power-law function of distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-3.4. Pipeline to Download Hi-C data
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-You'll need to download HiC data to a local directory via juicer
+.. list-table::
+   :header-rows: 1
+   :widths: auto
 
-.. code-block:: console
+   * - biosample
+     - DHS
+     - ATAC
+     - H3K27ac
+     - default_accessibility_feature
+     - HiC_file
+     - HiC_type
+     - HiC_resolution
+     - alt_TSS
+     - alt_genes
+   * - K562
+     - file/to/K562.bam
+     - 
+     - 
+     - DHS
+     - 
+     - 
+     -
+     - 
+     - 
 
-	$ python workflow/scripts/juicebox_dump.py  \
-		--hic_file https://hicfiles.s3.amazonaws.com/hiseq/k562/in-situ/combined_30.hic \
-		--juicebox "java -jar juicer_tools.jar" \
-		--outdir example_chr22/input_data/HiC/raw/ \
-		--chromosomes 22
+3.3. Cell-type average Hi-C data 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. list-table::
+   :header-rows: 1
+   :widths: auto
 
-Powerlaw will be fit to the HiC dir if you use snakemake. If you wish to fit manually, you can run
+   * - biosample
+     - DHS
+     - ATAC
+     - H3K27ac
+     - default_accessibility_feature
+     - HiC_file
+     - HiC_type
+     - HiC_resolution
+     - alt_TSS
+     - alt_genes
+   * - K562
+     - file/to/K562.bam
+     - 
+     - 
+     - DHS
+     - https://s3.us-central-1.wasabisys.com/aiden-encode-hic-mirror/bifocals_iter2/tissues.hic
+     - hic
+     - 5000
+     - 
+     - 
 
-.. code-block:: console
-
-	$ python src/compute_powerlaw_fit_from_hic.py \
-		--hic_dir example_chr22/input_data/HiC/raw/ \
-		--hic_type juicebox \
-		--hic_resolution 5000 \
-		--outDir example_chr22/input_data/HiC/raw/powerlaw/ \
+If you run into network issues, download the .hic file locally and replace the web link with your local file link
 
 
-3.5. Detailed considerations regarding estimation of 3D contact from Hi-C data
+3.4. Detailed considerations regarding estimation of 3D contact from Hi-C data
 
 Starting from raw read counts in a Hi-C matrix, we perform several processing steps to normalize the data and handle missing or sparse data.
 
@@ -223,19 +279,20 @@ Description:
 
 .. code-block:: console
 
-	$ python workflow/scripts/predict.py  \
-		--enhancers results/K562_chr22/Neighborhoods/EnhancerList.txt \
-		--outdir results/K562_chr22/Predictions \
-		--powerlaw_params_tsv results/HiC_Powerlaw/b08206e1/hic.powerlaw.tsv \
-		--score_column ABC.Score \
-		--chrom_sizes reference/hg38/GRCh38_EBV.no_alt.chrom.sizes.tsv \
-		--accessibility_feature DHS \
-		--cellType K562_chr22 \
-		--genes results/K562_chr22/Neighborhoods/GeneList.txt \
-		--hic_dir example_chr/HiC_K562 \
-		--hic_type juicebox \
-		--hic_resolution 5000 \
-		--scale_hic_using_powerlaw			                                                                                                            
+	$ python workflow/scripts/predict.py \
+	    --enhancers results/K562_chr22/Neighborhoods/EnhancerList.txt \
+	    --outdir results/K562_chr22/Predictions \
+	    --score_column ABC.Score \
+	    --chrom_sizes reference/hg38/GRCh38_EBV.no_alt.chrom.sizes.tsv \
+	    --accessibility_feature DHS \
+	    --cellType K562_chr22 \
+	    --genes results/K562_chr22/Neighborhoods/GeneList.txt \
+	    --hic_gamma 1.024238616787792 \
+	    --hic_scale 5.9594510043736655 \
+	    --hic_file https://www.encodeproject.org/files/ENCFF621AIY/@@download/ENCFF621AIY.hic \
+	    --hic_type hic \
+	    --hic_resolution 5000 \
+	    --scale_hic_using_powerlaw			                                                                                                            
 
 
 
