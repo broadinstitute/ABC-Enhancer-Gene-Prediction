@@ -237,6 +237,7 @@ If you run into network issues, download the .hic file locally and replace the w
 
 
 3.4. Detailed considerations regarding estimation of 3D contact from Hi-C data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Starting from raw read counts in a Hi-C matrix, we perform several processing steps to normalize the data and handle missing or sparse data.
 
