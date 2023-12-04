@@ -5,10 +5,10 @@ accessibility_feature ATAC
 outdir tests/test_output/generic/K562_chr22_tagAlign/Predictions
 cellType K562_chr22_tagAlign
 chrom_sizes reference/hg38/GRCh38_EBV.no_alt.chrom.sizes.tsv
-hic_file example_chr/HiC_K562
+hic_file https://www.encodeproject.org/files/ENCFF621AIY/@@download/ENCFF621AIY.hic
 hic_resolution 5000
 hic_pseudocount_distance 1000000.0
-hic_type juicebox
+hic_type hic
 hic_is_doubly_stochastic False
 scale_hic_using_powerlaw True
 hic_gamma 1.024238616787792
