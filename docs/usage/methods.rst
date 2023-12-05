@@ -208,6 +208,11 @@ Example biosample_config.tsv for each type:
 
 3.3. Cell-type average Hi-C data 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Download the avg HiC file here: https://www.encodeproject.org/files/ENCFF134PUN/@@download/ENCFF134PUN.bed.gz
+
+To be filled out: Extract the file into multiple directories
+
 .. list-table::
    :header-rows: 1
    :widths: auto
@@ -227,13 +232,12 @@ Example biosample_config.tsv for each type:
      - 
      - 
      - DHS
-     - https://s3.us-central-1.wasabisys.com/aiden-encode-hic-mirror/bifocals_iter2/tissues.hic
-     - hic
+     - /path/to/avg_hic_directory
+     - avg
      - 5000
      - 
      - 
 
-If you run into network issues, download the .hic file locally and replace the web link with your local file link
 
 
 3.4. Detailed considerations regarding estimation of 3D contact from Hi-C data
