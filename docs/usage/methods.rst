@@ -85,22 +85,39 @@ Maya do you ahve a figure showing GWAS performance as a function of window size?
 Description: 
 	- To define the candidate regions, for genome-wide analyses, we retain the top 150,000 peaks with the most read counts. A fixed number is chosen here because the numbers of peaks called vary with sequencing depths, but imprically we discovered that picking the peaks with the most reads counts can effectively remove the noise coming from weak peaks and variable sequencing quality. Additionally, the number of total peaks also affect the denominator of ABC score calculation; a fixed number of peaks also make ABC scores comparable across inputs of variable sequencing qualities and depths. For genome-wide analyses, 150K is a reasonable number because ENCODE analysis has previously estimated `a mean of 205,109 DHSs per cell type <https://www.nature.com/articles/nature11247>`, the majority of which are enhancers. 
   
-1.4. Defining and adding gene promoters [Andreas please edit]
+1.4. Defining and adding gene promoters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Finally, we force the inclusion of gene promoters in the set of candidate elements. This is done because include promoters in the calculation; but sometimes the promoters of genes do not pass the threshold for the top 150,000 genes, which has a large effect on ABC due to the promoter receiving a high "3D contact" value in the ABC computation.
+Finally, we force the inclusion of gene promoters in the set of candidate elements, to include
+promoters of all candidate genes the calculation of ABC scores. Promoters are chromatin accessible
+sites, however sometimes the promoters of genes do not pass the threshold for top 150,000 strongest
+peaks. Inclusion of promoter regions has large effect on the model due to the promoter receiving a
+high "3D contact" value in the ABC computation.
 
-Note that the exact method of defining the promoter region for a gene has a strong influence on the ABC computation.
+Note that the exact method of defining the promoter region for a gene has a strong influence on
+computing ABC and changing the promoter list can impact ABC scores:
 
-Describe how it is important how promoters are selected, and how changing the promoter list can impact ABC scores
-	- First, the exact promoter used affects the ABC score for the gene corresponding to that promoter, because of 3D contacts (which can differ depending on the location of the promoter) and whether that promoter is in fact the dominant element used (the promoter is included as a candidate "enhancer" for itself, and contributes to the denominator of the ABC score).
-	- Second, the promoter list used affects the ABC scores for other nearby genes, because force inclusion of these regions leads to more/larger regions being used which affects the ABC denominator.
-	- Third, the promoter list used can affect downstream benchmarking analyses. For example, benchmarks that filter to just 'distal elements' that are not promoter might filter out elements called as promoters that are actually enhancers (e.g. promoters of lncRNAs that act as enhancers).
+#. The exact promoter is used to compute 3D contact for enhancers regulating a gene, and using a wrong promoter will result in incorrect 3D contact estimates. If the promoter that is included itself as a candidate element is the dominant regulatory elements for a gene, it heavily contributes to the denominator of the ABC score (see below). Therefore, using an incorrect promoter will impact the ABC scores of enhancers regulating a gene.
+#. The list of promoters affects the ABC scores for other nearby genes, because force inclusion of these regions leads to more/larger regions being used as candidate elements, which affects the ABC denominator.
+#. The exact promoter list can affect benchmarking and downstream analyses. For example, analyses that filter to include only 'distal elements' that are not promoters might filter out elements incorrectly called as promoters that are in reality enhancers (e.g. promoters of lncRNAs that act as enhancers).
+	
+In practice, we provide a gene promoter file that we have used for various purposes that selects a
+single canonical promoter per gene. This file contains canonical RefSeq promoters which could be
+assigned to a gene in the GENCODE v29 genome annotations used by the ENCODE consortium. Genes that
+are annotated in GENCODE as miRNAs, pseudogenes, antisense transcribed RNAs or RNAs transcribed from
+bidirectional promoters were filtered out.
 
-In practice, we provide a gene promoter file that we have used for various purposes that selects a single canonical promoter per gene. 
-	- describe provenance of the gene promoter file(s) including in ABC repo (for human and mouse)
-	- Changing the promoter for a single gene, e.g. to accommodate a specific alternative transcription start site of a gene of interest, is likely to be okay and not globally affect predictions
-	- However, caution is warranting in making more extensive changes to the promoter list. Note again that including a much larger promoter list, e.g. including lncRNAs or including all possible transcription start sites for all isoforms for a gene, is likely to change the global properties of the ABC score and is not recommended without calibration of scores (see section on Interpreting the ABC score below)
+Changing the promoter for a single gene, e.g. to accommodate a specific alternative transcription
+start site of a gene of interest, is likely to not affect predictions globally and can be used in
+certain cases. However, caution is warranted if making more extensive changes to the promoter list.
 
+Also including a much larger promoter list, e.g. including lncRNAs or including all possible
+transcription start sites for all isoforms for a gene, is likely to change the global properties of
+the ABC score and is not recommended without calibration of scores (see section on Interpreting the
+ABC score below).
+
+Note that ABC includes the promoter of each gene in the thresholded ABC enhancer-gene predictions
+regardless of it's ABC score (forced to 1), since the promoter of a gene is always considered to
+regulate it's expression.
 
 
 
@@ -382,3 +399,6 @@ flavors of ABC models can be found in the table below:
     - 0.56
     - 0.44
     - 0.01587
+    
+Our CRISPR benchmarking pipeline can be used to infer thresholds for non-standard ABC models and is
+available on `Github <https://github.com/EngreitzLab/CRISPR_comparison>`_.
