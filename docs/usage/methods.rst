@@ -145,7 +145,7 @@ Enhancer activity in the ABC model is estimated by counting reads in peaks (from
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Datasets such as DNase-seq, ATAC-seq, and H3K27ac ChIP-seq often have varying signal-to-noise ratios (e.g., % reads in peaks, TSS enrichment). This changes the performance and thresholds needed for ABC model. To account for this, we apply quantile normalization on input datasets to match a reference dataset. As reference, we currently use datasets in K562, because we have CRISPR data to benchmark the model in that system.
 
-2.3. Using different chromatin assays to estimate enhancer activity [Andreas to add]
+2.3. Using different chromatin assays to estimate enhancer activity
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ABC uses DNase-seq and optionally H3K27ac ChIP-seq to estimate enhancer activity, but numerous other
 chromatin assays exist, including chromatin accessibility assays, TF ChIP-seq and histone ChIP-seq.
@@ -286,16 +286,33 @@ Other considerations:
 - We currently use Hi-C data at 5-Kb resolution.  Note that increasing the resolution is expected to affect the performance of the model both because of the potential sparsity in the data and because of the approach to normalizing Contact close to the TSS described above.
 
 
-4. Making predictions with different combinations of input datasets  (Andreas to add performance comparison plots)
+4. Making predictions with different combinations of input datasets
 ------------------------------------------------------------------------
 
-Note: This code should really be moved elsewhere e.g. to a new section, like 'computing the ABC score'.  Need to explain somewhere the denominator of the ABC score
+ABC scores are computed for all generated candidate elements within 5Mb of the considered
+candidate target genes (GeneList.txt). For each element-pair, the activity of the element is
+multiplied by the 3D contact value between the element and the promoter. 3D contact can be
+calculated using different approaches. The highest performance can be achieved by using cell-type
+specific Hi-C data. If such data are unavailable, average Hi-C contact across cell typed (described
+in `Nasser et al., 2021 <https://www.nature.com/articles/s41586-021-03446-x>`_) or an approximation
+of 3D contact via a powerlaw function (described in
+`Fulco et al., 2019 <https://www.nature.com/articles/s41588-019-0538-0>`_) can be used to calculate
+contact.
+
+Finally, the ABC scores for all element-gene pairs are divided by the sum of all ABC scores for each
+gene, normalizing the sum of ABC scores per gene to 1.
+
+The precision-recall curves below show a comparison of the performance of ABC models using cell-type
+specific Hi-C versus the powerlaw approximation for elements inferred from DNase-seq:
+
+.. image:: /images/abc_perf_comparison.png
+
 
 Main inputs
 	- EnhancerList.txt
 	- GeneList.txt
 	- Powerlaw params (from fitting powerlaw to HiC data)
-	- HiC data
+	- HiC data (optional)
 
 Output
 	- EnhancerPredictionsAllPutative.txt.gz: Scores for enhancer gene pairs
@@ -324,11 +341,44 @@ Description:
 	    --scale_hic_using_powerlaw			                                                                                                            
 
 
-
-5. Interpreting the ABC score (Andreas to add)
+5. Interpreting the ABC score
 ------------------------------------
 
-- Benchmark against the CRISPR data
-- Correlates with effect size, but not in a linear way
-- Appropriate threshold are different for models that use different combinations of input datasets, and provided [here]
+To validate and better understand the properties of the ABC score, we extensively benchmarked the
+model against CRISPR enhancer perturbation in K562 cells (
+`Fulco et al., 2019 <https://www.nature.com/articles/s41588-019-0538-0>`_ ,
+`Nasser et al., 2021 <https://www.nature.com/articles/s41586-021-03446-x>`_).
 
+These analyses show that ABC scores reliably predicts enhancer-gene regulatory interactions
+that were experimentally inferred in the CRISPR experiments. At the recall of 70%, an ABC model
+using DNase-seq + cell-type specific Hi-C data achieves a precision of 52%, meaning around half of
+the predicted enhancer-gene regulatory interactions will be true positives. The ABC scores
+themselves correlate with the CRISPR effect size on gene expression when perturbing an enhancer,
+however not in a precise linear fashion. This probably has different technical and biological
+reasons. Nevertheless, we can expect enhancers with large ABC scores to have strong effects on gene
+expression.
+
+One key consideration when applying ABC to generate maps of enhancer-gene pairs is selecting the
+appropriate ABC score threshold to predict regulatory enhancer-gene interactions. We recommend using
+a threshold that achieves 70% recall in our CRISPR benchmark. A list of thresholds for different
+flavors of ABC models can be found in the table below:
+
+.. list-table::
+  :header-rows: 1
+  :widths: auto
+   
+  * - Activity
+    - Contact
+    - AUPRC
+    - Precision @ 70% recall
+    - Threshold @ 70% recall
+  * - DNase-seq
+    - K562 Hi-C
+    - 0.60
+    - 0.52
+    - 0.024674
+  * - DNase-seq
+    - Powerlaw
+    - 0.56
+    - 0.44
+    - 0.01587
