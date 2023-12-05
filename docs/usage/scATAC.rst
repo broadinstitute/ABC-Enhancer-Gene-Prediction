@@ -9,7 +9,7 @@ We'll walk through an example of running a scATAC dataset through ABC.
 
 1. Converting to TagAlign
 -------------------------
-.. admonition:: Prerequisite
+.. admonition:: **Prerequisite**
 
     Make sure you've followed the environment setup steps in :ref:`GettingStarted` and activate your abc conda environment.
 
