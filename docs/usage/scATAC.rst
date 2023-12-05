@@ -1,15 +1,17 @@
 scATAC Walkthrough
 ===================
 
-.. admonition:: Prerequisite
-
-    Make sure you've followed the environment setup steps in :ref:`GettingStarted` and activate your abc conda environment.
+About
+-------------------------
+ABC can predict cell-type-specific enhancer-gene interactions using only the chromatin accessibility profile obtained through scATAC-seq. Given the sparsity of scATAC data, we recommend pseudo-bulking the scATAC fragments by cell cluster. Each pseudo-bulked scATAC profile should contain at least 3 million (preferably 6 million) unique fragments to ensure optimal performance.
 
 We'll walk through an example of running a scATAC dataset through ABC. 
 
-
 1. Converting to TagAlign
 -------------------------
+.. admonition:: **Prerequisite**
+
+    Make sure you've followed the environment setup steps in :ref:`GettingStarted` and activate your abc conda environment.
 
 When working with scATAC files, you may start off with a `fragment file <https://support.10xgenomics.com/single-cell-multiome-atac-gex/software/pipelines/latest/output/fragments?src=social&lss=facebook&cnm=soc-fb-ra_g-program-fb-ra_g-program&cid=7011P000000y072>`_. Since ABC works with `tagAlign file format <https://genome.ucsc.edu/FAQ/FAQformat.html#format15>`_,  we'll want to convert our fragment file to tagAlign. If you have a tagAlign file already, great! You can skip to the stage where we create the biosamples table.
 
