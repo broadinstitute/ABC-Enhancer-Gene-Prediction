@@ -56,9 +56,22 @@ The method of defining candidate elements includes the following steps:
 - Adding promoters
 
 1.1. Calling peaks with MACS2 [Rosa please edit]
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Rosa to add details about the MACS2 methods calling
+------------------------------
+Main inputs
+	- ATAC-Seq:
+		- Sorted tagalign file. The sorted tagalign file should be free of PCR duplicates, and sorted according to the chromosome order in the *chrom.sizes.tsv file; the file name must end in “.tagAlign.gz”. 
+	- DNAse-Seq:
+		- Single-ended BAM file. 
 
+Output
+	- narrowPeak file
+
+Description:
+	- To identify enriched cutting sites in DNase-Seq and ATAC-Seq datasets, we shift the 5’ ends of all reads by 75 bp towards the 3’ direction and extend them by 150 bp in the 5’ direction following the `ENCODE ATACSeq pipeline <https://docs.google.com/document/d/1f0Cm4vRyDQDu0bMehHD7P7KOMxTOP-HiNoIvL1VcBt8/edit#heading=h.9ecc41kilcvq>`_.
+
+	- Because (single-nucleus) ATAC-Seq is mostly paired-end, and MACS2 cannot call peaks using all the reads in paired-end BAM files, we recommend that ATAC-Seq input should be in the tagAlign format. Specifically, when using the “—format BAM” flag with paired-end BAM files, MACS only considers reads with R1 tags. Alternatively, the “—format BAMPE” flag would allow MACS2 to use all paired-end reads; however, “—format BAMPE”  cannot be performed with the reads shift and extension described above. 
+
+	- Since most DNase-Seq is single ended, and the ”—format BAM” option is compatible with shift and extension, DNase-Seq input can be supplied in the BAM format.
 
 1.2. Resizing and merging regions [Rosa + Maya please edit]
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -68,9 +81,9 @@ Maya do you ahve a figure showing GWAS performance as a function of window size?
 
 
 1.3. Selecting the top N peaks [Rosa please edit]
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-explain the logic of this step, e.g. because experiments of different sequencing depths can have large differences in numbers of peaks; this affects ABC score via the denominator; so we include top 150K
-
+------------------------------
+Description: 
+	- To define the candidate regions, for genome-wide analyses, we retain the top 150,000 peaks with the most read counts. A fixed number is chosen here because the numbers of peaks called vary with sequencing depths, but imprically we discovered that picking the peaks with the most reads counts can effectively remove the noise coming from weak peaks and variable sequencing quality. Additionally, the number of total peaks also affect the denominator of ABC score calculation; a fixed number of peaks also make ABC scores comparable across inputs of variable sequencing qualities and depths. For genome-wide analyses, 150K is a reasonable number because ENCODE analysis has previously estimated `a mean of 205,109 DHSs per cell type <https://www.nature.com/articles/nature11247>`, the majority of which are enhancers. 
   
 1.4. Defining and adding gene promoters [Andreas please edit]
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
