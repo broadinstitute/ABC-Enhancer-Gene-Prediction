@@ -55,7 +55,7 @@ The method of defining candidate elements includes the following steps:
 - Selecting the 150,000 strongest peaks (by read count)
 - Adding promoters
 
-1.1. Calling peaks with MACS2 [Rosa please edit]
+1.1. Calling peaks with MACS2 
 ------------------------------
 Main inputs
 	- ATAC-Seq:
@@ -73,20 +73,18 @@ Description:
 
 	- Since most DNase-Seq is single ended, and the ”—format BAM” option is compatible with shift and extension, DNase-Seq input can be supplied in the BAM format.
 
-1.2. Resizing and merging regions [Rosa + Maya please edit]
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-e.g. explain the logic:  We resize to 500 bp to count reads in and around peaks (esp. e.g. H3K27ac signal is surrounding the peak); peak callers are sensitive; 500 bp also a reasonable window for interpreting variants, since they're typically within this distance of a peak
-
-Maya do you ahve a figure showing GWAS performance as a function of window size?
+1.2. Resizing and merging regions 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+We resize to 500 bp to count reads in and around peaks (esp. e.g. H3K27ac signal is surrounding the peak)
 
 
-1.3. Selecting the top N peaks [Rosa please edit]
+1.3. Selecting the top N peaks
 ------------------------------
 Description: 
 	- To define the candidate regions, for genome-wide analyses, we retain the top 150,000 peaks with the most read counts. A fixed number is chosen here because the numbers of peaks called vary with sequencing depths, but imprically we discovered that picking the peaks with the most reads counts can effectively remove the noise coming from weak peaks and variable sequencing quality. Additionally, the number of total peaks also affect the denominator of ABC score calculation; a fixed number of peaks also make ABC scores comparable across inputs of variable sequencing qualities and depths. For genome-wide analyses, 150K is a reasonable number because ENCODE analysis has previously estimated `a mean of 205,109 DHSs per cell type <https://www.nature.com/articles/nature11247>`, the majority of which are enhancers. 
 
 1.4. Defining and adding gene promoters
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Finally, we force the inclusion of gene promoters in the set of candidate elements, to include
 promoters of all candidate genes the calculation of ABC scores. Promoters are chromatin accessible
 sites, however sometimes the promoters of genes do not pass the threshold for top 150,000 strongest
@@ -155,15 +153,15 @@ Description:
 	    --H3K27ac example_chr/chr22/ENCFF790GFL.chr22.sorted.se.bam
 
 2.1. Activity scales with read counts 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Enhancer activity in the ABC model is estimated by counting reads in peaks (from DNase-seq, H3K27ac ChIP-seq, etc.) in peaks. The quantitative signal in these assays in informative regarding the strength of enhancers, and the ABC model assumes that this relationship is linear.
 
 2.2. Quantile normalization for Activity
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Datasets such as DNase-seq, ATAC-seq, and H3K27ac ChIP-seq often have varying signal-to-noise ratios (e.g., % reads in peaks, TSS enrichment). This changes the performance and thresholds needed for ABC model. To account for this, we apply quantile normalization on input datasets to match a reference dataset. As reference, we currently use datasets in K562, because we have CRISPR data to benchmark the model in that system.
 
 2.3. Using different chromatin assays to estimate enhancer activity
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ABC uses DNase-seq and optionally H3K27ac ChIP-seq to estimate enhancer activity, but numerous other
 chromatin assays exist, including chromatin accessibility assays, TF ChIP-seq and histone ChIP-seq.
 To investigate which assays perform best in the ABC framework, we've built ABC models where activity
