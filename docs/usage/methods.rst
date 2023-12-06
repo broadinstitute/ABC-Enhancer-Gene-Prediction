@@ -85,22 +85,39 @@ Maya do you ahve a figure showing GWAS performance as a function of window size?
 Description: 
 	- To define the candidate regions, for genome-wide analyses, we retain the top 150,000 peaks with the most read counts. A fixed number is chosen here because the numbers of peaks called vary with sequencing depths, but imprically we discovered that picking the peaks with the most reads counts can effectively remove the noise coming from weak peaks and variable sequencing quality. Additionally, the number of total peaks also affect the denominator of ABC score calculation; a fixed number of peaks also make ABC scores comparable across inputs of variable sequencing qualities and depths. For genome-wide analyses, 150K is a reasonable number because ENCODE analysis has previously estimated `a mean of 205,109 DHSs per cell type <https://www.nature.com/articles/nature11247>`, the majority of which are enhancers. 
   
-1.4. Defining and adding gene promoters [Andreas please edit]
+1.4. Defining and adding gene promoters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Finally, we force the inclusion of gene promoters in the set of candidate elements. This is done because include promoters in the calculation; but sometimes the promoters of genes do not pass the threshold for the top 150,000 genes, which has a large effect on ABC due to the promoter receiving a high "3D contact" value in the ABC computation.
+Finally, we force the inclusion of gene promoters in the set of candidate elements, to include
+promoters of all candidate genes the calculation of ABC scores. Promoters are chromatin accessible
+sites, however sometimes the promoters of genes do not pass the threshold for top 150,000 strongest
+peaks. Inclusion of promoter regions has large effect on the model due to the promoter receiving a
+high "3D contact" value in the ABC computation.
 
-Note that the exact method of defining the promoter region for a gene has a strong influence on the ABC computation.
+Note that the exact method of defining the promoter region for a gene has a strong influence on
+computing ABC and changing the promoter list can impact ABC scores:
 
-Describe how it is important how promoters are selected, and how changing the promoter list can impact ABC scores
-	- First, the exact promoter used affects the ABC score for the gene corresponding to that promoter, because of 3D contacts (which can differ depending on the location of the promoter) and whether that promoter is in fact the dominant element used (the promoter is included as a candidate "enhancer" for itself, and contributes to the denominator of the ABC score).
-	- Second, the promoter list used affects the ABC scores for other nearby genes, because force inclusion of these regions leads to more/larger regions being used which affects the ABC denominator.
-	- Third, the promoter list used can affect downstream benchmarking analyses. For example, benchmarks that filter to just 'distal elements' that are not promoter might filter out elements called as promoters that are actually enhancers (e.g. promoters of lncRNAs that act as enhancers).
+#. The exact promoter is used to compute 3D contact for enhancers regulating a gene, and using a wrong promoter will result in incorrect 3D contact estimates. If the promoter that is included itself as a candidate element is the dominant regulatory elements for a gene, it heavily contributes to the denominator of the ABC score (see below). Therefore, using an incorrect promoter will impact the ABC scores of enhancers regulating a gene.
+#. The list of promoters affects the ABC scores for other nearby genes, because force inclusion of these regions leads to more/larger regions being used as candidate elements, which affects the ABC denominator.
+#. The exact promoter list can affect benchmarking and downstream analyses. For example, analyses that filter to include only 'distal elements' that are not promoters might filter out elements incorrectly called as promoters that are in reality enhancers (e.g. promoters of lncRNAs that act as enhancers).
+	
+In practice, we provide a gene promoter file that we have used for various purposes that selects a
+single canonical promoter per gene. This file contains canonical RefSeq promoters which could be
+assigned to a gene in the GENCODE v29 genome annotations used by the ENCODE consortium. Genes that
+are annotated in GENCODE as miRNAs, pseudogenes, antisense transcribed RNAs or RNAs transcribed from
+bidirectional promoters were filtered out.
 
-In practice, we provide a gene promoter file that we have used for various purposes that selects a single canonical promoter per gene. 
-	- describe provenance of the gene promoter file(s) including in ABC repo (for human and mouse)
-	- Changing the promoter for a single gene, e.g. to accommodate a specific alternative transcription start site of a gene of interest, is likely to be okay and not globally affect predictions
-	- However, caution is warranting in making more extensive changes to the promoter list. Note again that including a much larger promoter list, e.g. including lncRNAs or including all possible transcription start sites for all isoforms for a gene, is likely to change the global properties of the ABC score and is not recommended without calibration of scores (see section on Interpreting the ABC score below)
+Changing the promoter for a single gene, e.g. to accommodate a specific alternative transcription
+start site of a gene of interest, is likely to not affect predictions globally and can be used in
+certain cases. However, caution is warranted if making more extensive changes to the promoter list.
 
+Also including a much larger promoter list, e.g. including lncRNAs or including all possible
+transcription start sites for all isoforms for a gene, is likely to change the global properties of
+the ABC score and is not recommended without calibration of scores (see section on Interpreting the
+ABC score below).
+
+Note that ABC includes the promoter of each gene in the thresholded ABC enhancer-gene predictions
+regardless of it's ABC score (forced to 1), since the promoter of a gene is always considered to
+regulate it's expression.
 
 
 
@@ -145,9 +162,20 @@ Enhancer activity in the ABC model is estimated by counting reads in peaks (from
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Datasets such as DNase-seq, ATAC-seq, and H3K27ac ChIP-seq often have varying signal-to-noise ratios (e.g., % reads in peaks, TSS enrichment). This changes the performance and thresholds needed for ABC model. To account for this, we apply quantile normalization on input datasets to match a reference dataset. As reference, we currently use datasets in K562, because we have CRISPR data to benchmark the model in that system.
 
-2.3. Using different combinations of assays to estimate enhancer activity [Andreas to add]
+2.3. Using different chromatin assays to estimate enhancer activity
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-e.g. note differences in perofrmanc eofr ATAC, DHS, H3K27ac, possibly add the ENCODE activity assay figure here
+ABC uses DNase-seq and optionally H3K27ac ChIP-seq to estimate enhancer activity, but numerous other
+chromatin assays exist, including chromatin accessibility assays, TF ChIP-seq and histone ChIP-seq.
+To investigate which assays perform best in the ABC framework, we've built ABC models where activity
+was measured by one of 513 ENCODE 1D chromatin experiments that could represent enhancer activity.
+
+Among all assays, ABC models using DNase-seq or H3K27ac ChIP-seq ranked among the top 10 when
+benchmarking the performance of these models against CRISPR enhancer perturbation results. Given the
+availability of DNase-seq and H3K27ac ChIP-seq datasets (e.g. www.encodeproject.org), these two
+assays provide the best performance to build models that can be applied across different cell types
+and tissues. Of note, bulk ATAC-seq performed worse than DNase-seq in this comparison.
+
+.. image:: /images/abc_enh_assays_perf.png
 
 
 3. Estimating enhancer-promoter 3D contact
@@ -275,16 +303,33 @@ Other considerations:
 - We currently use Hi-C data at 5-Kb resolution.  Note that increasing the resolution is expected to affect the performance of the model both because of the potential sparsity in the data and because of the approach to normalizing Contact close to the TSS described above.
 
 
-4. Making predictions with different combinations of input datasets  (Andreas to add performance comparison plots)
+4. Making predictions with different combinations of input datasets
 ------------------------------------------------------------------------
 
-Note: This code should really be moved elsewhere e.g. to a new section, like 'computing the ABC score'.  Need to explain somewhere the denominator of the ABC score
+ABC scores are computed for all generated candidate elements within 5Mb of the considered
+candidate target genes (GeneList.txt). For each element-pair, the activity of the element is
+multiplied by the 3D contact value between the element and the promoter. 3D contact can be
+calculated using different approaches. The highest performance can be achieved by using cell-type
+specific Hi-C data. If such data are unavailable, average Hi-C contact across cell typed (described
+in `Nasser et al., 2021 <https://www.nature.com/articles/s41586-021-03446-x>`_) or an approximation
+of 3D contact via a powerlaw function (described in
+`Fulco et al., 2019 <https://www.nature.com/articles/s41588-019-0538-0>`_) can be used to calculate
+contact.
+
+Finally, the ABC scores for all element-gene pairs are divided by the sum of all ABC scores for each
+gene, normalizing the sum of ABC scores per gene to 1.
+
+The precision-recall curves below show a comparison of the performance of ABC models using cell-type
+specific Hi-C versus the powerlaw approximation for elements inferred from DNase-seq:
+
+.. image:: /images/abc_perf_comparison.png
+
 
 Main inputs
 	- EnhancerList.txt
 	- GeneList.txt
 	- Powerlaw params (from fitting powerlaw to HiC data)
-	- HiC data
+	- HiC data (optional)
 
 Output
 	- EnhancerPredictionsAllPutative.txt.gz: Scores for enhancer gene pairs
@@ -313,11 +358,47 @@ Description:
 	    --scale_hic_using_powerlaw			                                                                                                            
 
 
-
-5. Interpreting the ABC score (Andreas to add)
+5. Interpreting the ABC score
 ------------------------------------
 
-- Benchmark against the CRISPR data
-- Correlates with effect size, but not in a linear way
-- Appropriate threshold are different for models that use different combinations of input datasets, and provided [here]
+To validate and better understand the properties of the ABC score, we extensively benchmarked the
+model against CRISPR enhancer perturbation in K562 cells (
+`Fulco et al., 2019 <https://www.nature.com/articles/s41588-019-0538-0>`_ ,
+`Nasser et al., 2021 <https://www.nature.com/articles/s41586-021-03446-x>`_).
 
+These analyses show that ABC scores reliably predicts enhancer-gene regulatory interactions
+that were experimentally inferred in the CRISPR experiments. At the recall of 70%, an ABC model
+using DNase-seq + cell-type specific Hi-C data achieves a precision of 52%, meaning around half of
+the predicted enhancer-gene regulatory interactions will be true positives. The ABC scores
+themselves correlate with the CRISPR effect size on gene expression when perturbing an enhancer,
+however not in a precise linear fashion. This probably has different technical and biological
+reasons. Nevertheless, we can expect enhancers with large ABC scores to have strong effects on gene
+expression.
+
+One key consideration when applying ABC to generate maps of enhancer-gene pairs is selecting the
+appropriate ABC score threshold to predict regulatory enhancer-gene interactions. We recommend using
+a threshold that achieves 70% recall in our CRISPR benchmark. A list of thresholds for different
+flavors of ABC models can be found in the table below:
+
+.. list-table::
+  :header-rows: 1
+  :widths: auto
+   
+  * - Activity
+    - Contact
+    - AUPRC
+    - Precision @ 70% recall
+    - Threshold @ 70% recall
+  * - DNase-seq
+    - K562 Hi-C
+    - 0.60
+    - 0.52
+    - 0.024674
+  * - DNase-seq
+    - Powerlaw
+    - 0.56
+    - 0.44
+    - 0.01587
+    
+Our CRISPR benchmarking pipeline can be used to infer thresholds for non-standard ABC models and is
+available on `Github <https://github.com/EngreitzLab/CRISPR_comparison>`_.
