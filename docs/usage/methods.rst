@@ -252,7 +252,13 @@ Example biosample_config.tsv for each type:
 
 Download the avg HiC file here: https://www.encodeproject.org/files/ENCFF134PUN/@@download/ENCFF134PUN.bed.gz
 
-To be filled out: Extract the file into multiple directories
+We need to extract the file to create multiple HiC directories, one for each chromosome. 
+
+.. code-block:: console
+
+  (abc-env) [atan5133@sh03-04n24 /oak/stanford/groups/engreitz/Users/atan5133/ABC-Enhancer-Gene-Prediction] (job 37343981) $ py workflow/scripts/extract_avg_hic.py --avg_hic_bed_file ../data/ENCFF134PUN.bed.gz --output_dir ../data/
+
+This may take a while (~1-2 hours)
 
 .. list-table::
    :header-rows: 1
@@ -273,7 +279,7 @@ To be filled out: Extract the file into multiple directories
      - 
      - 
      - DHS
-     - /path/to/avg_hic_directory
+     - /oak/stanford/groups/engreitz/Users/atan5133/data/AvgHiC
      - avg
      - 5000
      - 
