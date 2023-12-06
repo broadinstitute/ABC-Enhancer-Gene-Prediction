@@ -1,0 +1,9 @@
+Activity,Contact,AUPRC,Precision @ 70% recall,Threshold @ 70% recall
+DNase-seq x H3K27ac,K562 Hi-C,0.61,0.56,0.023631
+DNase-seq x H3K27ac,avg. Hi-C,0.59,0.51,0.01609
+DNase-seq x H3K27ac,Powerlaw,0.58,0.48,0.016455
+DNase-seq,K562 Hi-C,0.6,0.52,0.024674
+DNase-seq,Powerlaw,0.56,0.44,0.01587
+ATAC-seq x H3K27ac,K562 Hi-C,0.56,0.5,0.024511
+ATAC-seq x H3K27ac,avg. Hi-C,0.54,0.46,0.016279
+ATAC-seq x H3K27ac,Powerlaw,0.53,0.45,0.016684
