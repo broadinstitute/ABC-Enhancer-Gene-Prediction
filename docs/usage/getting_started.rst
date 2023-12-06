@@ -8,7 +8,6 @@ Installation
 
 #. Download the repo locally from github
 	- ``git clone git@github.com:broadinstitute/ABC-Enhancer-Gene-Prediction.git``
-	- Utilize the **dev** branch: ``git checkout dev``
 #. Make sure you have conda & mamba installed
 	- `<https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_
 	- Make sure you're not using strict channel priorities: ``conda config --set channel_priority flexible``. Otherwise, you may encounter package conflicts later when installing abc. 
@@ -54,7 +53,7 @@ Configuring ABC
 ---------------
 
 The primary configuration file for ABC is `config/config.yaml
-<https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction/blob/dev/config/config.yaml>`_
+<https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction/blob/main/config/config.yaml>`_
 
 
 *First couple lines in config/config.yaml*
@@ -87,7 +86,7 @@ The rule specific params are explained in the :ref:`ABC-methods` section.
 
 BiosampleTable Specifications
 -----------------------------
-`chr22 example <https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction/blob/dev/config/config_biosamples_chr22.tsv>`_
+`chr22 example <https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction/blob/main/config/config_biosamples_chr22.tsv>`_
 
 biosamples config is a tsv separated file with the following columns
 
