@@ -84,7 +84,7 @@ Maya do you ahve a figure showing GWAS performance as a function of window size?
 ------------------------------
 Description: 
 	- To define the candidate regions, for genome-wide analyses, we retain the top 150,000 peaks with the most read counts. A fixed number is chosen here because the numbers of peaks called vary with sequencing depths, but imprically we discovered that picking the peaks with the most reads counts can effectively remove the noise coming from weak peaks and variable sequencing quality. Additionally, the number of total peaks also affect the denominator of ABC score calculation; a fixed number of peaks also make ABC scores comparable across inputs of variable sequencing qualities and depths. For genome-wide analyses, 150K is a reasonable number because ENCODE analysis has previously estimated `a mean of 205,109 DHSs per cell type <https://www.nature.com/articles/nature11247>`, the majority of which are enhancers. 
-  
+
 1.4. Defining and adding gene promoters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Finally, we force the inclusion of gene promoters in the set of candidate elements, to include
@@ -308,19 +308,21 @@ Other considerations:
 
 ABC scores are computed for all generated candidate elements within 5Mb of the considered
 candidate target genes (GeneList.txt). For each element-pair, the activity of the element is
-multiplied by the 3D contact value between the element and the promoter. 3D contact can be
-calculated using different approaches. The highest performance can be achieved by using cell-type
-specific Hi-C data. If such data are unavailable, average Hi-C contact across cell typed (described
-in `Nasser et al., 2021 <https://www.nature.com/articles/s41586-021-03446-x>`_) or an approximation
-of 3D contact via a powerlaw function (described in
+multiplied by the 3D contact value between the element and the promoter. 3D contact values can be
+calculated using different approaches and we achieved the highest performance by using cell-type
+specific Hi-C data. If Hi-C isn't available for the cell type of interest, average Hi-C contact
+across cell types (described in
+`Nasser et al., 2021 <https://www.nature.com/articles/s41586-021-03446-x>`_) or an approximation of
+3D contact via a powerlaw function (described in
 `Fulco et al., 2019 <https://www.nature.com/articles/s41588-019-0538-0>`_) can be used to calculate
 contact.
 
 Finally, the ABC scores for all element-gene pairs are divided by the sum of all ABC scores for each
 gene, normalizing the sum of ABC scores per gene to 1.
 
-The precision-recall curves below show a comparison of the performance of ABC models using cell-type
-specific Hi-C versus the powerlaw approximation for elements inferred from DNase-seq:
+The precision-recall curves below show a comparison of the CRISPR benchmark performance of ABC
+models using cell-type specific Hi-C versus the powerlaw approximation for elements inferred from
+bulk DNase-seq and single-cell ATAC-seq:
 
 .. image:: /images/abc_perf_comparison.png
 
@@ -355,8 +357,8 @@ Description:
 	    --hic_file https://www.encodeproject.org/files/ENCFF621AIY/@@download/ENCFF621AIY.hic \
 	    --hic_type hic \
 	    --hic_resolution 5000 \
-	    --scale_hic_using_powerlaw			                                                                                                            
-
+	    --scale_hic_using_powerlaw
+	    
 
 5. Interpreting the ABC score
 ------------------------------------
@@ -378,27 +380,11 @@ expression.
 One key consideration when applying ABC to generate maps of enhancer-gene pairs is selecting the
 appropriate ABC score threshold to predict regulatory enhancer-gene interactions. We recommend using
 a threshold that achieves 70% recall in our CRISPR benchmark. A list of thresholds for different
-flavors of ABC models can be found in the table below:
+common ABC models can be found in the table below:
 
-.. list-table::
-  :header-rows: 1
-  :widths: auto
-   
-  * - Activity
-    - Contact
-    - AUPRC
-    - Precision @ 70% recall
-    - Threshold @ 70% recall
-  * - DNase-seq
-    - K562 Hi-C
-    - 0.60
-    - 0.52
-    - 0.024674
-  * - DNase-seq
-    - Powerlaw
-    - 0.56
-    - 0.44
-    - 0.01587
+.. csv-table::
+   :file: /tables/perf_summary.csv
+   :header-rows: 1
     
 Our CRISPR benchmarking pipeline can be used to infer thresholds for non-standard ABC models and is
 available on `Github <https://github.com/EngreitzLab/CRISPR_comparison>`_.
