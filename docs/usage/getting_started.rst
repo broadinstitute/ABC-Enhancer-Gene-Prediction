@@ -3,6 +3,8 @@
 Getting Started
 ===============
 
+Running ABC only requires an accessibility file, either DNase-seq (bam) or ATAC-seq (tagAlign)
+
 Installation
 ------------
 
@@ -78,11 +80,12 @@ Reference files
 	- genome_tss: 500bp TSS region for each gene in the genes file
 		- FORMAT: BED6 with ENSEMBL_ID as 7th column 
 
+The rule specific params are explained in the :ref:`ABC-methods` section.
 
-
+Genome Builds
+-------------
 The default reference file params in the config.yaml file are programmed for hg38 genome. To use a different genome, change the reference files and specify the genomize size parameter under `params_macs`.
 
-The rule specific params are explained in the :ref:`ABC-methods` section.
 
 BiosampleTable Specifications
 -----------------------------
