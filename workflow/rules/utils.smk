@@ -19,13 +19,22 @@ def determine_mem_mb(wildcards, input, attempt, min_gb=8):
 	mem_to_use_mb = attempt_multiplier *  max(4 * input_size_mb, min_gb * 1000)
 	return min(mem_to_use_mb, MAX_MEM_MB)
 
-def convert_reference_files(config):
-	# prefixes ABC path if config var is provided
-	abs_path_prefix = config.get("ABC_DIR_PATH")
-	if abs_path_prefix:
-		for name, ref_file in config["ref"].items():
-			config["ref"][name] = os.path.join(abs_path_prefix, ref_file)
-	return config
+def make_paths_absolute(obj, base_path):
+	"""
+	Use absolute paths to be compatible with github submodules
+	Recursively go through the dictionary and convert relative paths to absolute paths.
+	"""
+	if isinstance(obj, dict):
+		for key, value in obj.items():
+			obj[key] = make_paths_absolute(value, base_path)
+	elif isinstance(obj, str):
+		# We assume all strings are paths. If converting the string
+		# to an absolute path results in a valid file, then the str was a path
+		new_file = os.path.join(base_path, obj)
+		if os.path.exists(new_file):
+			return new_file
+	return obj
+
 
 def determine_filtered_prediction_file_format(config):
 	threshold = config['params_filter_predictions']['threshold']

@@ -10,7 +10,7 @@ rule make_candidate_regions:
 		peakExtendFromSummit = config['params_candidate']['peakExtendFromSummit'],
 		nStrongestPeak = config['params_candidate']['nStrongestPeaks'],
 		output_dir = os.path.join(RESULTS_DIR, "{biosample}", "Peaks"),
-		scripts_dir = SCRIPTS_DIR
+		scripts_dir = SCRIPTS_DIR,
 	conda:
 		"../envs/abcenv.yml"
 	output: 

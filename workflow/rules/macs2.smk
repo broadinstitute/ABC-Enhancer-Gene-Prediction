@@ -5,7 +5,6 @@ rule call_macs_peaks:
 	params:
 		pval = config['params_macs']['pval'],
 		genome_size = config['params_macs']['genome_size'],
-		out_dir = config["predictions_results_dir"]
 	conda:
 		"../envs/abcenv.yml"
 	output: 
@@ -30,7 +29,7 @@ rule call_macs_peaks:
 		--nomodel \
 		--keep-dup all \
 		--call-summits \
-		--outdir {params.out_dir}/{wildcards.biosample}/Peaks \
+		--outdir {RESULTS_DIR}/{wildcards.biosample}/Peaks \
 		-t {input.accessibility} 
 		"""
 
