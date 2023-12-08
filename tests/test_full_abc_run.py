@@ -25,7 +25,7 @@ COLUMNS_TO_COMPARE: Dict[str, type] = {
     "ABC.Score": np.float64,
     "powerlaw.Score": np.float64,
 }
-TEST_OUTPUT_DIR = CONFIG["predictions_results_dir"]
+TEST_OUTPUT_DIR = CONFIG["results_dir"]
 EXPECTED_OUTPUT_DIR = f"tests/expected_output/{CONFIG['TEST_CONFIG_NAME']}"
 ALL_PUTATIVE_PRED_FILE = "Predictions/EnhancerPredictionsAllPutative.tsv.gz"
 POSITIVES_PRED_FILE = (

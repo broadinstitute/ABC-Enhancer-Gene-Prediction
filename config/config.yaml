@@ -5,7 +5,7 @@
 biosamplesTable: "config/config_biosamples_chr22.tsv"  # replace with your own config/config_biosamples.tsv
 
 ### OUTPUT DATA
-predictions_results_dir: "results"
+results_dir: "results/"
 
 
 ### REFERENCE FILES

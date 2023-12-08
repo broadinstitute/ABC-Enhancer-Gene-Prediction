@@ -21,7 +21,7 @@ rule create_predictions:
 		gamma = config['params_predict']['hic_gamma'],
 		scale = config['params_predict']['hic_scale'],
 		accessibility_feature = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'default_accessibility_feature'],
-		scripts_dir = SCRIPTS_DIR
+		scripts_dir = SCRIPTS_DIR,
 	conda:
 		"../envs/abcenv.yml"
 	output: 
@@ -54,7 +54,6 @@ rule filter_predictions:
 		threshold = config['params_filter_predictions']['threshold'],
 		include_self_promoter = config['params_filter_predictions']['include_self_promoter'],
 		only_expressed_genes = config['params_filter_predictions']['only_expressed_genes'],
-		scripts_dir = SCRIPTS_DIR
 	conda:
 		"../envs/abcenv.yml"
 	output:
@@ -66,7 +65,7 @@ rule filter_predictions:
 		mem_mb=determine_mem_mb
 	shell:
 		"""
-		python {params.scripts_dir}/filter_predictions.py \
+		python {SCRIPTS_DIR}/filter_predictions.py \
 			--output_tsv_file {output.enhPredictionsFull} \
 			--output_slim_tsv_file {output.enhPredictionsSlim} \
 			--output_bed_file {output.enhPredictionsFullBedpe} \
