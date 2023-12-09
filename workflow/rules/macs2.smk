@@ -37,7 +37,7 @@ rule generate_chrom_sizes_bed_file:
 	input:
 		chrom_sizes = config['ref']['chrom_sizes']
 	output:
-		chrom_sizes_bed = os.path.join(RESULTS_DIR, "tmp", config['ref']['chrom_sizes'] + '.bed')
+		chrom_sizes_bed = os.path.join(RESULTS_DIR, "tmp", os.path.basename(config['ref']['chrom_sizes']) + '.bed')
 	resources:
 		mem_mb=determine_mem_mb
 	shell:
@@ -49,7 +49,7 @@ rule generate_chrom_sizes_bed_file:
 rule sort_narrowpeaks:
 	input:
 		narrowPeak = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak"),
-		chrom_sizes_bed = os.path.join(RESULTS_DIR, "tmp", config['ref']['chrom_sizes'] + '.bed')
+		chrom_sizes_bed = os.path.join(RESULTS_DIR, "tmp", os.path.basename(config['ref']['chrom_sizes']) + '.bed')
 	params:
 		chrom_sizes = config['ref']['chrom_sizes']
 	conda:
