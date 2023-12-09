@@ -2,7 +2,7 @@ rule make_candidate_regions:
 	input:
 		narrowPeak = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted"),
 		accessibility = get_accessibility_files,
-		chrom_sizes_bed = os.path.join(RESULTS_DIR, "tmp", config['ref']['chrom_sizes'] + '.bed'),
+		chrom_sizes_bed = os.path.join(RESULTS_DIR, "tmp", os.path.basename(config['ref']['chrom_sizes']) + '.bed'),
 	params:
 		TSS = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'TSS'],
 		chrom_sizes = config['ref']['chrom_sizes'],
