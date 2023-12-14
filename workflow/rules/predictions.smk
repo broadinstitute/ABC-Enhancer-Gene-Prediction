@@ -1,3 +1,5 @@
+from functools import partial
+
 def _get_run_predictions_hic_params(wildcards):
 	hic_file = BIOSAMPLES_CONFIG.loc[wildcards.biosample, "HiC_file"]
 	hic_type = BIOSAMPLES_CONFIG.loc[wildcards.biosample, "HiC_type"]
@@ -28,7 +30,7 @@ rule create_predictions:
 		allPutative = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.tsv.gz"),
 		allPutativeNonExpressed = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz"),
 	resources:
-		mem_mb=32*1000
+		mem_mb=partial(determine_mem_mb, min_gb=20)  # Use 64GB if using average HiC
 	shell:
 		"""
 		python {params.scripts_dir}/predict.py \

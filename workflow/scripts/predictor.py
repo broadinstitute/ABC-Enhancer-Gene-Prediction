@@ -129,7 +129,7 @@ def add_hic_from_hic_file(pred, hic_file, chromosome, hic_resolution, window):
     )
     start_loci = pred["end"].min()
     end_loci = pred["end"].max()
-    step_size = 10000 * hic_resolution  # ~10k bins at a time
+    step_size = 10000 * hic_resolution  # ~10k bins at a time => ~12GB of memory usage
     for i in range(start_loci, end_loci, step_size):
         start = i
         end = start + step_size
