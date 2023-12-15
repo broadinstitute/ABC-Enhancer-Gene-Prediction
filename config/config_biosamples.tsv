@@ -1,0 +1,2 @@
+biosample	DHS	ATAC	H3K27ac	default_accessibility_feature	HiC_file	HiC_type	HiC_resolution	alt_TSS	alt_genes
+K562	/oak/stanford/groups/engreitz/Projects/Benchmarking/Predictors/K562_ABC/ENCFF860XAE.sorted.se.bam			DHS	https://www.encodeproject.org/files/ENCFF621AIY/@@download/ENCFF621AIY.hic	hic	5000		
