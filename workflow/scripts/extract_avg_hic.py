@@ -1,7 +1,8 @@
-import click
 import gzip
 import os
 import subprocess
+
+import click
 
 
 @click.command()
@@ -16,6 +17,7 @@ def main(avg_hic_bed_file, output_dir):
             if line.startswith("#"):  # header line
                 continue
             chrom = line.split("\t")[0]
+            hic_info = "\t".join(line.split("\t")[1:])
 
             if chrom not in file_handles:
                 print(f"Writing lines for {chrom}")
@@ -24,7 +26,7 @@ def main(avg_hic_bed_file, output_dir):
                     os.path.join(output_dir, chrom), f"{chrom}.bed"
                 )
                 file_handles[chrom] = open(chrom_file, "w")
-            file_handles[chrom].write(line)
+            file_handles[chrom].write(hic_info)
 
     # Close all file handles
     for fh in file_handles.values():
