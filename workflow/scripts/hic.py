@@ -205,8 +205,6 @@ def process_hic(
         )
     )
 
-    hic_df["juicebox_contact_values"] = hic_df["hic_contact"]
-
     print("process.hic: Elapsed time: {}".format(time.time() - t))
 
     return hic_df

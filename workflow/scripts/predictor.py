@@ -1,6 +1,6 @@
-import os
-import sys
+import math
 import time
+from collections import defaultdict
 from typing import Dict
 
 import hicstraw
@@ -26,7 +26,7 @@ def make_predictions(
     if args.hic_file:
         if args.hic_type == "hic":
             pred = add_hic_from_hic_file(
-                pred, args.hic_file, chromosome, args.hic_resolution, args.window
+                pred, args.hic_file, chromosome, args.hic_resolution
             )
         else:
             pred = add_hic_from_directory(
@@ -40,7 +40,7 @@ def make_predictions(
                 hic_scale,
                 chrom_sizes_map,
             )
-
+        pred = qc_hic(pred, hic_gamma, hic_scale, args.hic_resolution)
         pred.fillna(value={"hic_contact": 0}, inplace=True)
 
         # Add powerlaw scaling
@@ -97,10 +97,39 @@ def make_pred_table(chromosome, enh, genes, window, chrom_sizes_map: Dict[str, i
 
 
 def create_df_from_records(records, hic_resolution):
+    """
+    The bins returned from hic straw are in hic_resolution increments
+    If resolution = 5k, we want to normalize the bins such that:
+        5000 -> bin 1
+        10000 -> bin 2
+        ...
+        100k -> bin 20
+    Where the left number is the genomic position of the bin
+
+    We also record the neighboring bins of the diagonals, as we
+    want to replace the value with the neighbors later
+    """
     bin_data = [[r.binX, r.binY, r.counts] for r in records]
     df = pd.DataFrame(bin_data, columns=["binX", "binY", "counts"])
     df["binX"] = np.floor(df["binX"] / hic_resolution).astype(int)
     df["binY"] = np.floor(df["binY"] / hic_resolution).astype(int)
+    diagonal_bins = df[df["binX"] == df["binY"]]
+    # Provide max neighbor counts
+    # We'll divide by the normalizing constant later when replacing the value
+    for idx, record in diagonal_bins.iterrows():
+        binX = record["binX"]
+        left_bin_count = df[(df["binX"] == binX - 1) & (df["binY"] == binX)][
+            "counts"
+        ].max()
+        right_bin_count = df[(df["binX"] == binX) & (df["binY"] == binX + 1)][
+            "counts"
+        ].max()
+        if math.isnan(left_bin_count):
+            left_bin_count = 0
+        if math.isnan(right_bin_count):
+            right_bin_count = 0
+
+        df.loc[idx, "max_neighbor_count"] = max(left_bin_count, right_bin_count)
     return df
 
 
@@ -117,29 +146,91 @@ def get_chrom_format(hic: hicstraw.HiCFile, chromosome):
         return chromosome[3:]
 
 
-def add_hic_from_hic_file(pred, hic_file, chromosome, hic_resolution, window):
+def get_chrom_size(hic: hicstraw.HiCFile, chromosome):
+    for chrom in hic.getChromosomes():
+        if chrom.name == chromosome:
+            return chrom.length
+    raise Exception(f"{chromosome} not found in hic data")
+
+
+def determine_num_rows_to_fetch(
+    chrom_size, hic_resolution, desired_mem_usage=16e9, record_size_bytes=200
+):
+    """
+    Assuming each record takes up 200 bytes of memory, try to determine what is the
+    max number of rows we can fetch from the hic matrix without going over the
+    desired memory usage
+    """
+    num_records_per_row = math.ceil(chrom_size / hic_resolution)
+    mem_usage_per_row = num_records_per_row * record_size_bytes
+    max_rows = desired_mem_usage // mem_usage_per_row
+    return int(max_rows)
+
+
+def add_records_to_bin_sums(records, bin_sums, start, end):
+    """
+    hicstraw will remove duplicates in records
+    e.g say there's contact between bin 1 and bin 2
+    if i query for bin 1 and bin 2's rows in a single query, we will
+    only get 1 value of (bin 1, bin 2).
+    However, if we query for bin 1 and bin 2 separately, each result
+    will give us (bin 1, bin 2).
+    To correct for the duplicate values, we will divide a value in half
+    if it'll get returned in a different query
+    """
+    for record in records:
+        value = record.counts
+        binX, binY = record.binX, record.binY
+        if binX < start or binY > end:
+            value /= 2
+        if binX == binY:
+            bin_sums[binX] += value
+        else:
+            bin_sums[binX] += value
+            bin_sums[binY] += value
+
+
+def add_hic_from_hic_file(pred, hic_file, chromosome, hic_resolution):
     pred["enh_bin"] = np.floor(pred["enh_midpoint"] / hic_resolution).astype(int)
     pred["tss_bin"] = np.floor(pred["TargetGeneTSS"] / hic_resolution).astype(int)
     pred["binX"] = np.min(pred[["enh_bin", "tss_bin"]], axis=1)
     pred["binY"] = np.max(pred[["enh_bin", "tss_bin"]], axis=1)
     hic = hicstraw.HiCFile(hic_file)
     chromosome = get_chrom_format(hic, chromosome)
+    chromosome_size = get_chrom_size(hic, chromosome)
     matrix_object = hic.getMatrixZoomData(
         chromosome, chromosome, "observed", "SCALE", "BP", hic_resolution
     )
-    start_loci = pred["end"].min()
-    end_loci = pred["end"].max()
-    step_size = 10000 * hic_resolution  # ~10k bins at a time => ~12GB of memory usage
+    # start and end loci need to cover the entire chromosome b/c we do normalization
+    start_loci = 0
+    end_loci = chromosome_size
+    num_rows = determine_num_rows_to_fetch(chromosome_size, hic_resolution)
+    bin_sums = defaultdict(float)
+    step_size = num_rows * hic_resolution
     for i in range(start_loci, end_loci, step_size):
         start = i
-        end = start + step_size
-        records = matrix_object.getRecords(start, end, start - window, end + window)
-        df = create_df_from_records(records, hic_resolution)
-        pred = pred.merge(df, how="left", on=["binX", "binY"], suffixes=(None, "_"))
-        if "counts_" in pred:
-            pred["counts"] = np.max(pred[["counts", "counts_"]], axis=1)
-            pred.drop("counts_", inplace=True, axis=1)
+        end = start + step_size - hic_resolution
+        records = matrix_object.getRecords(start, end, start_loci, end_loci)
+        if records:
+            add_records_to_bin_sums(records, bin_sums, start, end)
+            df = create_df_from_records(records, hic_resolution)
+            pred = pred.merge(df, how="left", on=["binX", "binY"], suffixes=(None, "_"))
+            if "counts_" in pred:
+                pred["counts"] = np.max(pred[["counts", "counts_"]], axis=1)
+                pred.drop("counts_", inplace=True, axis=1)
 
+                pred["max_neighbor_count"] = np.max(
+                    pred[["max_neighbor_count", "max_neighbor_count_"]], axis=1
+                )
+                pred.drop("max_neighbor_count_", inplace=True, axis=1)
+
+    row_mean = np.mean(list(bin_sums.values()))
+    # normalize hic_contact by the row_mean, to imitate a doubly stochastic hic matrix
+    pred["counts"] /= row_mean
+    pred["max_neighbor_count"] /= row_mean
+    pred["counts"] = pred["max_neighbor_count"].combine_first(pred["counts"])
+
+    # Replace counts with max_neighbor_counts if it exists
     pred.drop(
         [
             "binX",
@@ -149,6 +240,7 @@ def add_hic_from_hic_file(pred, hic_file, chromosome, hic_resolution, window):
             "enh_midpoint",
             "tss_bin",
             "enh_bin",
+            "max_neighbor_count",
         ],
         inplace=True,
         axis=1,
@@ -289,8 +381,6 @@ def add_hic_from_directory(
                 left_on=["tss_bin", "enh_bin"],
                 right_on=["bin1", "bin2"],
             )
-        # QC juicebox HiC
-        pred = qc_hic(pred, hic_gamma, hic_scale, args.hic_resolution)
 
     pred.drop(
         [
