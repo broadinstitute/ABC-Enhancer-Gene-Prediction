@@ -3,9 +3,9 @@ import argparse
 import csv
 import glob
 import os.path
-from matplotlib.backends.backend_pdf import PdfPages
 
 import pandas as pd
+from matplotlib.backends.backend_pdf import PdfPages
 from metrics import GrabQCMetrics, HiCQC, NeighborhoodFileQC, PeakFileQC
 
 
@@ -44,6 +44,8 @@ def generateQCMetrics(args):
     chrom_order = pd.read_csv(args.chrom_sizes, sep="\t", header=None)[0].tolist()
     # read prediction file
     prediction_df = pd.read_csv(args.preds_file, sep="\t")
+    n = min(len(prediction_df), 10000)
+    prediction_df = prediction_df.sample(n)
 
     with PdfPages(args.output_qc_plots) as pdf_writer:
         pred_metrics = GrabQCMetrics(

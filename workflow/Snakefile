@@ -29,6 +29,3 @@ rule all:
 		allPutative = expand(
 			os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.tsv.gz"), biosample=BIOSAMPLES_CONFIG["biosample"]
 		),
-		qcPlots = expand(
-			os.path.join(RESULTS_DIR, "{biosample}", "Metrics", f"QCSummary_{filtered_prediction_file_format}.tsv"), biosample=BIOSAMPLES_CONFIG["biosample"]
-		)

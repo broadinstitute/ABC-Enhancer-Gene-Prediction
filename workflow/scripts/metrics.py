@@ -194,8 +194,8 @@ def PlotDistribution(
     ax.set_ylabel(stat.capitalize())
 
     mean, median, _ = grabStatistics(pd_series)
-    mean = round(mean, 3)  # 3 decimal places
-    median = round(median, 3)  # 3 decimal places
+    mean = round(mean, 6)  # 6 decimal places
+    median = round(median, 6)  # 6 decimal places
     plt.axvline(x=mean, color="red", linestyle="-", label=f"Mean={mean}")
     plt.axvline(x=median, color="green", linestyle="-", label=f"Median={median}")
     plt.legend()
@@ -203,39 +203,33 @@ def PlotDistribution(
     return ax.get_figure()
 
 
-def HiCQC(df, gamma, scale, pdf_writer):
-    # filter for e-g distances of >10kb and <1Mb
-    df = df.loc[(df["distance"] > 10000) & (df["distance"] < 1000000)]
+def PlotScatter(series_a, series_b, title, x_label, y_label):
+    plt.clf()  # make sure we're starting with a fresh plot
+    ax = sns.scatterplot(x=series_a, y=series_b)
+    ax.set_title(title)
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
 
-    max_samples = 10000
-    df = df.sample(min(max_samples, len(df)))
-    if len(df):
+    return ax.get_figure()
+
+
+def HiCQC(df, gamma, scale, pdf_writer):
+    df = df[df["distance"] > 0]
+    distance = df["distance"]
+    hic_columns = [
+        "hic_contact",
+        "hic_contact_pl_scaled",
+        "hic_contact_pl_scaled_adj",
+        "powerlaw_contact",
+        "powerlaw_contact_reference",
+        "hic_pseudocount",
+    ]
+    log_dist = distance.apply(np.log10)
+    for col in hic_columns:
+        values = df[col]
+        pdf_writer.savefig(PlotDistribution(values, col, x_label="value"))
         pdf_writer.savefig(
-            PlotPowerLawRelationship(
-                df, "distance", "hic_contact", "E-G Pair HiC Powerlaw Fit", gamma, scale
+            PlotScatter(
+                log_dist, values, f"{col} vs dist", x_label="log10 dist", y_label=col
             )
         )
-
-
-def PlotPowerLawRelationship(df, x_axis_col, y_axis_col, title, gamma, scale):
-    plt.clf()  # make sure we're starting with a fresh plot
-    # filter out zeros
-    df = df[df[x_axis_col] > 0]
-    df = df[df[y_axis_col] > 0]
-
-    log_x_axis_label = f"natural log ({x_axis_col})"
-    log_y_axis_label = f"natural log ({y_axis_col})"
-    log_x_vals = np.log(df[x_axis_col])
-    log_y_vals = np.log(df[y_axis_col])
-    values = np.vstack([log_x_vals, log_y_vals])
-    kernel = stats.gaussian_kde(values)(values)
-    ax = sns.scatterplot(x=log_x_vals, y=log_y_vals, c=kernel, cmap="viridis")
-
-    fitted_y_vals = scale + -1 * gamma * log_x_vals
-    sns.lineplot(
-        x=log_x_vals, y=fitted_y_vals, color="red", label="Fitted Powerlaw Fit"
-    )
-    ax.set(title=title)
-    ax.set_xlabel(log_x_axis_label)
-    ax.set_ylabel(log_y_axis_label)
-    return ax.get_figure()
