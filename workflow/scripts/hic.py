@@ -62,7 +62,6 @@ def load_hic_juicebox(
     min_window,
     gamma,
     scale=None,
-    interpolate_nan=True,
     apply_diagonal_bin_correction=True,
 ):
     print("Loading HiC Juicebox")
@@ -76,7 +75,6 @@ def load_hic_juicebox(
         window=window,
         min_window=min_window,
         gamma=gamma,
-        interpolate_nan=interpolate_nan,
         apply_diagonal_bin_correction=apply_diagonal_bin_correction,
         scale=scale,
     )
@@ -124,7 +122,6 @@ def process_hic(
     min_window=0,
     hic_is_doubly_stochastic=False,
     apply_diagonal_bin_correction=True,
-    interpolate_nan=True,
     gamma=None,
     kr_cutoff=0.25,
     scale=None,
@@ -183,9 +180,6 @@ def process_hic(
                 hic_mat[last_idx, last_idx - 1] * tss_hic_contribution / 100
             )
 
-    # Any entries with low KR norm entries get set to NaN. These will be interpolated below
-    hic_mat = apply_kr_threshold(hic_mat, hic_norm_file, kr_cutoff)
-
     # Remove lower triangle
     if not hic_is_vc:
         hic_mat = ssp.triu(hic_mat)
@@ -212,38 +206,10 @@ def process_hic(
     )
 
     hic_df["juicebox_contact_values"] = hic_df["hic_contact"]
-    # Fill NaN
-    if interpolate_nan:
-        interpolate_nan_in_hic(hic_df, gamma, scale, resolution)
 
     print("process.hic: Elapsed time: {}".format(time.time() - t))
 
     return hic_df
-
-
-def interpolate_nan_in_hic(hic_df, gamma, scale, resolution) -> None:
-    # NaN in the KR normalized matrix are not zeros. They are entries where the KR algorithm did not converge (or low KR norm)
-    # So need to fill these. Use powerlaw.
-    # Not ideal obviously but the scipy interpolation algos are either very slow or don't work since the nan structure implies that not all nans are interpolated
-    nan_loc = np.isnan(hic_df["hic_contact"])
-    hic_df.loc[nan_loc, "hic_contact"] = get_powerlaw_at_distance(
-        abs(hic_df.loc[nan_loc, "bin1"] - hic_df.loc[nan_loc, "bin2"]) * resolution,
-        gamma,
-        scale,
-        min_distance=resolution,
-    )
-
-
-def apply_kr_threshold(hic_mat, hic_norm_file, kr_cutoff):
-    # Convert all entries in the hic matrix corresponding to low kr norm entries to NaN
-    # Note that in scipy sparse matrix multiplication 0*nan = 0
-    # So this doesn't convert 0's to nan only nonzero to nan
-    norms = np.loadtxt(hic_norm_file)
-    norms[norms < kr_cutoff] = np.nan
-    norms[norms >= kr_cutoff] = 1
-    norm_mat = ssp.dia_matrix((1.0 / norms, [0]), (len(norms), len(norms)))
-
-    return norm_mat * hic_mat * norm_mat
 
 
 def hic_to_sparse(filename, norm_file, resolution, hic_is_doubly_stochastic=False):

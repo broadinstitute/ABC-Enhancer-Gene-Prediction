@@ -22,6 +22,7 @@ rule create_predictions:
 		flags = config['params_predict']['flags'],
 		gamma = config['params_predict']['hic_gamma'],
 		scale = config['params_predict']['hic_scale'],
+		hic_pseudocount_distance = config['params_predict']['hic_pseudocount_distance'],
 		accessibility_feature = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'default_accessibility_feature'],
 		scripts_dir = SCRIPTS_DIR,
 	conda:
@@ -43,6 +44,7 @@ rule create_predictions:
 			--genes {input.genes} \
 			--hic_gamma {params.gamma} \
 			--hic_scale {params.scale} \
+			--hic_pseudocount_distance {params.hic_pseudocount_distance} \
 			{params.hic_params} \
 			{params.flags}
 		"""
