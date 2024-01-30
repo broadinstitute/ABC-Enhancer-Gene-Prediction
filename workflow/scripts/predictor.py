@@ -41,12 +41,12 @@ def make_predictions(
                 chrom_sizes_map,
             )
 
-        # Remove all NaN values so we have valid scores
         pred.fillna(value={"hic_contact": 0}, inplace=True)
+
         # Add powerlaw scaling
         pred = scale_hic_with_powerlaw(pred, args)
         # Add pseudocount
-        pred = add_hic_pseudocount(pred)
+        pred = add_hic_pseudocount(pred, args)
         print("HiC Complete")
 
         pred = compute_score(
@@ -290,7 +290,7 @@ def add_hic_from_directory(
                 right_on=["bin1", "bin2"],
             )
         # QC juicebox HiC
-        pred = qc_hic(pred)
+        pred = qc_hic(pred, hic_gamma, hic_scale, args.hic_resolution)
 
     pred.drop(
         [
@@ -342,32 +342,42 @@ def add_powerlaw_to_predictions(pred, args, hic_gamma, hic_scale):
     pred["powerlaw_contact_reference"] = get_powerlaw_at_distance(
         pred["distance"].values, args.hic_gamma_reference, hic_scale_reference
     )
-
     return pred
 
 
-def add_hic_pseudocount(pred):
+def add_hic_pseudocount(pred, args):
     # Add a pseudocount based on the powerlaw expected count at a given distance
-
-    pseudocount = pred[["powerlaw_contact", "powerlaw_contact_reference"]].min(axis=1)
-    pred["hic_pseudocount"] = pseudocount
-    pred["hic_contact_pl_scaled_adj"] = pred["hic_contact_pl_scaled"] + pseudocount
-
+    pseudocount_distance = get_powerlaw_at_distance(
+        args.hic_pseudocount_distance,
+        args.hic_gamma,
+        args.hic_scale,
+        args.hic_resolution,
+    )
+    pred["hic_pseudocount"] = pd.DataFrame(
+        {"a": pred["powerlaw_contact"], "b": pseudocount_distance}
+    ).min(axis=1)
+    pred["hic_contact_pl_scaled_adj"] = (
+        pred["hic_contact_pl_scaled"] + pred["hic_pseudocount"]
+    )
     return pred
 
 
-def qc_hic(pred, threshold=0.01):
-    # Genes with insufficient hic coverage should get nan'd
-
+def qc_hic(pred, gamma, scale, resolution, threshold=0.01):
+    # Gene promoters with insufficient hic coverage should get replaced with powerlaw
     summ = (
         pred.loc[pred["isSelfPromoter"], :]
         .groupby(["TargetGene"])
         .agg({"hic_contact": "sum"})
     )
     bad_genes = summ.loc[summ["hic_contact"] < threshold, :].index
+    affected_pred = pred.loc[pred["TargetGene"].isin(bad_genes), :]
 
-    pred.loc[pred["TargetGene"].isin(bad_genes), "hic_contact"] = np.nan
-
+    pred.loc[affected_pred.index, "hic_contact"] = get_powerlaw_at_distance(
+        affected_pred["distance"].values,
+        gamma,
+        scale,
+        min_distance=resolution,
+    )
     return pred
 
 
