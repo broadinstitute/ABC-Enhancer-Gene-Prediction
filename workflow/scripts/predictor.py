@@ -109,27 +109,31 @@ def create_df_from_records(records, hic_resolution):
     We also record the neighboring bins of the diagonals, as we
     want to replace the value with the neighbors later
     """
-    bin_data = [[r.binX, r.binY, r.counts] for r in records]
-    df = pd.DataFrame(bin_data, columns=["binX", "binY", "counts"])
+    df = pd.DataFrame(records, columns=["binX", "binY", "counts"])
     df["binX"] = np.floor(df["binX"] / hic_resolution).astype(int)
     df["binY"] = np.floor(df["binY"] / hic_resolution).astype(int)
-    diagonal_bins = df[df["binX"] == df["binY"]]
+    df = df.set_index(["binX", "binY"])  # Set indexes for performance
+    diagonal_bins = df[
+        df.index.get_level_values("binX") == df.index.get_level_values("binY")
+    ]
+    print(f"{len(diagonal_bins)} diagonal bins")
     # Provide max neighbor counts
     # We'll divide by the normalizing constant later when replacing the value
-    for idx, record in diagonal_bins.iterrows():
-        binX = record["binX"]
-        left_bin_count = df[(df["binX"] == binX - 1) & (df["binY"] == binX)][
-            "counts"
-        ].max()
-        right_bin_count = df[(df["binX"] == binX) & (df["binY"] == binX + 1)][
-            "counts"
-        ].max()
-        if math.isnan(left_bin_count):
-            left_bin_count = 0
-        if math.isnan(right_bin_count):
-            right_bin_count = 0
+    for (binX, binY), _ in diagonal_bins.iterrows():
+        left_bin_count, right_bin_count = 0, 0
+        left_binX = binX - 1
+        left_binY = binX
+        if (left_binX, left_binY) in df.index:
+            left_bin_count = df.loc[(left_binX, left_binY), "counts"]
 
-        df.loc[idx, "max_neighbor_count"] = max(left_bin_count, right_bin_count)
+        right_binX = binX
+        right_binY = binX + 1
+        if (right_binX, right_binY) in df.index:
+            right_bin_count = df.loc[(right_binX, right_binY), "counts"]
+
+        df.loc[(binX, binY), "max_neighbor_count"] = max(
+            left_bin_count, right_bin_count
+        )
     return df
 
 
@@ -178,9 +182,7 @@ def add_records_to_bin_sums(records, bin_sums, start, end):
     To correct for the duplicate values, we will divide a value in half
     if it'll get returned in a different query
     """
-    for record in records:
-        value = record.counts
-        binX, binY = record.binX, record.binY
+    for binX, binY, value in records:
         if binX < start or binY > end:
             value /= 2
         if binX == binY:
@@ -204,17 +206,26 @@ def add_hic_from_hic_file(pred, hic_file, chromosome, hic_resolution):
     # start and end loci need to cover the entire chromosome b/c we do normalization
     start_loci = 0
     end_loci = chromosome_size
-    num_rows = determine_num_rows_to_fetch(chromosome_size, hic_resolution)
+    num_rows = 8000  # Using megamap with this number keeps memory usage right under 4GB
     bin_sums = defaultdict(float)
     step_size = num_rows * hic_resolution
+
     for i in range(start_loci, end_loci, step_size):
+        start_time = time.time()
         start = i
         end = start + step_size - hic_resolution
         records = matrix_object.getRecords(start, end, start_loci, end_loci)
         if records:
+            records = [[r.binX, r.binY, r.counts] for r in records]
             add_records_to_bin_sums(records, bin_sums, start, end)
             df = create_df_from_records(records, hic_resolution)
-            pred = pred.merge(df, how="left", on=["binX", "binY"], suffixes=(None, "_"))
+            pred = pred.merge(
+                df,
+                how="left",
+                left_on=["binX", "binY"],
+                right_index=True,
+                suffixes=(None, "_"),
+            )
             if "counts_" in pred:
                 pred["counts"] = np.max(pred[["counts", "counts_"]], axis=1)
                 pred.drop("counts_", inplace=True, axis=1)
@@ -225,12 +236,12 @@ def add_hic_from_hic_file(pred, hic_file, chromosome, hic_resolution):
                 pred.drop("max_neighbor_count_", inplace=True, axis=1)
 
     row_mean = np.mean(list(bin_sums.values()))
-    # normalize hic_contact by the row_mean, to imitate a doubly stochastic hic matrix
+    # normalize hic_contact by the row_mean to reflect a doubly stochastic hic matrix
     pred["counts"] /= row_mean
     pred["max_neighbor_count"] /= row_mean
+    # Fill in diagonals with the max of neighbors
     pred["counts"] = pred["max_neighbor_count"].combine_first(pred["counts"])
 
-    # Replace counts with max_neighbor_counts if it exists
     pred.drop(
         [
             "binX",
