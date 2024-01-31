@@ -7,7 +7,7 @@ from typing import Dict
 import numpy as np
 import pandas as pd
 import yaml
-from test_utils import get_biosample_names, get_filtered_dataframe, read_file, run_cmd
+from utils import get_biosample_names, get_filtered_dataframe, read_file, run_cmd
 
 logging.basicConfig(level=logging.INFO)
 

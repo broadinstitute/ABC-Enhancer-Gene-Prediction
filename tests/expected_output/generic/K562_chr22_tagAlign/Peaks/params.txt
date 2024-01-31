@@ -1,11 +1,11 @@
-narrowPeak tests/test_output/generic/K562_chr22_tagAlign/Peaks/macs2_peaks.narrowPeak.sorted
+narrowPeak /oak/stanford/groups/engreitz/Users/atan5133/ABC-Enhancer-Gene-Prediction/tests/test_output/generic/K562_chr22_tagAlign/Peaks/macs2_peaks.narrowPeak.sorted
 accessibility ['example_chr/chr22/chr22.sorted.tagAlign.gz']
-chrom_sizes reference/hg38/GRCh38_EBV.no_alt.chrom.sizes.tsv
-chrom_sizes_bed tests/test_output/generic/tmp/reference/hg38/GRCh38_EBV.no_alt.chrom.sizes.tsv.bed
-outDir tests/test_output/generic/K562_chr22_tagAlign/Peaks
+chrom_sizes /oak/stanford/groups/engreitz/Users/atan5133/ABC-Enhancer-Gene-Prediction/reference/hg38/GRCh38_EBV.no_alt.chrom.sizes.tsv
+chrom_sizes_bed /oak/stanford/groups/engreitz/Users/atan5133/ABC-Enhancer-Gene-Prediction/tests/test_output/generic/tmp/GRCh38_EBV.no_alt.chrom.sizes.tsv.bed
+outDir /oak/stanford/groups/engreitz/Users/atan5133/ABC-Enhancer-Gene-Prediction/tests/test_output/generic/K562_chr22_tagAlign/Peaks
 nStrongestPeaks 150000
 peakExtendFromSummit 250
 ignoreSummits False
 minPeakWidth 500
 regions_includelist example_chr/chr22/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.hg38.TSS500bp.bed
-regions_blocklist reference/hg38/GRCh38_unified_blacklist.bed
+regions_blocklist /oak/stanford/groups/engreitz/Users/atan5133/ABC-Enhancer-Gene-Prediction/reference/hg38/GRCh38_unified_blacklist.bed

@@ -2,7 +2,7 @@
 
 ### INPUT DATA
 # Add your inputs here
-biosamplesTable: "config/config_biosamples.tsv"  # replace with your own config/config_biosamples.tsv
+biosamplesTable: "config/config_biosamples_chr22.tsv"  # replace with your own config/config_biosamples.tsv
 
 ### OUTPUT DATA
 results_dir: "results/"
