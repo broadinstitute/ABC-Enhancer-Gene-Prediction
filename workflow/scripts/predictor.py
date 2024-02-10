@@ -116,7 +116,6 @@ def create_df_from_records(records, hic_resolution):
     diagonal_bins = df[
         df.index.get_level_values("binX") == df.index.get_level_values("binY")
     ]
-    print(f"{len(diagonal_bins)} diagonal bins")
     # Provide max neighbor counts
     # We'll divide by the normalizing constant later when replacing the value
     for (binX, binY), _ in diagonal_bins.iterrows():
