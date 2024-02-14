@@ -19,7 +19,7 @@ dependencies:
   - samtools>=1.9  # to avoid open ssl issue: https://github.com/merenlab/anvio/issues/1479
   - scipy
   - seaborn
-  - snakemake>=7.0
+  - snakemake>=7,<8
   - sphinx
   - tabix
   - yaml
