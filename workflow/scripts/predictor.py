@@ -192,6 +192,8 @@ def add_records_to_bin_sums(records, bin_sums, start, end):
 
 
 def add_hic_from_hic_file(pred, hic_file, chromosome, hic_resolution):
+    print("Begin HiC")
+    start_time = time.time()
     pred["enh_bin"] = np.floor(pred["enh_midpoint"] / hic_resolution).astype(int)
     pred["tss_bin"] = np.floor(pred["TargetGeneTSS"] / hic_resolution).astype(int)
     pred["binX"] = np.min(pred[["enh_bin", "tss_bin"]], axis=1)
@@ -210,7 +212,6 @@ def add_hic_from_hic_file(pred, hic_file, chromosome, hic_resolution):
     step_size = num_rows * hic_resolution
 
     for i in range(start_loci, end_loci, step_size):
-        start_time = time.time()
         start = i
         end = start + step_size - hic_resolution
         records = matrix_object.getRecords(start, end, start_loci, end_loci)
@@ -256,7 +257,7 @@ def add_hic_from_hic_file(pred, hic_file, chromosome, hic_resolution):
         axis=1,
         errors="ignore",
     )
-
+    print("HiC added to predictions table. Elapsed time: {}".format(time.time() - start_time))
     return pred.rename(columns={"counts": "hic_contact"})
 
 
