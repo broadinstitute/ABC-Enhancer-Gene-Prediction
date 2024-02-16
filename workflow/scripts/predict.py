@@ -3,9 +3,9 @@ import os
 import os.path
 import time
 
+from predictor import make_predictions  # hicstraw must be imported before pandas
 import pandas as pd
 from getVariantOverlap import test_variant_overlap
-from predictor import make_predictions
 from tools import determine_expressed_genes, write_params
 
 
