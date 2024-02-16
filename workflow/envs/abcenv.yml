@@ -13,6 +13,7 @@ dependencies:
   - numpy
   - pandas
   - pip
+  - pyarrow
   - pyranges
   - pysam
   - python>=3.6
