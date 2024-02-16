@@ -3,7 +3,7 @@ import time
 from collections import defaultdict
 from typing import Dict
 
-import hicstraw
+import hicstraw  # hicstraw must be imported before pandas
 import numpy as np
 import pandas as pd
 from hic import (
@@ -257,7 +257,11 @@ def add_hic_from_hic_file(pred, hic_file, chromosome, hic_resolution):
         axis=1,
         errors="ignore",
     )
-    print("HiC added to predictions table. Elapsed time: {}".format(time.time() - start_time))
+    print(
+        "HiC added to predictions table. Elapsed time: {}".format(
+            time.time() - start_time
+        )
+    )
     return pred.rename(columns={"counts": "hic_contact"})
 
 
