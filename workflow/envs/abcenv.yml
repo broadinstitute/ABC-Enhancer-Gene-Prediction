@@ -12,6 +12,7 @@ dependencies:
   - matplotlib
   - numpy
   - pandas
+  - pybigwig
   - pip
   - pyarrow
   - pyranges
