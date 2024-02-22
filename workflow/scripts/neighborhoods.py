@@ -8,9 +8,11 @@ from subprocess import PIPE, Popen, check_call, check_output
 import numpy as np
 import pandas as pd
 import pyranges as pr
+from pyBigWig import open as open_bigwig
 import pysam
 from scipy import interpolate
 from tools import df_to_pyranges, run_command, run_piped_commands
+
 
 pd.options.display.max_colwidth = (
     10000  # seems to be necessary for pandas to read long file names... strange
@@ -460,8 +462,6 @@ def count_tagalign(tagalign, bed_file, output, genome_sizes, genome_sizes_bed):
 
 
 def count_bigwig(target, bed_file, output):
-    from pyBigWig import open as open_bigwig
-
     bw = open_bigwig(target)
     bed = read_bed(bed_file)
     with open(output, "wb") as outfp:
@@ -469,13 +469,16 @@ def count_bigwig(target, bed_file, output):
             # if isinstance(name, np.float):
             #     name = ""
             try:
-                val = (
-                    bw.stats(chr, int(start), int(max(end, start + 1)), "mean")[0] or 0
-                )
+                if chr not in bw.chroms():
+                    val = 0
+                else:
+                    val = (
+                        bw.stats(chr, int(start), int(end), type="sum", exact=True)[0]
+                        or 0
+                    )
             except RuntimeError:
                 print("Failed on", chr, start, end)
                 raise
-            val *= abs(end - start)  # convert to total coverage
             output = ("\t".join([chr, str(start), str(end), str(val)]) + "\n").encode(
                 "ascii"
             )
@@ -541,6 +544,7 @@ def count_single_feature_for_bed(
     skip_rpkm_quantile,
     use_fast_count,
 ):
+    orig_df = df.copy()
     orig_shape = df.shape[0]
     feature_name = feature + "." + os.path.basename(feature_bam)
     feature_outfile = os.path.join(
@@ -570,7 +574,6 @@ def count_single_feature_for_bed(
 
     df = df.merge(domain_counts.drop_duplicates())
     # df = smart_merge(df, domain_counts.drop_duplicates())
-
     assert df.shape[0] == orig_shape, "Dimension mismatch"
 
     df[feature_name + ".RPM"] = 1e6 * df[featurecount] / float(total_counts)
@@ -683,10 +686,10 @@ def count_tagalign_total(tagalign):
 
 
 def count_bigwig_total(bw_file):
-    from pyBigWig import open as open_bigwig
-
     bw = open_bigwig(bw_file)
-    result = sum(l * bw.stats(ch, 0, l, "mean")[0] for ch, l in bw.chroms().items())
+    result = sum(
+        l * bw.stats(ch, 0, l, "mean", exact=True)[0] for ch, l in bw.chroms().items()
+    )
     assert (
         abs(result) > 0
     )  ## BigWig could have negative values, e.g. the negative-strand GroCAP bigwigs
