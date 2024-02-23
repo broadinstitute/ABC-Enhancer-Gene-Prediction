@@ -2,10 +2,10 @@
 
 ### INPUT DATA
 # Add your inputs here
-biosamplesTable: "config/config_biosamples_chr22.tsv"  # replace with your own config/config_biosamples.tsv
+biosamplesTable: "/oak/stanford/groups/engreitz/Users/atan5133/anthonys_scripts/scATAC/biosamples_config.tsv"  # replace with your own config/config_biosamples.tsv
 
 ### OUTPUT DATA
-results_dir: "results/"
+results_dir: "/oak/stanford/groups/engreitz/public/CATLAS_predictions/ABC_results"
 
 
 ### REFERENCE FILES
@@ -41,7 +41,7 @@ params_predict:
 
 params_filter_predictions:
         score_column: 'ABC.Score'
-        threshold: .02
+        threshold: 0.013
         include_self_promoter: True
         only_expressed_genes: False
 
