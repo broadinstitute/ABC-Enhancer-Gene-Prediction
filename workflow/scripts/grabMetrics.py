@@ -3,9 +3,9 @@ import argparse
 import csv
 import glob
 import os.path
-from matplotlib.backends.backend_pdf import PdfPages
 
 import pandas as pd
+from matplotlib.backends.backend_pdf import PdfPages
 from metrics import GrabQCMetrics, HiCQC, NeighborhoodFileQC, PeakFileQC
 
 
@@ -50,7 +50,8 @@ def generateQCMetrics(args):
             prediction_df, chrom_order, args.outdir, pdf_writer
         )
         pred_metrics = PeakFileQC(pred_metrics, args.macs_peaks, pdf_writer)
-        HiCQC(prediction_df, args.hic_gamma, args.hic_scale, pdf_writer)
+        if "hic_contact" in prediction_df.columns:
+            HiCQC(prediction_df, args.hic_gamma, args.hic_scale, pdf_writer)
 
     # Appends Percentage Counts in Promoters into PeakFileQCSummary.txt
     potential_features = ["DHS", "H3K27ac", "ATAC"]
