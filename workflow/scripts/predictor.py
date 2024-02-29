@@ -55,6 +55,14 @@ def make_predictions(
             "ABC",
             adjust_self_promoters=True,
         )
+    else:
+        pred = compute_score(
+            pred,
+            [pred["activity_base"], pred["powerlaw_contact"]],
+            "ABC",
+            adjust_self_promoters=True,
+        )
+
     pred = compute_score(
         pred,
         [pred["activity_base"], pred["powerlaw_contact"]],
