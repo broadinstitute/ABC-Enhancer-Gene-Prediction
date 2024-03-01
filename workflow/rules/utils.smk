@@ -37,6 +37,10 @@ def make_paths_absolute(obj, base_path):
 	return obj
 
 def determine_threshold(biosample):
+	# config takes priority
+	config_threshold = config["params_filter_predictions"]["threshold"]
+	if config_threshold:
+		return config_threshold
 	biosample_row = BIOSAMPLES_CONFIG[BIOSAMPLES_CONFIG["biosample"] == biosample].iloc[0]
 	hic_type = biosample_row["HiC_type"]
 	if hic_type == None:
