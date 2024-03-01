@@ -31,7 +31,7 @@ rule create_predictions:
 		allPutative = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.tsv.gz"),
 		allPutativeNonExpressed = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz"),
 	resources:
-		mem_mb=partial(determine_mem_mb, min_gb=20)  # Use 64GB if using average HiC
+		mem_mb=partial(determine_mem_mb, min_gb=20)  # Use 100GB if using average HiC
 	shell:
 		"""
 		python {params.scripts_dir}/predict.py \
@@ -55,7 +55,7 @@ rule filter_predictions:
 		allPutativeNonExpressed = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz"),
 	params:
 		score_column = config['params_filter_predictions']['score_column'],
-		threshold = config['params_filter_predictions']['threshold'],
+		threshold = lambda wildcards: determine_threshold(wildcards.biosample),
 		include_self_promoter = config['params_filter_predictions']['include_self_promoter'],
 		only_expressed_genes = config['params_filter_predictions']['only_expressed_genes'],
 	conda:

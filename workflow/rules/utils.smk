@@ -7,6 +7,7 @@ wildcard_constraints:
 	other_flags=r".{0}|[^0-9]+"  # match empty strings or more flags
 
 FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE = "threshold{threshold}{separator}{other_flags}"
+DEFAULT_THRESHOLD = .02
 
 MAX_MEM_MB = 250 * 1000  # 250GB
 
@@ -35,9 +36,28 @@ def make_paths_absolute(obj, base_path):
 			return new_file
 	return obj
 
+def determine_threshold(biosample):
+	biosample_row = BIOSAMPLES_CONFIG[BIOSAMPLES_CONFIG["biosample"] == biosample].iloc[0]
+	hic_type = biosample_row["HiC_type"]
+	if hic_type == None:
+		hic_type = "powerlaw"
+	elif hic_type == "avg":
+		hic_type = "avg_hic"
+	elif hic_type == "hic":
+		hic_type = "intact_hic"
+	matching_row = ABC_THRESHOLDS[
+        (ABC_THRESHOLDS["accessibility"] == biosample_row["default_accessibility_feature"])
+        & (ABC_THRESHOLDS["has_h3k27ac"] == bool(biosample_row["H3K27ac"]))
+        & (ABC_THRESHOLDS["hic_type"] == hic_type)
+    ]
+	if len(matching_row) == 0:
+		print(f"Threshold not found for biosample: {biosample}. Using default threshold of {DEFAULT_THRESHOLD}")
+		threshold = DEFAULT_THRESHOLD
+	else:
+		threshold = matching_row.iloc[0]["threshold"]
+	return threshold
 
-def determine_filtered_prediction_file_format(config):
-	threshold = config['params_filter_predictions']['threshold']
+def determine_filtered_prediction_file_format(threshold, config):
 	include_self_promoter = config['params_filter_predictions']['include_self_promoter']
 	only_expressed_genes = config['params_filter_predictions']['only_expressed_genes']
 	if include_self_promoter or only_expressed_genes:
@@ -61,6 +81,10 @@ def load_biosamples_config(config):
 	_validate_biosamples_config(biosamples_config)
 	_configure_tss_and_gene_files(biosamples_config)
 	return biosamples_config
+
+def load_abc_thresholds(config):
+	file = config["ref"]["abc_thresholds"]
+	return pd.read_csv(file, sep='\t')
 
 def get_accessibility_files(wildcards):
 	# Inputs have been validated so only DHS or ATAC is provided
