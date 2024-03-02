@@ -40,7 +40,7 @@ params_predict:
 
 params_filter_predictions:
         score_column: 'ABC.Score'
-        threshold: .02
+        threshold: null
         include_self_promoter: True
         only_expressed_genes: False
 

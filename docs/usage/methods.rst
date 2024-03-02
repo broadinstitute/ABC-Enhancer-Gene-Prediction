@@ -32,22 +32,6 @@ Description:
 	#. Remove any regions listed in the 'blocklist' and include any regions listed in the 'includelist'
 	#. Merge any overlapping regions
 
-
-**Example:**
-
-.. code-block:: console
-
-	$ python workflow/scripts/makeCandidateRegions.py \
-	    --narrowPeak results/K562_chr22/Peaks/macs2_peaks.narrowPeak.sorted \
-	    --accessibility example_chr/chr22/ENCFF860XAE.chr22.sorted.se.bam \
-	    --outDir results/K562_chr22/Peaks \
-	    --chrom_sizes reference/hg38/GRCh38_EBV.no_alt.chrom.sizes.tsv \
-	    --chrom_sizes_bed results/tmp/reference/hg38/GRCh38_EBV.no_alt.chrom.sizes.tsv.bed \
-	    --regions_blocklist reference/hg38/GRCh38_unified_blacklist.bed \
-	    --regions_includelist example_chr/chr22/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.hg38.TSS500bp.bed \
-	    --peakExtendFromSummit 250 \
-	    --nStrongestPeak 150000
-
 The method of defining candidate elements includes the following steps:
 
 - Peak-calling with MACS2
@@ -135,22 +119,6 @@ Output
 
 Description: 
 	- Counts DNase-seq (or ATAC-seq) and H3K27ac ChIP-seq reads in candidate enhancer regions
-
-**Example:**
-
-.. code-block:: console
-
-	$ python workflow/scripts/run.neighborhoods.py \
-	    --candidate_enhancer_regions results/K562_chr22/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed \
-	    --DHS example_chr/chr22/ENCFF860XAE.chr22.sorted.se.bam \
-	    --default_accessibility_feature DHS \
-	    --chrom_sizes reference/hg38/GRCh38_EBV.no_alt.chrom.sizes.tsv \
-	    --chrom_sizes_bed results/tmp/reference/hg38/GRCh38_EBV.no_alt.chrom.sizes.tsv.bed \
-	    --outdir results/K562_chr22/Neighborhoods \
-	    --genes results/K562_chr22/processed_genes_file.bed \
-	    --ubiquitously_expressed_genes reference/UbiquitouslyExpressedGenes.txt \
-	    --qnorm reference/EnhancersQNormRef.K562.txt \
-	    --H3K27ac example_chr/chr22/ENCFF790GFL.chr22.sorted.se.bam
 
 2.1. Activity scales with read counts 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -344,26 +312,6 @@ Description:
 	- Makes predictions following the Activity by Contact model
 	- Utilizes HiC data for contact; otherwise, uses powerlaw
 
-**Example:**
-
-.. code-block:: console
-
-	$ python workflow/scripts/predict.py \
-	    --enhancers results/K562_chr22/Neighborhoods/EnhancerList.txt \
-	    --outdir results/K562_chr22/Predictions \
-	    --score_column ABC.Score \
-	    --chrom_sizes reference/hg38/GRCh38_EBV.no_alt.chrom.sizes.tsv \
-	    --accessibility_feature DHS \
-	    --cellType K562_chr22 \
-	    --genes results/K562_chr22/Neighborhoods/GeneList.txt \
-	    --hic_gamma 1.024238616787792 \
-	    --hic_scale 5.9594510043736655 \
-	    --hic_file https://www.encodeproject.org/files/ENCFF621AIY/@@download/ENCFF621AIY.hic \
-	    --hic_type hic \
-	    --hic_resolution 5000 \
-	    --scale_hic_using_powerlaw
-	    
-
 5. Interpreting the ABC score
 ------------------------------------
 
@@ -374,7 +322,7 @@ model against CRISPR enhancer perturbation in K562 cells (
 
 These analyses show that ABC scores reliably predicts enhancer-gene regulatory interactions
 that were experimentally inferred in the CRISPR experiments. At the recall of 70%, an ABC model
-using DNase-seq + cell-type specific Hi-C data achieves a precision of 52%, meaning around half of
+using DNase-seq + cell-type specific Hi-C data achieves a precision of 51%, meaning around half of
 the predicted enhancer-gene regulatory interactions will be true positives. The ABC scores
 themselves correlate with the CRISPR effect size on gene expression when perturbing an enhancer,
 however not in a precise linear fashion. This probably has different technical and biological
@@ -390,5 +338,8 @@ common ABC models can be found in the table below:
    :file: /tables/perf_summary.csv
    :header-rows: 1
     
+We automatically choose the best threshold based on your input, but you can specify a threshold value
+yourself in the config.yaml file.
+
 Our CRISPR benchmarking pipeline can be used to infer thresholds for non-standard ABC models and is
 available on `Github <https://github.com/EngreitzLab/CRISPR_comparison>`_.
