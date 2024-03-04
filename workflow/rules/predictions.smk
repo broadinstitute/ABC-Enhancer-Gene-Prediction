@@ -1,3 +1,5 @@
+from functools import partial
+
 def _get_run_predictions_hic_params(wildcards):
 	hic_file = BIOSAMPLES_CONFIG.loc[wildcards.biosample, "HiC_file"]
 	hic_type = BIOSAMPLES_CONFIG.loc[wildcards.biosample, "HiC_type"]
@@ -20,15 +22,16 @@ rule create_predictions:
 		flags = config['params_predict']['flags'],
 		gamma = config['params_predict']['hic_gamma'],
 		scale = config['params_predict']['hic_scale'],
+		hic_pseudocount_distance = config['params_predict']['hic_pseudocount_distance'],
 		accessibility_feature = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'default_accessibility_feature'],
-		scripts_dir = SCRIPTS_DIR
+		scripts_dir = SCRIPTS_DIR,
 	conda:
 		"../envs/abcenv.yml"
 	output: 
 		allPutative = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.tsv.gz"),
 		allPutativeNonExpressed = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz"),
 	resources:
-		mem_mb=32*1000
+		mem_mb=partial(determine_mem_mb, min_gb=20)  # Use 100GB if using average HiC
 	shell:
 		"""
 		python {params.scripts_dir}/predict.py \
@@ -41,6 +44,7 @@ rule create_predictions:
 			--genes {input.genes} \
 			--hic_gamma {params.gamma} \
 			--hic_scale {params.scale} \
+			--hic_pseudocount_distance {params.hic_pseudocount_distance} \
 			{params.hic_params} \
 			{params.flags}
 		"""
@@ -51,10 +55,9 @@ rule filter_predictions:
 		allPutativeNonExpressed = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz"),
 	params:
 		score_column = config['params_filter_predictions']['score_column'],
-		threshold = config['params_filter_predictions']['threshold'],
+		threshold = lambda wildcards: determine_threshold(wildcards.biosample),
 		include_self_promoter = config['params_filter_predictions']['include_self_promoter'],
 		only_expressed_genes = config['params_filter_predictions']['only_expressed_genes'],
-		scripts_dir = SCRIPTS_DIR
 	conda:
 		"../envs/abcenv.yml"
 	output:
@@ -66,7 +69,7 @@ rule filter_predictions:
 		mem_mb=determine_mem_mb
 	shell:
 		"""
-		python {params.scripts_dir}/filter_predictions.py \
+		python {SCRIPTS_DIR}/filter_predictions.py \
 			--output_tsv_file {output.enhPredictionsFull} \
 			--output_slim_tsv_file {output.enhPredictionsSlim} \
 			--output_bed_file {output.enhPredictionsFullBedpe} \

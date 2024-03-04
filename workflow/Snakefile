@@ -9,25 +9,34 @@ configfile: "config/config.yaml"
 conda: "mamba"
 
 include: "rules/utils.smk"
-config = convert_reference_files(config)
-RESULTS_DIR = config['predictions_results_dir']
+# Making paths absolute is important so that ABC can be 
+# used as a submodule for ENCODE-rE2G
+ABC_DIR_PATH = os.path.abspath(config["ABC_DIR_PATH"])
+config = make_paths_absolute(config, ABC_DIR_PATH)
+
+RESULTS_DIR = config['results_dir']
 BIOSAMPLES_CONFIG = load_biosamples_config(config)
-SCRIPTS_DIR = os.path.join(config["ABC_DIR_PATH"], "workflow/scripts")
+SCRIPTS_DIR = os.path.join(ABC_DIR_PATH, "workflow/scripts")
+ABC_THRESHOLDS = load_abc_thresholds(config)
 include: "rules/macs2.smk"
 include: "rules/candidate_regions.smk"
 include: "rules/neighborhoods.smk"
 include: "rules/predictions.smk"
 include: "rules/qc.smk"
 
-## overall rule to run pipeline
+def qc_plot_outputs():
+	output_files = []
+	for _, row in BIOSAMPLES_CONFIG.iterrows():
+		biosample = row["biosample"]
+		threshold = determine_threshold(biosample)
+		file = os.path.join(RESULTS_DIR, biosample, "Metrics", f"QCSummary_{determine_filtered_prediction_file_format(threshold, config)}.tsv")
+		output_files.append(file)
+	return output_files
 
-filtered_prediction_file_format = determine_filtered_prediction_file_format(config)
 
 rule all:
 	input:
 		allPutative = expand(
 			os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.tsv.gz"), biosample=BIOSAMPLES_CONFIG["biosample"]
 		),
-		qcPlots = expand(
-			os.path.join(RESULTS_DIR, "{biosample}", "Metrics", f"QCSummary_{filtered_prediction_file_format}.tsv"), biosample=BIOSAMPLES_CONFIG["biosample"]
-		)
+		qcPlots = qc_plot_outputs()

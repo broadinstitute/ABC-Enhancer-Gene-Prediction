@@ -5,7 +5,6 @@ rule call_macs_peaks:
 	params:
 		pval = config['params_macs']['pval'],
 		genome_size = config['params_macs']['genome_size'],
-		out_dir = config["predictions_results_dir"]
 	conda:
 		"../envs/abcenv.yml"
 	output: 
@@ -30,7 +29,7 @@ rule call_macs_peaks:
 		--nomodel \
 		--keep-dup all \
 		--call-summits \
-		--outdir {params.out_dir}/{wildcards.biosample}/Peaks \
+		--outdir {RESULTS_DIR}/{wildcards.biosample}/Peaks \
 		-t {input.accessibility} 
 		"""
 
@@ -38,7 +37,7 @@ rule generate_chrom_sizes_bed_file:
 	input:
 		chrom_sizes = config['ref']['chrom_sizes']
 	output:
-		chrom_sizes_bed = os.path.join(RESULTS_DIR, "tmp", config['ref']['chrom_sizes'] + '.bed')
+		chrom_sizes_bed = os.path.join(RESULTS_DIR, "tmp", os.path.basename(config['ref']['chrom_sizes']) + '.bed')
 	resources:
 		mem_mb=determine_mem_mb
 	shell:
@@ -50,7 +49,7 @@ rule generate_chrom_sizes_bed_file:
 rule sort_narrowpeaks:
 	input:
 		narrowPeak = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak"),
-		chrom_sizes_bed = os.path.join(RESULTS_DIR, "tmp", config['ref']['chrom_sizes'] + '.bed')
+		chrom_sizes_bed = os.path.join(RESULTS_DIR, "tmp", os.path.basename(config['ref']['chrom_sizes']) + '.bed')
 	params:
 		chrom_sizes = config['ref']['chrom_sizes']
 	conda:

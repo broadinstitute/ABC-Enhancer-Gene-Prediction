@@ -6,8 +6,9 @@ from typing import Dict
 
 import numpy as np
 import pandas as pd
+import glob
 import yaml
-from test_utils import get_biosample_names, get_filtered_dataframe, read_file, run_cmd
+from utils import get_biosample_names, get_filtered_dataframe, read_file, run_cmd
 
 logging.basicConfig(level=logging.INFO)
 
@@ -25,11 +26,11 @@ COLUMNS_TO_COMPARE: Dict[str, type] = {
     "ABC.Score": np.float64,
     "powerlaw.Score": np.float64,
 }
-TEST_OUTPUT_DIR = CONFIG["predictions_results_dir"]
+TEST_OUTPUT_DIR = CONFIG["results_dir"]
 EXPECTED_OUTPUT_DIR = f"tests/expected_output/{CONFIG['TEST_CONFIG_NAME']}"
 ALL_PUTATIVE_PRED_FILE = "Predictions/EnhancerPredictionsAllPutative.tsv.gz"
-POSITIVES_PRED_FILE = (
-    "Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter.tsv"
+THRESHOLDED_PRED_FILE = (
+    "Predictions/EnhancerPredictionsFull_threshold*_self_promoter.tsv"
 )
 INTERMEDIATE_FILES = [
     # EnhancerList is not good to compare b/c genicSymbol column isn't deterministic
@@ -49,10 +50,35 @@ class TestFullABCRun(unittest.TestCase):
             expected_contents = read_file(expected_file)
             self.assertEqual(test_contents, expected_contents, msg)
 
-    def compare_prediction_file(self, biosample: str, pred_file) -> None:
+    def compare_all_prediction_file(self, biosample: str, pred_file) -> None:
         test_file = os.path.join(TEST_OUTPUT_DIR, biosample, pred_file)
         expected_file = os.path.join(EXPECTED_OUTPUT_DIR, biosample, pred_file)
         print(f"Comparing biosample: {biosample} for pred_file: {pred_file}")
+        pd.testing.assert_frame_equal(
+            get_filtered_dataframe(test_file, COLUMNS_TO_COMPARE),
+            get_filtered_dataframe(expected_file, COLUMNS_TO_COMPARE),
+        )
+
+    def compare_thresholded_prediction_file(self, biosample: str) -> None:
+        test_files = glob.glob(
+            os.path.join(TEST_OUTPUT_DIR, biosample, THRESHOLDED_PRED_FILE)
+        )
+        expected_files = glob.glob(
+            os.path.join(EXPECTED_OUTPUT_DIR, biosample, THRESHOLDED_PRED_FILE)
+        )
+        if len(test_files) != 1:
+            raise Exception(
+                f"Multiple or no test thresholded files found. Please clean up. {test_files}"
+            )
+        if len(expected_files) != 1:
+            raise Exception(
+                f"Multiple or no expected thresholded files found. Please clean up. {expected_files}"
+            )
+        test_file = test_files[0]
+        expected_file = expected_files[0]
+        print(
+            f"Comparing biosample: {biosample} for pred_file: {os.path.basename(test_file)}"
+        )
         pd.testing.assert_frame_equal(
             get_filtered_dataframe(test_file, COLUMNS_TO_COMPARE),
             get_filtered_dataframe(expected_file, COLUMNS_TO_COMPARE),
@@ -67,8 +93,8 @@ class TestFullABCRun(unittest.TestCase):
         biosample_names = get_biosample_names(CONFIG["biosamplesTable"])
         for biosample in biosample_names:
             self.compare_intermediate_files(biosample)
-            self.compare_prediction_file(biosample, ALL_PUTATIVE_PRED_FILE)
-            self.compare_prediction_file(biosample, POSITIVES_PRED_FILE)
+            self.compare_all_prediction_file(biosample, ALL_PUTATIVE_PRED_FILE)
+            self.compare_thresholded_prediction_file(biosample)
 
         # Make sure the test doesn't take too long
         # May need to adjust as more biosamples are added, but we should keep

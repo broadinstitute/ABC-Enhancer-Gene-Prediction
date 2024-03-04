@@ -5,7 +5,7 @@
 biosamplesTable: "config/config_biosamples_chr22.tsv"  # replace with your own config/config_biosamples.tsv
 
 ### OUTPUT DATA
-predictions_results_dir: "results"
+results_dir: "results/"
 
 
 ### REFERENCE FILES
@@ -16,6 +16,7 @@ ref:
         genes: "reference/hg38/CollapsedGeneBounds.hg38.bed"
         genome_tss: "reference/hg38/CollapsedGeneBounds.hg38.TSS500bp.bed"
         qnorm: "reference/EnhancersQNormRef.K562.txt"
+        abc_thresholds: "reference/abc_thresholds.tsv"
 
 ### RULE SPECIFIC PARAMS
 params_macs:
@@ -37,10 +38,11 @@ params_predict:
         flags: "--scale_hic_using_powerlaw"
         hic_gamma: 1.024238616787792  # avg hic gamma
         hic_scale: 5.9594510043736655  # avg hic scale
+        hic_pseudocount_distance: 5000  # powerlaw at this distance is added to the contact for all predictions
 
 params_filter_predictions:
         score_column: 'ABC.Score'
-        threshold: .02
+        threshold: null  # null => Automatic determination based on input 
         include_self_promoter: True
         only_expressed_genes: False
 
