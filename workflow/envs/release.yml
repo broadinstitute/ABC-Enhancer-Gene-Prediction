@@ -82,7 +82,6 @@ dependencies:
   - exceptiongroup=1.2.0=pyhd8ed1ab_2
   - expat=2.5.0=hcb278e6_1
   - filechunkio=1.8=py_2
-  - filelock=3.13.1=pyhd8ed1ab_0
   - fmt=10.2.1=h00ab1b0_0
   - font-ttf-dejavu-sans-mono=2.37=hab24e00_0
   - font-ttf-inconsolata=3.000=h77eed37_0
@@ -230,7 +229,6 @@ dependencies:
   - lzo=2.10=h516909a_1000
   - macs2=2.2.9.1=py310h4b81fae_0
   - make=4.3=hd18ef5c_1
-  - mamba=1.5.7=py310h51d5547_0
   - markdown-it-py=3.0.0=pyhd8ed1ab_0
   - markupsafe=2.1.5=py310h2372a71_0
   - matplotlib=3.8.3=py310hff52083_0
@@ -295,7 +293,7 @@ dependencies:
   - pysftp=0.2.9=py_1
   - pysocks=1.7.1=pyha2e5f31_6
   - pytest=8.0.2=pyhd8ed1ab_0
-  - python=3.10.11=he550d4f_0_cpython
+  - python=3.10.13=hd12c33a_1_cpython
   - python-dateutil=2.9.0=pyhd8ed1ab_0
   - python-fastjsonschema=2.19.1=pyhd8ed1ab_0
   - python-irodsclient=2.0.0=pyhd8ed1ab_0
@@ -331,10 +329,10 @@ dependencies:
   - sip=6.7.12=py310hc6cd4ac_0
   - six=1.16.0=pyh6c4a22f_0
   - slacker=0.14.0=py_0
-  - smart_open=7.0.1=pyhd8ed1ab_0
+  - smart_open=6.4.0=pyhd8ed1ab_0
   - smmap=5.0.0=pyhd8ed1ab_0
-  - snakemake=7.25.4=hdfd78af_0
-  - snakemake-minimal=7.25.4=pyhdfd78af_0
+  - snakemake=7.32.4=hdfd78af_1
+  - snakemake-minimal=7.32.4=pyhdfd78af_1
   - snappy=1.1.10=h9fff704_0
   - snowballstemmer=2.2.0=pyhd8ed1ab_0
   - sorted_nearest=0.0.39=py310h4b81fae_0
