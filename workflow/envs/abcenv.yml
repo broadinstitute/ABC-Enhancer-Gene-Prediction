@@ -21,6 +21,8 @@ dependencies:
   - samtools>=1.9  # to avoid open ssl issue: https://github.com/merenlab/anvio/issues/1479
   - scipy
   - seaborn
+  # smart_open version >=7 leads to errors with Snakemake https://pastebin.com/uBmBwdnK
+  - smart_open<7
   - snakemake>=7,<8
   - sphinx
   - tabix
@@ -33,4 +35,3 @@ dependencies:
   - pip:
     - sphinx_rtd_theme
     - hic-straw
-  
