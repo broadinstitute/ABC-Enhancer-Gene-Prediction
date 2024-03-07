@@ -10,7 +10,7 @@ rule create_neighborhoods:
 		genes = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'genes'],
 		ubiquitous_genes = config['ref']['ubiquitous_genes'],
 		chrom_sizes = config['ref']['chrom_sizes'],
-		qnorm = config['ref']['qnorm'] if config['params_neighborhoods']['use_qnorm'] else None,
+		qnorm = f"--qnorm {config['ref']['qnorm']}" if config['params_neighborhoods']['use_qnorm'] else "",
 		scripts_dir = SCRIPTS_DIR
 	conda:
 		"../envs/abcenv.yml"
@@ -39,6 +39,6 @@ rule create_neighborhoods:
 			--outdir {output.neighborhoodDirectory} \
 			--genes {output.processed_genes_file} \
 			--ubiquitously_expressed_genes {params.ubiquitous_genes} \
-			--qnorm {params.qnorm} \
-			--H3K27ac {params.H3K27ac}
+			--H3K27ac {params.H3K27ac} \
+			{params.qnorm} 
 		"""
