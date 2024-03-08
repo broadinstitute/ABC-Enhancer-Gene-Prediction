@@ -1,12 +1,12 @@
 enhancers /oak/stanford/groups/engreitz/Users/atan5133/ABC-Enhancer-Gene-Prediction/tests/test_output/generic/K562_chr22_tagAlign/Neighborhoods/EnhancerList.txt
 genes /oak/stanford/groups/engreitz/Users/atan5133/ABC-Enhancer-Gene-Prediction/tests/test_output/generic/K562_chr22_tagAlign/Neighborhoods/GeneList.txt
-score_column ABC.Score
+score_column powerlaw.Score
 accessibility_feature ATAC
 outdir /oak/stanford/groups/engreitz/Users/atan5133/ABC-Enhancer-Gene-Prediction/tests/test_output/generic/K562_chr22_tagAlign/Predictions
 cellType K562_chr22_tagAlign
 chrom_sizes /oak/stanford/groups/engreitz/Users/atan5133/ABC-Enhancer-Gene-Prediction/reference/hg38/GRCh38_EBV.no_alt.chrom.sizes.tsv
-hic_file https://www.encodeproject.org/files/ENCFF621AIY/@@download/ENCFF621AIY.hic
-hic_resolution 5000
+hic_file None
+hic_resolution None
 hic_pseudocount_distance 5000
 hic_type hic
 hic_is_doubly_stochastic False
