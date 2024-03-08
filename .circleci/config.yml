@@ -39,7 +39,7 @@ jobs:
       - run:
           name: Run tests
           command: |
-            conda run -n abc-env pytest
+            conda run -n abc-env pytest -n 4
       - slack/notify:
           branch_pattern: dev,main 
           channel: abc_circleci

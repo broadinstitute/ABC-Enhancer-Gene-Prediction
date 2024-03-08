@@ -17,6 +17,7 @@ dependencies:
   - pyarrow
   - pyranges
   - pysam
+  - pytest-xdist
   - python>=3.6
   - samtools>=1.9  # to avoid open ssl issue: https://github.com/merenlab/anvio/issues/1479
   - scipy
