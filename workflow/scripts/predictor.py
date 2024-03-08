@@ -51,21 +51,21 @@ def make_predictions(
 
         pred = compute_score(
             pred,
-            [pred["activity_base"], pred["hic_contact_pl_scaled_adj"]],
+            [pred["activity_base_enh"], pred["hic_contact_pl_scaled_adj"]],
             "ABC",
             adjust_self_promoters=True,
         )
     else:
         pred = compute_score(
             pred,
-            [pred["activity_base"], pred["powerlaw_contact"]],
+            [pred["activity_base_enh"], pred["powerlaw_contact"]],
             "ABC",
             adjust_self_promoters=True,
         )
 
     pred = compute_score(
         pred,
-        [pred["activity_base"], pred["powerlaw_contact"]],
+        [pred["activity_base_enh"], pred["powerlaw_contact"]],
         "powerlaw",
         adjust_self_promoters=True,
     )
@@ -87,7 +87,6 @@ def make_pred_table(chromosome, enh, genes, window, chrom_sizes_map: Dict[str, i
         end_slop=window,
         chrom_sizes_map=chrom_sizes_map,
     )
-
     pred = enh_pr.join(genes_pr).df.drop(
         ["Start_b", "End_b", "chr_b", "Chromosome", "Start", "End"], axis=1
     )
