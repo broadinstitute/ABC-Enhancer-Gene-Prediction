@@ -34,10 +34,12 @@ jobs:
             black . --check
       - run:
           name: Install abc-env
+          no_output_timeout: 30m
           command: |
             mamba env create -f workflow/envs/abcenv.yml
       - run:
           name: Run tests
+          no_output_timeout: 30m
           command: |
             conda run -n abc-env pytest -n 4
       - slack/notify:
