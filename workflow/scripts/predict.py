@@ -3,6 +3,7 @@ import os
 import os.path
 import time
 
+# isort:skip_file
 from predictor import make_predictions  # hicstraw must be imported before pandas
 import pandas as pd
 from getVariantOverlap import test_variant_overlap
@@ -175,6 +176,13 @@ def main():
     genes = determine_expressed_genes(
         genes, args.expression_cutoff, args.promoter_activity_quantile_cutoff
     )
+    print("reading enhancers")
+    enhancers_full = pd.read_csv(args.enhancers, sep="\t")
+    enhancers_column_names = ["chr", "start", "end", "name", "class", "activity_base"]
+    if args.accessibility_feature not in {"ATAC", "DHS"}:
+        raise ValueError("The feature has to be either ATAC or DHS!")
+    normalized_activity_col = f"normalized_{args.accessibility_feature.lower()}"
+    normalized_h3k27ac = "normalized_h3k27ac"
 
     genes_columns_to_subset = [
         "chr",
@@ -184,8 +192,9 @@ def main():
         "PromoterActivityQuantile",
         "isExpressed",
         "Ensembl_ID",
+        f"{args.accessibility_feature}.RPKM.quantile.TSS1Kb",
     ]
-    genes_column_names = [
+    new_genes_column_names = [
         "chr",
         "TargetGene",
         "TargetGeneTSS",
@@ -193,24 +202,24 @@ def main():
         "TargetGenePromoterActivityQuantile",
         "TargetGeneIsExpressed",
         "TargetGeneEnsembl_ID",
+        f"{normalized_activity_col}_prom",
     ]
-    print("reading enhancers")
-    enhancers_full = pd.read_csv(args.enhancers, sep="\t")
-    enhancers_column_names = ["chr", "start", "end", "name", "class", "activity_base"]
-    if args.accessibility_feature not in {"ATAC", "DHS"}:
-        raise ValueError("The feature has to be either ATAC or DHS!")
-    normalized_activity_col = f"normalized_{args.accessibility_feature.lower()}"
+    if "H3K27ac.RPKM.quantile.TSS1Kb" in genes.columns:
+        genes_columns_to_subset.append("H3K27ac.RPKM.quantile.TSS1Kb")
+        new_genes_column_names.append(f"{normalized_h3k27ac}_prom")
 
-    genes_subset_columns = genes_columns_to_subset + [
-        f"{args.accessibility_feature}.RPKM.quantile.TSS1Kb"
+    genes = genes.loc[:, genes_columns_to_subset]
+    genes.columns = new_genes_column_names
+
+    enhancers = enhancers_full.loc[:, enhancers_column_names]
+    enhancers["activity_base_enh"] = enhancers_full["activity_base"]
+    enhancers["activity_base_squared_enh"] = enhancers["activity_base_enh"] ** 2
+    enhancers[f"{normalized_activity_col}_enh"] = enhancers_full[
+        f"{normalized_activity_col}"
     ]
-    genes = genes.loc[:, genes_subset_columns]
-    genes.columns = genes_column_names + [normalized_activity_col]
+    if "normalized_h3K27ac" in enhancers_full.columns:
+        enhancers[f"{normalized_h3k27ac}_enh"] = enhancers_full["normalized_h3K27ac"]
 
-    enh_subset_columns = enhancers_column_names + [normalized_activity_col]
-    enhancers = enhancers_full.loc[:, enh_subset_columns]
-
-    enhancers["activity_base_squared"] = enhancers["activity_base"] ** 2
     # Initialize Prediction files
     all_pred_file_expressed = os.path.join(
         args.outdir, "EnhancerPredictionsAllPutative.tsv.gz"
