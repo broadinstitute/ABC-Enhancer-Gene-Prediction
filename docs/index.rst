@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 The Activity-by-Contact (ABC) Model for predicting enhancer-gene regulatory interactions
-========================================================
+========================================================================================
 
 The Activity-by-Contact (ABC) model predicts which enhancers regulate which genes in a given cell type, based on a combination of input datasets representing enhancer activity and 3D enhancer-promoter contact frequency [1].
 
@@ -47,6 +47,7 @@ v0.2 (version for [1])
    usage/getting_started
    usage/methods
    usage/scATAC
+   usage/troubleshooting
 
 
 .. toctree::

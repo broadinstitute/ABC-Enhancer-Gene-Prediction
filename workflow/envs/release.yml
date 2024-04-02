@@ -80,6 +80,7 @@ dependencies:
   - dropbox=11.36.2=pyhd8ed1ab_0
   - eido=0.2.2=pyhd8ed1ab_0
   - exceptiongroup=1.2.0=pyhd8ed1ab_2
+  - execnet=2.0.2=pyhd8ed1ab_0
   - expat=2.5.0=hcb278e6_1
   - filechunkio=1.8=py_2
   - fmt=10.2.1=h00ab1b0_0
@@ -293,6 +294,7 @@ dependencies:
   - pysftp=0.2.9=py_1
   - pysocks=1.7.1=pyha2e5f31_6
   - pytest=8.0.2=pyhd8ed1ab_0
+  - pytest-xdist=3.5.0=pyhd8ed1ab_0
   - python=3.10.13=hd12c33a_1_cpython
   - python-dateutil=2.9.0=pyhd8ed1ab_0
   - python-fastjsonschema=2.19.1=pyhd8ed1ab_0
