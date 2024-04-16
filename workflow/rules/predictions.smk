@@ -28,7 +28,7 @@ rule create_predictions:
 		allPutative = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.tsv.gz"),
 		allPutativeNonExpressed = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz"),
 	resources:
-		mem_mb=32*1000
+		mem_mb=64*1000
 	shell:
 		"""
 		python {params.scripts_dir}/predict.py \
@@ -63,7 +63,7 @@ rule filter_predictions:
 		enhPredictionsSlim = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", f"EnhancerPredictions_{FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE}.tsv"),
 		genePredictionsStats = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", f"GenePredictionStats_{FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE}.tsv")
 	resources:
-		mem_mb=determine_mem_mb
+		mem_mb=16*1000
 	shell:
 		"""
 		python {params.scripts_dir}/filter_predictions.py \

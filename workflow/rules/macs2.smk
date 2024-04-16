@@ -56,7 +56,7 @@ rule sort_narrowpeaks:
 	conda:
 		os.path.join(config["env"],"abcenv.yml")
 	output:
-		narrowPeakSorted = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted")
+		narrowPeakSorted = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted.preFilter")
 	resources:
 		mem_mb=determine_mem_mb
 	shell:
@@ -65,3 +65,18 @@ rule sort_narrowpeaks:
 		bedtools intersect -u -a {input.narrowPeak} -b {input.chrom_sizes_bed} | \
 		bedtools sort -faidx {params.chrom_sizes} -i stdin > {output.narrowPeakSorted}
 		"""
+
+rule filter_sorted_narrowpeaks:
+	input:
+		narrowPeakSorted = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted.preFilter")
+	params:
+		nStrongestSummit = config['params_macs']['nStrongestSummits'],
+	output:
+		narrowPeakSorted_filtered = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted")
+	resources:
+		mem_mb=50000
+	run:
+		narrowPeak=pd.read_table(input.narrowPeakSorted, sep="\t", header=None, index_col=False)
+		narrowPeak_filtered=narrowPeak.groupby([0,1,2]).apply(lambda x:x.sort_values(ascending=False,by=8).head(params.nStrongestSummit))
+		narrowPeak_filtered=narrowPeak_filtered.reset_index(drop=True)
+		narrowPeak_filtered.to_csv(output.narrowPeakSorted_filtered ,sep="\t",header=False,index=False)
