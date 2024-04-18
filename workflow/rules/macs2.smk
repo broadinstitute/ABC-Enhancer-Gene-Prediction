@@ -6,7 +6,7 @@ rule call_macs_peaks:
 		pval = config['params_macs']['pval'],
 		genome_size = config['params_macs']['genome_size'],
 	conda:
-		"../envs/abcenv.yml"
+		os.path.join(config["env"],"abcenv.yml")
 	output: 
 		narrowPeak = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak")
 	resources:
