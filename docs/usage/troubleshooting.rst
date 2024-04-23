@@ -10,3 +10,8 @@ If you're on MacOSX, make sure to remove some of the requirements in abcenv.yml.
 
 If there are incompatibility issues, try building off the 'release.yml' conda environment.
 
+
+malloc: Heap corruption detected
+--------------------------------
+We've seen this happen when running on MacOSX during the prediction rule. It's an error thrown by the hicstraw library and happens the first time you use it. 
+Re-running the pipeline should fix it.
