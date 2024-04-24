@@ -46,7 +46,7 @@ def write_connections_bedpe_format(pred, outfile, score_column):
     towrite["chr2"] = pred["chr"]
     towrite["y1"] = pred["TargetGeneTSS"]
     towrite["y2"] = pred["TargetGeneTSS"]
-    towrite["name"] = pred["TargetGene"] + "_" + pred["name"]
+    towrite["name"] = pred["TargetGene"] + "|" + pred["name"]
     towrite["score"] = pred[score_column]
     towrite["strand1"] = "."
     towrite["strand2"] = "."
