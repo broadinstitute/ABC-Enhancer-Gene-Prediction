@@ -113,19 +113,18 @@ def fill_diagonals(df, hic_resolution):
     diagonal_bins = df[
         df.index.get_level_values("binX") == df.index.get_level_values("binY")
     ]
+    search_space_bins = 1
+    if hic_resolution < 5000:
+        search_space_bins = math.ceil(5000 / hic_resolution)
     for (binX, binX), _ in diagonal_bins.iterrows():
-        left_bin_count, right_bin_count = 0, 0
-        left_binX = binX - 1
-        left_binY = binX
-        if (left_binX, left_binY) in df.index:
-            left_bin_count = df.loc[(left_binX, left_binY), "counts"]
-
-        right_binX = binX
-        right_binY = binX + 1
-        if (right_binX, right_binY) in df.index:
-            right_bin_count = df.loc[(right_binX, right_binY), "counts"]
-
-        df.loc[(binX, binX), "counts"] = max(left_bin_count, right_bin_count)
+        max_contact = 0
+        for i in range(1, search_space_bins+1):
+            left_bin = (binX - i, binX)
+            right_bin = (binX, binX + i)  # we have to look above b/c we haven't processed right bin yet
+            for bin in [left_bin, right_bin]:
+                if bin in df.index:
+                    max_contact = max(max_contact, df.loc[bin, "counts"])
+        df.loc[(binX, binX), "counts"] = max_contact
 
 
 def create_df_from_records(records, hic_resolution):
