@@ -118,9 +118,12 @@ def fill_diagonals(df, hic_resolution):
         search_space_bins = math.ceil(5000 / hic_resolution)
     for (binX, binX), _ in diagonal_bins.iterrows():
         max_contact = 0
-        for i in range(1, search_space_bins+1):
+        for i in range(1, search_space_bins + 1):
             left_bin = (binX - i, binX)
-            right_bin = (binX, binX + i)  # we have to look above b/c we haven't processed right bin yet
+            right_bin = (
+                binX,
+                binX + i,
+            )  # we have to look above b/c we haven't processed right bin yet
             for bin in [left_bin, right_bin]:
                 if bin in df.index:
                     max_contact = max(max_contact, df.loc[bin, "counts"])

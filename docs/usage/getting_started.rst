@@ -123,7 +123,7 @@ biosamples config is a tsv separated file with the following columns
 	- If you dumped hic into a directory via JuicerTools, use ``juicebox``
 	- If you have a bedpe file for contact, it should be a tab delimited file containing 8 columns (chr1,start1,end1,chr2,start2,end2,name,score)
 #. HiC_resolution (int)
-	- Recommended to use 5KB (kilobases)
+	- Currently only 5KB (kilobases) is supported
 	- 5KB means dna regions are bucketed into 5KB bins and we measure contact between those bins
 #. alt_TSS (optional; not recommended to fill)
 	- Alternative TSS reference file 
