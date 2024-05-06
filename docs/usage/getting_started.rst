@@ -15,6 +15,7 @@ Installation
 	- Make sure you're not using strict channel priorities: ``conda config --set channel_priority flexible``. Otherwise, you may encounter package conflicts later when installing abc. 
 	- To install mamba: ``conda create -n mamba -c conda-forge mamba -y``
 		- We recommend mamba as using conda can take 1hr+ for setup
+		- See troubleshooting page if you run into issues
 
 
 Setup Conda Environment
