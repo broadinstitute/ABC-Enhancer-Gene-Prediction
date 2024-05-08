@@ -106,6 +106,8 @@ def _validate_hic_info(row: pd.Series):
 	if row["HiC_file"]:
 		if not (row["HiC_type"] and row["HiC_resolution"]):
 			raise InvalidConfig("Must provide HiC type and resolution with file")
+		if row["HiC_resolution"] != 5000:
+			raise InvalidConfig("Only 5kb resolution supported at the moment")
 
 def _validate_biosamples_config(biosamples_config):
 	"""
