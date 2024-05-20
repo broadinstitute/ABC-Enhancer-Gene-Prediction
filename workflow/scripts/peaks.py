@@ -31,22 +31,39 @@ def make_candidate_regions_from_summits(
 
     # 2. Take top N regions, get summits, extend summits, merge, remove blocklist, add includelist, sort and merge
     # use -sorted in intersect command? Not worth it, both files are small
-    piped_cmds = [
-        f"bedtools sort -i {reads_out} -faidx {genome_sizes}",
-        "bedtools merge -i stdin -c 4 -o max",
-        "sort -nr -k 4",
-        f"head -n {n_enhancers}",
-        f"bedtools intersect -b stdin -a {macs_peaks} -wa",
-        'awk \'{{print $1 "\\t" $2 + $10 "\\t" $2 + $10}}\'',
-        f"bedtools slop -i stdin -b {peak_extend} -g {genome_sizes}",
-        f"bedtools sort -i stdin -faidx {genome_sizes}",
-        "bedtools merge -i stdin",
-        blocklist_command,
-        "cut -f 1-3",
-        includelist_command,
-        f"bedtools sort -i stdin -faidx {genome_sizes}",
-        f"bedtools merge -i stdin > {outfile}",
-    ]
+    if regions_includelist:
+        piped_cmds = [
+            f"bedtools sort -i {reads_out} -faidx {genome_sizes}",
+            "bedtools merge -i stdin -c 4 -o max",
+            "sort -nr -k 4",
+            f"head -n {n_enhancers}",
+            f"bedtools intersect -b stdin -a {macs_peaks} -wa",
+            'awk \'{{print $1 "\\t" $2 + $10 "\\t" $2 + $10}}\'',
+            f"bedtools slop -i stdin -b {peak_extend} -g {genome_sizes}",
+            f"bedtools sort -i stdin -faidx {genome_sizes}",
+            "bedtools merge -i stdin",
+            blocklist_command,
+            "cut -f 1-3",
+            includelist_command,
+            f"bedtools sort -i stdin -faidx {genome_sizes}",
+            f"bedtools merge -i stdin > {outfile}",
+        ]
+    else:
+        piped_cmds = [
+            f"bedtools sort -i {reads_out} -faidx {genome_sizes}",
+            "bedtools merge -i stdin -c 4 -o max",
+            "sort -nr -k 4",
+            f"head -n {n_enhancers}",
+            f"bedtools intersect -b stdin -a {macs_peaks} -wa",
+            'awk \'{{print $1 "\\t" $2 + $10 "\\t" $2 + $10}}\'',
+            f"bedtools slop -i stdin -b {peak_extend} -g {genome_sizes}",
+            f"bedtools sort -i stdin -faidx {genome_sizes}",
+            "bedtools merge -i stdin",
+            blocklist_command,
+            "cut -f 1-3",
+            f"bedtools sort -i stdin -faidx {genome_sizes}",
+            f"bedtools merge -i stdin > {outfile}",
+        ]
 
     run_piped_commands(piped_cmds)
 

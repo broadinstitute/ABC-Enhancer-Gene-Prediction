@@ -8,7 +8,7 @@ from subprocess import PIPE, Popen, check_call, check_output
 import numpy as np
 import pandas as pd
 import pyranges as pr
-from pyBigWig import open as open_bigwig
+#from pyBigWig import open as open_bigwig
 import pysam
 from scipy import interpolate
 from tools import df_to_pyranges, run_command, run_piped_commands

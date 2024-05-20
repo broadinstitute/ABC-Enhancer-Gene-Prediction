@@ -6,10 +6,11 @@ import numpy as np
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--all_putative")
+    #parser.add_argument("--all_putative")
     parser.add_argument("--score_column", default="ABC.Score")
     parser.add_argument("--chrom_sizes")
     parser.add_argument("--outdir")
+    parser.add_argument("--threshold")
     args = parser.parse_args()
     return args
 
@@ -20,7 +21,7 @@ def test_variant_overlap(args, all_putative):
         "EnhancerPredictionsAllPutative.ForVariantOverlap.shrunk150bp.tsv.gz",
     )
     # generate predictions for variant overlap
-    score_t = all_putative[args.score_column] > 0.015
+    score_t = all_putative[args.score_column] > float(args.threshold)
     not_promoter = all_putative["class"] != "promoter"
     is_promoter = all_putative["class"] == "promoter"
     score_one = all_putative[args.score_column] > 0.1

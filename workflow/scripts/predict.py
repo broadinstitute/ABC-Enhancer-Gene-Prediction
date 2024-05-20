@@ -6,7 +6,7 @@ import time
 # isort:skip_file
 from predictor import make_predictions  # hicstraw must be imported before pandas
 import pandas as pd
-from getVariantOverlap import test_variant_overlap
+#from getVariantOverlap import test_variant_overlap
 from tools import determine_expressed_genes, write_params
 
 
@@ -291,7 +291,7 @@ def main():
         na_rep="NaN",
     )
 
-    test_variant_overlap(args, all_putative)
+    #test_variant_overlap(args, all_putative)
 
     print("Done.")
 

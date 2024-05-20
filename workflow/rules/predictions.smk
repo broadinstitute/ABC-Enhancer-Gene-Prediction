@@ -54,6 +54,8 @@ rule filter_predictions:
 		allPutative = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.tsv.gz"),
 		allPutativeNonExpressed = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz"),
 	params:
+		output_dir = lambda wildcards: os.path.join(RESULTS_DIR, wildcards.biosample, "Predictions"),
+		chrom_sizes = config['ref']['chrom_sizes'],
 		score_column = config['params_filter_predictions']['score_column'],
 		threshold = lambda wildcards: determine_threshold(wildcards.biosample),
 		include_self_promoter = config['params_filter_predictions']['include_self_promoter'],
@@ -64,18 +66,21 @@ rule filter_predictions:
 		enhPredictionsFull = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", f"EnhancerPredictionsFull_{FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE}.tsv"),
 		enhPredictionsFullBedpe = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", f"EnhancerPredictionsFull_{FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE}.bedpe"),
 		enhPredictionsSlim = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", f"EnhancerPredictions_{FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE}.tsv"),
-		genePredictionsStats = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", f"GenePredictionStats_{FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE}.tsv")
+		genePredictionsStats = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", f"GenePredictionStats_{FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE}.tsv"),
+		#ForVariantOverlap =os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.ForVariantOverlap.shrunk150bp.tsv.gz")
 	resources:
 		mem_mb=determine_mem_mb
 	shell:
 		"""
 		python {SCRIPTS_DIR}/filter_predictions.py \
+			--outdir {params.output_dir} \
 			--output_tsv_file {output.enhPredictionsFull} \
 			--output_slim_tsv_file {output.enhPredictionsSlim} \
 			--output_bed_file {output.enhPredictionsFullBedpe} \
 			--output_gene_stats_file {output.genePredictionsStats} \
 			--pred_file {input.allPutative} \
 			--pred_nonexpressed_file {input.allPutativeNonExpressed} \
+			--chrom_sizes {params.chrom_sizes} \
 			--score_column {params.score_column} \
 			--threshold {params.threshold} \
 			--include_self_promoter {params.include_self_promoter} \

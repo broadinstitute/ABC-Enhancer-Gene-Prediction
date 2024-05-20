@@ -39,4 +39,5 @@ rule all:
 		allPutative = expand(
 			os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.tsv.gz"), biosample=BIOSAMPLES_CONFIG["biosample"]
 		),
-		qcPlots = qc_plot_outputs()
+		candidateRegionsWOpromoters=expand(os.path.join(RESULTS_DIR, "{biosample}", "Peaks_candidate_wo_promoters", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed"), biosample=BIOSAMPLES_CONFIG["biosample"]),
+		qcPlots = qc_plot_outputs(),

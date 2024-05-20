@@ -30,3 +30,34 @@ rule make_candidate_regions:
 			--peakExtendFromSummit {params.peakExtendFromSummit} \
 			--nStrongestPeak {params.nStrongestPeak}
 		"""
+
+rule make_candidate_regions_wo_uncalled_promoters:
+	input:
+		narrowPeak = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted"),
+		accessibility = get_accessibility_files,
+		chrom_sizes_bed = os.path.join(RESULTS_DIR, "tmp", os.path.basename(config['ref']['chrom_sizes']) + '.bed'),
+	params:
+		chrom_sizes = config['ref']['chrom_sizes'],
+		regions_blocklist = config['ref']['regions_blocklist'],
+		peakExtendFromSummit = config['params_candidate']['peakExtendFromSummit'],
+		nStrongestPeak = config['params_candidate']['nStrongestPeaks'],
+		output_dir = os.path.join(RESULTS_DIR, "{biosample}", "Peaks_candidate_wo_promoters"),
+		scripts_dir = SCRIPTS_DIR,
+	conda:
+		os.path.join(config["env"],"abcenv.yml")
+	output: 
+		candidateRegions = os.path.join(RESULTS_DIR, "{biosample}", "Peaks_candidate_wo_promoters", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed")
+	resources:
+		mem_mb=determine_mem_mb
+	shell: 
+		"""
+		python {params.scripts_dir}/makeCandidateRegions.py \
+			--narrowPeak {input.narrowPeak}\
+			--accessibility {input.accessibility} \
+			--outDir {params.output_dir} \
+			--chrom_sizes {params.chrom_sizes} \
+			--chrom_sizes_bed {input.chrom_sizes_bed} \
+			--regions_blocklist {params.regions_blocklist} \
+			--peakExtendFromSummit {params.peakExtendFromSummit} \
+			--nStrongestPeak {params.nStrongestPeak}
+		"""
