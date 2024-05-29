@@ -13,6 +13,7 @@ dependencies:
   - numpy
   - pandas
   - pybigwig
+  - pulp<2.8 # Pin pulp <2.8 for snakemake: https://github.com/snakemake/snakemake/issues/2607
   - pip
   - pyarrow
   - pyranges
