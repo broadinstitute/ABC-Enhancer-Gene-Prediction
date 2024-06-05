@@ -1,4 +1,4 @@
-CircleCI [![CircleCI](https://dl.circleci.com/status-badge/img/gh/broadinstitute/ABC-Enhancer-Gene-Prediction/tree/dev.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/broadinstitute/ABC-Enhancer-Gene-Prediction/tree/dev)
+CircleCI [![CircleCI](https://dl.circleci.com/status-badge/img/gh/broadinstitute/ABC-Enhancer-Gene-Prediction.svg?style=svg)](https://app.circleci.com/pipelines/github/broadinstitute/ABC-Enhancer-Gene-Prediction)
 
 > :memo: **Note:** This is a revamp of the ABC codebase presented in [1]. If you wish to access that version of the ABC repo, please check out https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction/tree/master.
 
