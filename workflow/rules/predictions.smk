@@ -49,6 +49,59 @@ rule create_predictions:
 			{params.flags}
 		"""
 
+rule combine_accessible_regions:
+	input:
+		prediction_files=expand(os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "EnhancerList.txt"), biosample=BIOSAMPLES_CONFIG["biosample"].to_list())
+	output:
+		combined_prediction_file=os.path.join(RESULTS_DIR, "combined_Predictions", "combined_accessible_peaks.tsv.gz"),
+	params:
+		biosamples=BIOSAMPLES_CONFIG["biosample"].to_list(),
+		result_dir=os.path.join(RESULTS_DIR)
+	resources:
+		mem_mb=8*1000
+	threads: 8
+	shell:
+		"""
+		i=0
+        for sample in {params.biosamples}
+        do 
+            if [ $i -eq 0 ]
+            then
+            	head -1 {params.result_dir}/$sample/Neighborhoods/EnhancerList.txt | cut -f1,2,3 |tr \'\\n\' \'\\t\' > {params.result_dir}/combined_Predictions/combined_accessible_peaks.tsv
+				echo "celltype" >> {params.result_dir}/combined_Predictions/combined_accessible_peaks.tsv
+				sed 1d {params.result_dir}/$sample/Neighborhoods/EnhancerList.txt | cut -f1,2,3 |sed "s/$/\t$sample/" >> {params.result_dir}/combined_Predictions/combined_accessible_peaks.tsv
+            else
+                sed 1d {params.result_dir}/$sample/Neighborhoods/EnhancerList.txt |cut -f1,2,3| sed "s/$/\t$sample/" >> {params.result_dir}/combined_Predictions/combined_accessible_peaks.tsv
+            fi
+            ((i=i+1))
+        done
+		cat {params.result_dir}/combined_Predictions/combined_accessible_peaks.tsv |pigz -p{threads} > {output.combined_prediction_file}
+		rm {params.result_dir}/combined_Predictions/combined_accessible_peaks.tsv
+		"""
+
+rule combine_all_putative_predictions:
+	input:
+		all_putative_files=expand(os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.tsv.gz"), biosample=BIOSAMPLES_CONFIG["biosample"].to_list())
+	output:
+		combined_all_putative_file=os.path.join(RESULTS_DIR, "combined_Predictions", "combined_only_expressed_genes_EnhancerPredictionsAllPutative.tsv.gz"),
+	params:
+		biosamples=BIOSAMPLES_CONFIG["biosample"].to_list(),
+		result_dir=os.path.join(RESULTS_DIR)
+	resources:
+		mem_mb=8*1000
+	threads: 16
+	shell:
+		"""
+		touch {output.combined_all_putative_file}
+		LC_ALL=C
+        	for sample in {params.biosamples}
+        	do 
+            		zcat {params.result_dir}/$sample/Predictions/EnhancerPredictionsAllPutative.tsv.gz | sed 1d |cut -f12,28|sort --parallel={threads} |uniq | pigz -p{threads} >> {output.combined_all_putative_file}
+        	done
+		"""
+		#cat {params.result_dir}/combined_Predictions/combined_only_expressed_genes_EnhancerPredictionsAllPutative.tsv|pigz -p{threads} > {output.combined_all_putative_file}
+		#rm {params.result_dir}/combined_Predictions/combined_only_expressed_genes_EnhancerPredictionsAllPutative.tsv
+
 rule filter_predictions:
 	input: 
 		allPutative = os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.tsv.gz"),
