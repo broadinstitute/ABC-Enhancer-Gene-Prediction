@@ -103,6 +103,33 @@ def make_pred_table(chromosome, enh, genes, window, chrom_sizes_map: Dict[str, i
     return pred
 
 
+def fill_diagonals(df, hic_resolution):
+    """
+    Fill diagonals based on the neighbors
+    We want to search neighboring bins
+    If hic_resolution is < 5kb, make sure we use a search space of 5kb for our
+    neighbors
+    """
+    diagonal_bins = df[
+        df.index.get_level_values("binX") == df.index.get_level_values("binY")
+    ]
+    search_space_bins = 1
+    if hic_resolution < 5000:
+        search_space_bins = math.ceil(5000 / hic_resolution)
+    for (binX, binX), _ in diagonal_bins.iterrows():
+        max_contact = 0
+        for i in range(1, search_space_bins + 1):
+            left_bin = (binX - i, binX)
+            right_bin = (
+                binX,
+                binX + i,
+            )  # we have to look above b/c we haven't processed right bin yet
+            for bin in [left_bin, right_bin]:
+                if bin in df.index:
+                    max_contact = max(max_contact, df.loc[bin, "counts"])
+        df.loc[(binX, binX), "counts"] = max_contact
+
+
 def create_df_from_records(records, hic_resolution):
     """
     The bins returned from hic straw are in hic_resolution increments
@@ -113,33 +140,13 @@ def create_df_from_records(records, hic_resolution):
         100k -> bin 20
     Where the left number is the genomic position of the bin
 
-    We also record the neighboring bins of the diagonals, as we
-    want to replace the value with the neighbors later
+    We also handle filling the diagonals differently
     """
     df = pd.DataFrame(records, columns=["binX", "binY", "counts"])
     df["binX"] = np.floor(df["binX"] / hic_resolution).astype(int)
     df["binY"] = np.floor(df["binY"] / hic_resolution).astype(int)
     df = df.set_index(["binX", "binY"])  # Set indexes for performance
-    diagonal_bins = df[
-        df.index.get_level_values("binX") == df.index.get_level_values("binY")
-    ]
-    # Provide max neighbor counts
-    # We'll divide by the normalizing constant later when replacing the value
-    for (binX, binY), _ in diagonal_bins.iterrows():
-        left_bin_count, right_bin_count = 0, 0
-        left_binX = binX - 1
-        left_binY = binX
-        if (left_binX, left_binY) in df.index:
-            left_bin_count = df.loc[(left_binX, left_binY), "counts"]
-
-        right_binX = binX
-        right_binY = binX + 1
-        if (right_binX, right_binY) in df.index:
-            right_bin_count = df.loc[(right_binX, right_binY), "counts"]
-
-        df.loc[(binX, binY), "max_neighbor_count"] = max(
-            left_bin_count, right_bin_count
-        )
+    fill_diagonals(df, hic_resolution)
     return df
 
 
@@ -234,20 +241,15 @@ def add_hic_from_hic_file(pred, hic_file, chromosome, hic_resolution):
                 suffixes=(None, "_"),
             )
             if "counts_" in pred:
+                # After the first join, we have to merge the new records into
+                # the existing count column. It's really just replacing the
+                # nan values in pred_df with new values from latest records
                 pred["counts"] = np.max(pred[["counts", "counts_"]], axis=1)
                 pred.drop("counts_", inplace=True, axis=1)
-
-                pred["max_neighbor_count"] = np.max(
-                    pred[["max_neighbor_count", "max_neighbor_count_"]], axis=1
-                )
-                pred.drop("max_neighbor_count_", inplace=True, axis=1)
 
     row_mean = np.mean(list(bin_sums.values()))
     # normalize hic_contact by the row_mean to reflect a doubly stochastic hic matrix
     pred["counts"] /= row_mean
-    pred["max_neighbor_count"] /= row_mean
-    # Fill in diagonals with the max of neighbors
-    pred["counts"] = pred["max_neighbor_count"].combine_first(pred["counts"])
 
     pred.drop(
         [
@@ -463,7 +465,7 @@ def add_hic_pseudocount(pred, args):
         args.hic_pseudocount_distance,
         args.hic_gamma,
         args.hic_scale,
-        args.hic_resolution,
+        args.hic_pseudocount_distance,
     )
     pred["hic_pseudocount"] = pd.DataFrame(
         {"a": pred["powerlaw_contact"], "b": pseudocount_distance}
