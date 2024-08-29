@@ -53,7 +53,7 @@ rule combine_accessible_regions:
 	input:
 		prediction_files=expand(os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "EnhancerList.txt"), biosample=BIOSAMPLES_CONFIG["biosample"].to_list())
 	output:
-		combined_prediction_file=os.path.join(RESULTS_DIR, "combined_Predictions", "combined_accessible_peaks.tsv.gz"),
+		combined_prediction_file=os.path.join(RESULTS_DIR, "combined_Predictions_{model_name}", "combined_accessible_peaks.tsv.gz"),
 	params:
 		biosamples=BIOSAMPLES_CONFIG["biosample"].to_list(),
 		result_dir=os.path.join(RESULTS_DIR)
@@ -67,23 +67,23 @@ rule combine_accessible_regions:
         do 
             if [ $i -eq 0 ]
             then
-            	head -1 {params.result_dir}/$sample/Neighborhoods/EnhancerList.txt | cut -f1,2,3 |tr \'\\n\' \'\\t\' > {params.result_dir}/combined_Predictions/combined_accessible_peaks.tsv
-				echo "celltype" >> {params.result_dir}/combined_Predictions/combined_accessible_peaks.tsv
-				sed 1d {params.result_dir}/$sample/Neighborhoods/EnhancerList.txt | cut -f1,2,3 |sed "s/$/\t$sample/" >> {params.result_dir}/combined_Predictions/combined_accessible_peaks.tsv
+            	head -1 {params.result_dir}/$sample/Neighborhoods/EnhancerList.txt | cut -f1,2,3 |tr \'\\n\' \'\\t\' > {params.result_dir}/combined_Predictions_{wildcards.model_name}/combined_accessible_peaks.tsv
+				echo "celltype" >> {params.result_dir}/combined_Predictions_{wildcards.model_name}/combined_accessible_peaks.tsv
+				sed 1d {params.result_dir}/$sample/Neighborhoods/EnhancerList.txt | cut -f1,2,3 |sed "s/$/\t$sample/" >> {params.result_dir}/combined_Predictions_{wildcards.model_name}/combined_accessible_peaks.tsv
             else
-                sed 1d {params.result_dir}/$sample/Neighborhoods/EnhancerList.txt |cut -f1,2,3| sed "s/$/\t$sample/" >> {params.result_dir}/combined_Predictions/combined_accessible_peaks.tsv
+                sed 1d {params.result_dir}/$sample/Neighborhoods/EnhancerList.txt |cut -f1,2,3| sed "s/$/\t$sample/" >> {params.result_dir}/combined_Predictions_{wildcards.model_name}/combined_accessible_peaks.tsv
             fi
             ((i=i+1))
         done
-		cat {params.result_dir}/combined_Predictions/combined_accessible_peaks.tsv |pigz -p{threads} > {output.combined_prediction_file}
-		rm {params.result_dir}/combined_Predictions/combined_accessible_peaks.tsv
+		cat {params.result_dir}/combined_Predictions_{wildcards.model_name}/combined_accessible_peaks.tsv |pigz -p{threads} > {output.combined_prediction_file}
+		rm {params.result_dir}/combined_Predictions_{wildcards.model_name}/combined_accessible_peaks.tsv
 		"""
 
 rule combine_all_putative_predictions:
 	input:
 		all_putative_files=expand(os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.tsv.gz"), biosample=BIOSAMPLES_CONFIG["biosample"].to_list())
 	output:
-		combined_all_putative_file=os.path.join(RESULTS_DIR, "combined_Predictions", "combined_only_expressed_genes_EnhancerPredictionsAllPutative.tsv.gz"),
+		combined_all_putative_file=os.path.join(RESULTS_DIR, "combined_Predictions_{model_name}", "combined_only_expressed_genes_EnhancerPredictionsAllPutative.tsv.gz"),
 	params:
 		biosamples=BIOSAMPLES_CONFIG["biosample"].to_list(),
 		result_dir=os.path.join(RESULTS_DIR)
