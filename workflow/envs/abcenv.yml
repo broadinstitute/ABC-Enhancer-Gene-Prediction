@@ -8,6 +8,7 @@ dependencies:
   - bedtools=2.26.0
   - black
   - click
+  - cryptography<42
   - macs2
   - matplotlib
   - numpy
