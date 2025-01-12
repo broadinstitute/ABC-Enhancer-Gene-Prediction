@@ -7,7 +7,7 @@ sys.path.insert(0, SCRIPTS_DIR)
 from predictor import add_hic_from_hic_file
 import pandas as pd
 
-HIC_FILE = "https://www.encodeproject.org/files/ENCFF621AIY/@@download/ENCFF621AIY.hic"
+HIC_FILE = "https://encode-public.s3.amazonaws.com/2022/05/15/0571c671-3645-4f92-beae-51dfd3f42c36/ENCFF621AIY.hic"
 
 # this file has 3k rows of E-G pairs with valid contact values
 # contact values were generated from the original doubly stochastic method

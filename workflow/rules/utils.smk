@@ -80,7 +80,7 @@ def determine_filtered_prediction_file_format(threshold, config):
 def load_biosamples_config(config):
 	biosamples_config = pd.read_csv(
 		config["biosamplesTable"], sep="\t", na_values=""
-	).replace([np.NaN], [None]).set_index("biosample", drop=False)
+	).replace([np.nan], [None]).set_index("biosample", drop=False)
 	biosamples_config["HiC_resolution"] = biosamples_config["HiC_resolution"].replace([None], [0]).astype(int)
 	_validate_biosamples_config(biosamples_config)
 	_configure_tss_and_gene_files(biosamples_config)
@@ -106,6 +106,8 @@ def _validate_hic_info(row: pd.Series):
 	if row["HiC_file"]:
 		if not (row["HiC_type"] and row["HiC_resolution"]):
 			raise InvalidConfig("Must provide HiC type and resolution with file")
+		if row["HiC_resolution"] != 5000:
+			raise InvalidConfig("Only 5kb resolution supported at the moment")
 
 def _validate_biosamples_config(biosamples_config):
 	"""

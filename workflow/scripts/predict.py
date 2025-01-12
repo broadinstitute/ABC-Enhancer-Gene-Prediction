@@ -55,7 +55,7 @@ def get_model_argument_parser():
     parser.add_argument(
         "--hic_pseudocount_distance",
         type=int,
-        default=1e6,
+        required=True,
         help="A pseudocount is added equal to the powerlaw fit at this distance",
     )
     parser.add_argument(
