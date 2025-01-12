@@ -1,0 +1,42 @@
+name: abc-env
+# note: this environment does not support pipeline due to package conflicts
+# for use to make major changes to the pipeline environment
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+  - anaconda
+dependencies:
+  - bedtools=2.26.0
+  - black
+  - click
+  - cryptography<42
+  - macs2
+  - matplotlib
+  - numpy
+  - pandas
+  - pybigwig
+  - pulp<2.8 # Pin pulp <2.8 for snakemake: https://github.com/snakemake/snakemake/issues/2607
+  - pip
+  - pyarrow
+  - pyranges
+  - pysam
+  - pytest-xdist
+  - python>=3.6
+  - samtools>=1.9  # to avoid open ssl issue: https://github.com/merenlab/anvio/issues/1479
+  - scipy
+  - seaborn
+  # smart_open version >=7 leads to errors with Snakemake https://pastebin.com/uBmBwdnK
+  - smart_open<7
+  - snakemake>=7,<8
+  - sphinx
+  - tabix
+  - yaml
+  # The following 3 are needed to compile hic-straw in HPC
+  # You may need to remove them if working on macosx
+  - gcc
+  - gxx
+  - zlib
+  - pip:
+    - sphinx_rtd_theme
+    - hic-straw
