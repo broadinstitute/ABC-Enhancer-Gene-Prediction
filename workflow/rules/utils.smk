@@ -1,3 +1,8 @@
+import pandas as pd
+import time
+import random
+from pandas.errors import EmptyDataError
+
 class InvalidConfig(Exception):
 	pass 
 
@@ -77,9 +82,32 @@ def determine_filtered_prediction_file_format(threshold, config):
 		other_flags = ''
 	return FILTERED_PREDICTION_FILE_FORMAT_TEMPLATE.format(threshold=threshold, separator=separator, other_flags=other_flags)
 
+def enable_retry(func, func_args={}, max_attempts=3, delay=0.5):
+	"""
+	To prevent EmptyDataError race condition when using SLURM ro launch jobs as processes
+	Assuming the EmptyDataError is caused by a file caching or synchronization lag
+	Retry with delay
+
+	@Param
+	func:  Function to retry
+	func_args:  Dictionary of kwargs for function
+	max_attempts:  Maximum number of attempts allowable before raising error
+	delay: minimum delay before retry
+	"""
+	for attempt in range(max_attempts):
+		try:
+			return func(**func_args)
+		except Exception as e:
+			if attempt == max_attempts - 1:
+				raise
+			sleep_time = delay + random.uniform(0, 0.5)
+			time.sleep(sleep_time)
+	return None
+
 def load_biosamples_config(config):
-	biosamples_config = pd.read_csv(
-		config["biosamplesTable"], sep="\t", na_values=""
+	biosamples_config = enable_retry(
+		pd.read_csv, 
+		func_args={'filepath_or_buffer': config["biosamplesTable"], 'sep': "\t"}
 	).replace([np.nan], [None]).set_index("biosample", drop=False)
 	biosamples_config["HiC_resolution"] = biosamples_config["HiC_resolution"].replace([None], [0]).astype(int)
 	_validate_biosamples_config(biosamples_config)
