@@ -124,6 +124,14 @@ def get_accessibility_files(wildcards):
 	files = BIOSAMPLES_CONFIG.loc[wildcards.biosample, "DHS"] or BIOSAMPLES_CONFIG.loc[wildcards.biosample, "ATAC"]
 	return files.split(",")
 
+def get_activity_files(wildcards):
+	# for neighborhoods step, to trigger download of necessary inputs
+	files = get_accessibility_files(wildcards)
+	k27ac_value = BIOSAMPLES_CONFIG.loc[wildcards.biosample, "H3K27ac"]
+	if k27ac_value:
+		k27ac_files = k27ac_value.split(",")
+		files = files + k27ac_files
+	return files
 
 def _validate_accessibility_feature(row: pd.Series):
 	if row["DHS"] and row["ATAC"]:
