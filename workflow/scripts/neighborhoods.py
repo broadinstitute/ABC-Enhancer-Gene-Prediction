@@ -764,7 +764,7 @@ def compute_activity(df, access_col):
     if access_col == "DHS":
         if "H3K27ac.RPM" in df.columns:
             df["activity_base"] = np.sqrt(
-                df["normalized_h3K27ac"] * df["normalized_dhs"]
+                df["normalized_h3k27ac"] * df["normalized_dhs"]
             )
             df["activity_base_no_qnorm"] = np.sqrt(df["H3K27ac.RPM"] * df["DHS.RPM"])
         else:
@@ -773,7 +773,7 @@ def compute_activity(df, access_col):
     elif access_col == "ATAC":
         if "H3K27ac.RPM" in df.columns:
             df["activity_base"] = np.sqrt(
-                df["normalized_h3K27ac"] * df["normalized_atac"]
+                df["normalized_h3k27ac"] * df["normalized_atac"]
             )
             df["activity_base_no_qnorm"] = np.sqrt(df["H3K27ac.RPM"] * df["ATAC.RPM"])
         else:
@@ -792,7 +792,7 @@ def run_qnorm(df, qnorm, qnorm_method="rank", separate_promoters=True):
 
     if qnorm is None:
         if "H3K27ac.RPM" in df.columns:
-            df["normalized_h3K27ac"] = df["H3K27ac.RPM"]
+            df["normalized_h3k27ac"] = df["H3K27ac.RPM"]
         if "DHS.RPM" in df.columns:
             df["normalized_dhs"] = df["DHS.RPM"]
         if "ATAC.RPM" in df.columns:
@@ -803,7 +803,7 @@ def run_qnorm(df, qnorm, qnorm_method="rank", separate_promoters=True):
         col_dict = {
             "DHS.RPM": "normalized_dhs",
             "ATAC.RPM": "normalized_atac",
-            "H3K27ac.RPM": "normalized_h3K27ac",
+            "H3K27ac.RPM": "normalized_h3k27ac",
         }
 
         # & operator doesn't work in newer versions https://pastebin.com/8d2Ra9L1
