@@ -217,8 +217,8 @@ def main():
     enhancers[f"{normalized_activity_col}_enh"] = enhancers_full[
         f"{normalized_activity_col}"
     ]
-    if "normalized_h3K27ac" in enhancers_full.columns:
-        enhancers[f"{normalized_h3k27ac}_enh"] = enhancers_full["normalized_h3K27ac"]
+    if "normalized_h3k27ac" in enhancers_full.columns:
+        enhancers[f"{normalized_h3k27ac}_enh"] = enhancers_full["normalized_h3k27ac"]
 
     # Initialize Prediction files
     all_pred_file_expressed = os.path.join(
