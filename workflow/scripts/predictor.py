@@ -515,6 +515,7 @@ def compute_score(enhancers, product_terms, prefix, adjust_self_promoters=True):
 
     return enhancers
 
+
 def annotate_predictions(pred, genes, tss_slop=500):
     ## annotate self-promoter E-G pairs
     pred["isSelfPromoter"] = np.logical_and.reduce(
@@ -526,16 +527,24 @@ def annotate_predictions(pred, genes, tss_slop=500):
     )
 
     ## annotate self-genic E-G pairs
-    genes_subset = genes[['name', 'start', 'end']].copy()
-    pred = pred.merge(genes_subset, how='left', left_on='TargetGene', right_on='name', suffixes=('', '_gene'))
+    genes_subset = genes[["name", "start", "end"]].copy()
+    pred = pred.merge(
+        genes_subset,
+        how="left",
+        left_on="TargetGene",
+        right_on="name",
+        suffixes=("", "_gene"),
+    )
 
-    pred['isSelfGenic'] = np.logical_and.reduce((
-        pred['class'] == 'genic',
-        pred['start'] <= pred['end_gene'],
-        pred['end'] >= pred['start_gene'],
-    ))
+    pred["isSelfGenic"] = np.logical_and.reduce(
+        (
+            pred["class"] == "genic",
+            pred["start"] <= pred["end_gene"],
+            pred["end"] >= pred["start_gene"],
+        )
+    )
 
-    pred.drop(columns=['name', 'start_gene', 'end_gene'], inplace=True)
+    pred.drop(columns=["name", "start_gene", "end_gene"], inplace=True)
 
     return pred
 
