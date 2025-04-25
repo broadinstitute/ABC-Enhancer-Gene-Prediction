@@ -186,6 +186,8 @@ def main():
 
     genes_columns_to_subset = [
         "chr",
+        "start",
+        "end",
         "symbol",
         "tss",
         "Expression",
@@ -196,6 +198,8 @@ def main():
     ]
     new_genes_column_names = [
         "chr",
+        "GeneStart",
+        "GeneEnd",
         "TargetGene",
         "TargetGeneTSS",
         "TargetGeneExpression",
