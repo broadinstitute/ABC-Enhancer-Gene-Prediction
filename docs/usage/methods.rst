@@ -17,11 +17,11 @@ Key concepts:
 1. Defining candidate elements
 ------------------------------
 
-'Candidate elements' are the set of putative enhancer elements for which ABC Scores will be computed. These include gene promoters. This step is encoded in the makeCnadidateRegions.py script.
+'Candidate elements' are the set of putative enhancer elements for which ABC Scores will be computed. These include gene promoters. This step is encoded in the makeCandidateRegions.py script.
 
 Main inputs
-	- narrowPeak file from MACS2 
-	- DNase-seq of ATAC-seq input file
+	- narrowPeak file from MACS2
+	- DNase-seq or ATAC-seq input file
 
 Output
 	- Candidate regions in BED file format
@@ -65,12 +65,12 @@ We resize to 500 bp to count reads in and around peaks (esp. e.g. H3K27ac signal
 1.3. Selecting the top N peaks
 ------------------------------
 Description: 
-	- To define the candidate regions, for genome-wide analyses, we retain the top 150,000 peaks with the most read counts. A fixed number is chosen here because the numbers of peaks called vary with sequencing depths, but imprically we discovered that picking the peaks with the most reads counts can effectively remove the noise coming from weak peaks and variable sequencing quality. Additionally, the number of total peaks also affect the denominator of ABC score calculation; a fixed number of peaks also make ABC scores comparable across inputs of variable sequencing qualities and depths. For genome-wide analyses, 150K is a reasonable number because ENCODE analysis has previously estimated `a mean of 205,109 DHSs per cell type <https://www.nature.com/articles/nature11247>`, the majority of which are enhancers. 
+	- To define the candidate regions, for genome-wide analyses, we retain the top 150,000 peaks with the most read counts. A fixed number is chosen here because the numbers of peaks called vary with sequencing depths, but empirically we discovered that picking the peaks with the most reads counts can effectively remove the noise coming from weak peaks and variable sequencing quality. Additionally, the number of total peaks also affect the denominator of ABC score calculation; a fixed number of peaks also make ABC scores comparable across inputs of variable sequencing qualities and depths. For genome-wide analyses, 150K is a reasonable number because ENCODE analysis has previously estimated `a mean of 205,109 DHSs per cell type <https://www.nature.com/articles/nature11247>`, the majority of which are enhancers. 
 
 1.4. Defining and adding gene promoters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Finally, we force the inclusion of gene promoters in the set of candidate elements, to include
-promoters of all candidate genes the calculation of ABC scores. Promoters are chromatin accessible
+promoters of all candidate genes in the calculation of ABC scores. Promoters are chromatin accessible
 sites, however sometimes the promoters of genes do not pass the threshold for top 150,000 strongest
 peaks. Inclusion of promoter regions has large effect on the model due to the promoter receiving a
 high "3D contact" value in the ABC computation.
@@ -98,8 +98,8 @@ the ABC score and is not recommended without calibration of scores (see section 
 ABC score below).
 
 Note that ABC includes the promoter of each gene in the thresholded ABC enhancer-gene predictions
-regardless of it's ABC score (forced to 1), since the promoter of a gene is always considered to
-regulate it's expression.
+regardless of its ABC score (forced to 1), since the promoter of a gene is always considered to
+regulate its expression.
 
 
 
@@ -110,7 +110,7 @@ In this step, we estimate the 'enhancer activity' of candidate elements by count
 
 Main inputs
 	- Candidate regions BED file
-	- DNase-seq of ATAC-seq input file
+	- DNase-seq or ATAC-seq input file
 	- Genes reference file 
 
 Output
@@ -320,7 +320,7 @@ model against CRISPR enhancer perturbation in K562 cells (
 `Fulco et al., 2019 <https://www.nature.com/articles/s41588-019-0538-0>`_ ,
 `Nasser et al., 2021 <https://www.nature.com/articles/s41586-021-03446-x>`_).
 
-These analyses show that ABC scores reliably predicts enhancer-gene regulatory interactions
+These analyses show that ABC scores reliably predict enhancer-gene regulatory interactions
 that were experimentally inferred in the CRISPR experiments. At the recall of 70%, an ABC model
 using DNase-seq + cell-type specific Hi-C data achieves a precision of 51%, meaning around half of
 the predicted enhancer-gene regulatory interactions will be true positives. The ABC scores

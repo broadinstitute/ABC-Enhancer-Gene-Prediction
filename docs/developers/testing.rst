@@ -20,7 +20,7 @@ These tests
 aim to prevent any regressions that may come from updating the code or the 
 conda environment.
 
-We should be continuously adding more test to increase coverage of different 
+We should be continuously adding more tests to increase coverage of different 
 paths of the ABC code. Here's the coverage so far
 
 * DNase-seq + H3K27ac + K562 Hi-C run on chr22 K562 cell type
