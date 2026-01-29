@@ -176,10 +176,15 @@ def _validate_hic_info(row: pd.Series):
 		if row["HiC_resolution"] != 5000:
 			raise InvalidConfig("Only 5kb resolution supported at the moment")
 
+def _is_url(path):
+	"""Check if a path is a URL."""
+	return path.startswith("http://") or path.startswith("https://")
+
 def _validate_input_files_exist(row: pd.Series):
 	"""
 	Validate that input files and their indexes exist.
 	Raises InvalidConfig with informative message if files are missing.
+	Skips validation for URLs (e.g., HiC files from ENCODE).
 	"""
 	biosample = row["biosample"]
 	missing_files = []
@@ -208,8 +213,8 @@ def _validate_input_files_exist(row: pd.Series):
 				if idx and not os.path.exists(idx):
 					missing_indexes.append(idx)
 
-	# Check HiC file
-	if row["HiC_file"] and not os.path.exists(row["HiC_file"]):
+	# Check HiC file (skip URLs - they are fetched at runtime)
+	if row["HiC_file"] and not _is_url(row["HiC_file"]) and not os.path.exists(row["HiC_file"]):
 		missing_files.append(row["HiC_file"])
 
 	# Report errors
