@@ -13,7 +13,6 @@ import pysam
 from scipy import interpolate
 from tools import df_to_pyranges, run_command, run_piped_commands
 
-
 pd.options.display.max_colwidth = (
     10000  # seems to be necessary for pandas to read long file names... strange
 )
