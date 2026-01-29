@@ -7,6 +7,7 @@ biosamplesTable: "config/config_biosamples_chr22.tsv"  # replace with your own c
 ### OUTPUT DATA
 results_dir: "results/"
 
+max_memory_allocation_mb: 250000
 
 ### REFERENCE FILES
 ref:

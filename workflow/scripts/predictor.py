@@ -19,8 +19,11 @@ from tools import df_to_pyranges
 def make_predictions(
     chromosome, enhancers, genes, args, hic_gamma, hic_scale, chrom_sizes_map
 ):
+    genes_with_bounds = genes.copy()
+    genes.drop(columns=["GeneStart", "GeneEnd"], inplace=True)
+
     pred = make_pred_table(chromosome, enhancers, genes, args.window, chrom_sizes_map)
-    pred = annotate_predictions(pred, args.tss_slop)
+    pred = annotate_predictions(pred, genes_with_bounds, args.tss_slop)
     pred = add_powerlaw_to_predictions(pred, args, hic_gamma, hic_scale)
     # if Hi-C file is not provided, only powerlaw model will be computed
     if args.hic_file:
@@ -516,8 +519,8 @@ def compute_score(enhancers, product_terms, prefix, adjust_self_promoters=True):
     return enhancers
 
 
-def annotate_predictions(pred, tss_slop=500):
-    # TO DO: Add is self genic
+def annotate_predictions(pred, genes, tss_slop=500):
+    ## annotate self-promoter E-G pairs
     pred["isSelfPromoter"] = np.logical_and.reduce(
         (
             pred["class"] == "promoter",
@@ -525,6 +528,25 @@ def annotate_predictions(pred, tss_slop=500):
             pred.end + tss_slop > pred.TargetGeneTSS,
         )
     )
+
+    ## annotate self-genic E-G pairs
+    genes_subset = genes[["TargetGene", "GeneStart", "GeneEnd"]].copy()
+    pred = pred.merge(
+        genes_subset,
+        how="left",
+        left_on="TargetGene",
+        right_on="TargetGene",
+    )
+
+    pred["isSelfGenic"] = np.logical_and.reduce(
+        (
+            pred["class"] == "genic",
+            pred["start"] <= pred["GeneStart"],
+            pred["end"] >= pred["GeneEnd"],
+        )
+    )
+
+    pred.drop(columns=["GeneStart", "GeneEnd"], inplace=True)
 
     return pred
 
