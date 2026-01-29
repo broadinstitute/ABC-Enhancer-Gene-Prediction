@@ -1,7 +1,10 @@
 import argparse
 import os
-import pandas as pd
+
 import numpy as np
+import pandas as pd
+
+from tools import run_piped_commands_safe
 
 
 def parse_args():
@@ -31,24 +34,32 @@ def test_variant_overlap(args, all_putative):
     variant_overlap = variant_overlap_pred.loc[
         variant_overlap_pred["distance"] <= 2000000
     ]
+    tmp_file = variant_overlap_file + ".tmp"
     variant_overlap.to_csv(
-        variant_overlap_file + ".tmp",
+        tmp_file,
         sep="\t",
         index=False,
         header=True,
         compression="gzip",
         float_format="%.6f",
     )
-    # shrink regions
-    os.system(
-        "zcat {}.tmp 2>/dev/null | head -1 | gzip > {}".format(
-            variant_overlap_file, variant_overlap_file
-        )
+
+    # Shrink regions using safe subprocess calls (no shell injection)
+    # Extract header
+    run_piped_commands_safe(
+        [["zcat", tmp_file], ["head", "-1"], ["gzip"]],
+        outfile=variant_overlap_file,
     )
-    os.system(
-        "zcat {}.tmp | sed 1d | bedtools slop -b -150 -g {} | gzip >> {}".format(
-            variant_overlap_file, args.chrom_sizes, variant_overlap_file
-        )
+    # Shrink regions by 150bp and append
+    run_piped_commands_safe(
+        [
+            ["zcat", tmp_file],
+            ["sed", "1d"],
+            ["bedtools", "slop", "-b", "-150", "-g", args.chrom_sizes],
+            ["gzip"],
+        ],
+        outfile=variant_overlap_file,
+        append=True,
     )
 
     print("Done.")
