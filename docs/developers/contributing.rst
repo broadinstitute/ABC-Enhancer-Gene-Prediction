@@ -13,7 +13,7 @@ What we should incorporate
 What we shouldn't incorporate
 
 * Experimental code
-* User specific configs (e.g my version of `biosamples.tsv``)
+* User specific configs (e.g. my version of `biosamples.tsv`)
 * Reference files not used in the generic version of the code
 
 Process

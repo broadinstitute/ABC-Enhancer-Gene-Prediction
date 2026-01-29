@@ -130,6 +130,39 @@ def get_activity_files(wildcards):
 		files = files + k27ac_files
 	return files
 
+def get_index_file(filepath):
+	"""
+	Return the expected index file path for a given input file.
+	- BAM files (.bam) -> .bam.bai
+	- tagAlign files (.gz) -> .gz.tbi
+	- BigWig files -> None (no index needed)
+	"""
+	if filepath.endswith(".bam"):
+		return filepath + ".bai"
+	elif "tagAlign" in filepath and filepath.endswith(".gz"):
+		return filepath + ".tbi"
+	# BigWig and other files don't need indexes
+	return None
+
+def get_index_files_for_list(filepaths):
+	"""Return list of index files for files that need them."""
+	indexes = []
+	for f in filepaths:
+		idx = get_index_file(f)
+		if idx:
+			indexes.append(idx)
+	return indexes
+
+def get_accessibility_index_files(wildcards):
+	"""Return index files for accessibility BAM/tagAlign files."""
+	files = get_accessibility_files(wildcards)
+	return get_index_files_for_list(files)
+
+def get_activity_index_files(wildcards):
+	"""Return index files for all activity files (accessibility + H3K27ac)."""
+	files = get_activity_files(wildcards)
+	return get_index_files_for_list(files)
+
 def _validate_accessibility_feature(row: pd.Series):
 	if row["DHS"] and row["ATAC"]:
 		raise InvalidConfig("Can only specify one of DHS or ATAC for accessibility")
@@ -143,6 +176,63 @@ def _validate_hic_info(row: pd.Series):
 		if row["HiC_resolution"] != 5000:
 			raise InvalidConfig("Only 5kb resolution supported at the moment")
 
+def _is_url(path):
+	"""Check if a path is a URL."""
+	return path.startswith("http://") or path.startswith("https://")
+
+def _validate_input_files_exist(row: pd.Series):
+	"""
+	Validate that input files and their indexes exist.
+	Raises InvalidConfig with informative message if files are missing.
+	Skips validation for URLs (e.g., HiC files from ENCODE).
+	"""
+	biosample = row["biosample"]
+	missing_files = []
+	missing_indexes = []
+
+	# Check accessibility files (DHS or ATAC)
+	access_files_str = row["DHS"] or row["ATAC"]
+	if access_files_str:
+		for f in access_files_str.split(","):
+			f = f.strip()
+			if not os.path.exists(f):
+				missing_files.append(f)
+			else:
+				idx = get_index_file(f)
+				if idx and not os.path.exists(idx):
+					missing_indexes.append(idx)
+
+	# Check H3K27ac files
+	if row["H3K27ac"]:
+		for f in row["H3K27ac"].split(","):
+			f = f.strip()
+			if not os.path.exists(f):
+				missing_files.append(f)
+			else:
+				idx = get_index_file(f)
+				if idx and not os.path.exists(idx):
+					missing_indexes.append(idx)
+
+	# Check HiC file (skip URLs - they are fetched at runtime)
+	if row["HiC_file"] and not _is_url(row["HiC_file"]) and not os.path.exists(row["HiC_file"]):
+		missing_files.append(row["HiC_file"])
+
+	# Report errors
+	if missing_files or missing_indexes:
+		error_msg = f"Input file validation failed for biosample '{biosample}':\n"
+		if missing_files:
+			error_msg += "\n  Missing files:\n"
+			for f in missing_files:
+				error_msg += f"    - {f}\n"
+		if missing_indexes:
+			error_msg += "\n  Missing index files:\n"
+			for f in missing_indexes:
+				error_msg += f"    - {f}\n"
+			error_msg += "\n  To create missing indexes:\n"
+			error_msg += "    - For BAM files: samtools index <file.bam>\n"
+			error_msg += "    - For tagAlign.gz: tabix -p bed <file.tagAlign.gz>\n"
+		raise InvalidConfig(error_msg)
+
 def _validate_biosamples_config(biosamples_config):
 	"""
 	Throw exception if a row needs to be fixed
@@ -150,6 +240,7 @@ def _validate_biosamples_config(biosamples_config):
 	for _, row in biosamples_config.iterrows():
 		_validate_hic_info(row)
 		_validate_accessibility_feature(row)
+		_validate_input_files_exist(row)
 
 def _configure_tss_and_gene_files(biosamples_config):
 	## get TSS and genefile names for each biosample 

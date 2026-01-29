@@ -53,7 +53,7 @@ The predictions will be stored in the ``{ABC_DIR}/results/{biosample_name}/Predi
 
 To sanity check your output from ABC, you can check out the QC metrics in the ``{ABC_DIR}/results/{biosample_name}/Metrics`` folder. 
 For comparison, you can find the QC plots for our K562 run `here <https://drive.google.com/file/d/1fyd7ONKDgP646fOIafJhXcXnAk_6LCi1/view?usp=sharing>`_.
-The metrics includes plots of things such as number of enhancers per gene and number of enhancer-genes per chromosome.
+The metrics include plots of things such as number of enhancers per gene and number of enhancer-genes per chromosome.
 
 
 Configuring ABC
@@ -75,7 +75,7 @@ To run ABC with your own specified data, create a **config-biosamples.tsv** file
 
 Reference files
 	- chrom_sizes: chromosome sizes file
-		- FORMAT: TSV with 2 columns: chromsome (str), size (int) 
+		- FORMAT: TSV with 2 columns: chromosome (str), size (int) 
 	- regions_blocklist: enhancer/promoter sequences to exclude from the model
 		- FORMAT: BED 
 	- ubiquitous_genes: genes that are always expressed, regardless of cell type (these genes do not typically have distal enhancers and so are flagged by the pipeline)
@@ -89,7 +89,7 @@ The rule specific params are explained in the :ref:`ABC-methods` section.
 
 Genome Builds
 -------------
-The default reference file params in the config.yaml file are programmed for hg38 genome. To use a different genome, change the reference files and specify the genomize size parameter under `params_macs`.
+The default reference file params in the config.yaml file are programmed for hg38 genome. To use a different genome, change the reference files and specify the genome size parameter under `params_macs`.
 
 
 BiosampleTable Specifications
