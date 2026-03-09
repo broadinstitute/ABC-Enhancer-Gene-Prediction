@@ -3,7 +3,7 @@ import pandas as pd
 import hashlib
 import numpy as np
 from snakemake.utils import min_version
-min_version("9.0")
+min_version("7.0")
 
 configfile: "config/config.yaml"
 MAX_MEM_MB = config["max_memory_allocation_mb"]
