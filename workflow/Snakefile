@@ -6,7 +6,6 @@ from snakemake.utils import min_version
 min_version("7.0")
 
 configfile: "config/config.yaml"
-conda: "mamba"
 MAX_MEM_MB = config["max_memory_allocation_mb"]
 
 include: "rules/utils.smk"
