@@ -52,7 +52,7 @@ The predictions will be stored in the ``{ABC_DIR}/results/{biosample_name}/Predi
 ``EnhancerPredictionsAllPutative.tsv.gz`` contains all (unthresholded) E-G links with the ABC Score.
 
 To sanity check your output from ABC, you can check out the QC metrics in the ``{ABC_DIR}/results/{biosample_name}/Metrics`` folder. 
-For comparison, you can find the QC plots for our K562 run `here <https://drive.google.com/file/d/1fyd7ONKDgP646fOIafJhXcXnAk_6LCi1/view?usp=sharing>`_.
+For comparison, you can find the QC plots for our K562 run `here <https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction/blob/dev/example_chr/all_chr/K562_DNase_ABC.QCPlots_threshold0.016_self_promoter.pdf>`_.
 The metrics include plots of things such as number of enhancers per gene and number of enhancer-genes per chromosome.
 
 
