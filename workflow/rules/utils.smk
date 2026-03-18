@@ -106,8 +106,8 @@ def load_biosamples_config(config):
 	biosamples_config = enable_retry(
 		pd.read_csv, 
 		func_args={'filepath_or_buffer': config["biosamplesTable"], 'sep': "\t"}
-	).replace([np.nan], [None]).set_index("biosample", drop=False)
-	biosamples_config["HiC_resolution"] = biosamples_config["HiC_resolution"].replace([None], [0]).astype(int)
+	).replace([np.nan], [None]).infer_objects(copy=False).set_index("biosample", drop=False)
+	biosamples_config["HiC_resolution"] = biosamples_config["HiC_resolution"].fillna(0).astype(int)
 	_validate_biosamples_config(biosamples_config)
 	_configure_tss_and_gene_files(biosamples_config)
 	return biosamples_config
