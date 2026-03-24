@@ -102,13 +102,13 @@ def enable_retry(func, func_args={}, max_attempts=3, delay=0.5):
 			time.sleep(sleep_time)
 	return None
 
-def load_biosamples_config(config):
+def load_biosamples_config(config, validate_inputs_exist=True):
 	biosamples_config = enable_retry(
 		pd.read_csv, 
 		func_args={'filepath_or_buffer': config["biosamplesTable"], 'sep': "\t"}
 	).replace([np.nan], [None]).infer_objects(copy=False).set_index("biosample", drop=False)
 	biosamples_config["HiC_resolution"] = biosamples_config["HiC_resolution"].fillna(0).astype(int)
-	_validate_biosamples_config(biosamples_config)
+	_validate_biosamples_config(biosamples_config, validate_inputs_exist)
 	_configure_tss_and_gene_files(biosamples_config)
 	return biosamples_config
 
@@ -233,14 +233,15 @@ def _validate_input_files_exist(row: pd.Series):
 			error_msg += "    - For tagAlign.gz: tabix -p bed <file.tagAlign.gz>\n"
 		raise InvalidConfig(error_msg)
 
-def _validate_biosamples_config(biosamples_config):
+def _validate_biosamples_config(biosamples_config, validate_inputs_exist=True):
 	"""
 	Throw exception if a row needs to be fixed
 	"""
 	for _, row in biosamples_config.iterrows():
 		_validate_hic_info(row)
 		_validate_accessibility_feature(row)
-		_validate_input_files_exist(row)
+		if validate_inputs_exist:
+			_validate_input_files_exist(row)
 
 def _configure_tss_and_gene_files(biosamples_config):
 	## get TSS and genefile names for each biosample 
