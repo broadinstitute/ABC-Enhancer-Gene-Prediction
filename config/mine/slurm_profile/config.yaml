@@ -1,0 +1,10 @@
+# Snakemake 7.x generic cluster profile: each rule is submitted as its own
+# sbatch job sized by that rule's own `resources: mem_mb=...` (already
+# declared per rule in workflow/rules/*.smk), instead of running everything
+# inside one fixed-size local allocation. engreitz listed alongside normal so
+# Slurm can schedule on whichever partition has room first.
+jobs: 20
+cluster: "sbatch -p normal,engreitz --parsable --cpus-per-task=2 --mem={resources.mem_mb} --time=06:00:00 -o config/mine/logs/slurm-%j-{rule}.out -e config/mine/logs/slurm-%j-{rule}.err"
+default-resources: [mem_mb=8000]
+latency-wait: 30
+rerun-incomplete: true

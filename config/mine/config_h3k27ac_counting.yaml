@@ -1,0 +1,60 @@
+# working directory is ABC-Enhancer-Gene-Prediction
+
+### INPUT DATA
+# Add your inputs here
+biosamplesTable: "config/mine/config_biosamples_h3k27ac_counting.tsv"
+
+### OUTPUT DATA
+results_dir: "results/2026_0721_h3k27ac_counting_comparison"
+
+max_memory_allocation_mb: 250000
+
+### REFERENCE FILES
+ref:
+        chrom_sizes: "reference/hg38/GRCh38_EBV.no_alt.chrom.sizes.tsv"
+        regions_blocklist: "reference/hg38/GRCh38_unified_blacklist.bed"
+        ubiquitous_genes: "reference/UbiquitouslyExpressedGenes.txt"
+        genes: "reference/hg38/CollapsedGeneBounds.hg38.bed"
+        genome_tss: "reference/hg38/CollapsedGeneBounds.hg38.TSS500bp.bed"
+        qnorm: "reference/EnhancersQNormRef.K562.txt"
+        abc_thresholds: "reference/abc_thresholds.tsv"
+
+### RULE SPECIFIC PARAMS
+params_macs:
+        pval: 0.1
+        genome_size: hs  # shortcuts: hs: human ; mm: mice
+        threads: 10
+
+# These parameters are used to run the Run Candidate Regions portion of the abc code
+params_candidate:
+        peakExtendFromSummit: 250
+        nStrongestPeaks: 150000
+
+# These parameters are used to run the Run Neighborhoods portion of the abc code
+params_neighborhoods:
+        # Off for this experiment: qnorm maps signal onto a K562 reference
+        # distribution to make cross-cell-type comparisons valid. Since every
+        # biosample here IS K562, comparing raw RPM keeps the H3K27ac
+        # counting-mode comparison uncontaminated by the qnorm reference's
+        # own (element-mode-calibrated) distribution.
+        use_qnorm: False
+
+# These parameters are used to run the Predictions portion of the abc code
+params_predict:
+        flags: "--scale_hic_using_powerlaw"
+        hic_gamma: 1.024238616787792  # avg hic gamma
+        hic_scale: 5.9594510043736655  # avg hic scale
+        hic_pseudocount_distance: 5000  # powerlaw at this distance is added to the contact for all predictions
+
+params_filter_predictions:
+        score_column: 'ABC.Score'
+        threshold: null  # null => Automatic determination based on input
+        include_self_promoter: True
+        only_expressed_genes: False
+
+
+### INTERNAL USE ONLY
+
+# ABS path to prepend to reference and script files
+# Only relevant when using ABC as a submodule
+ABC_DIR_PATH: ""

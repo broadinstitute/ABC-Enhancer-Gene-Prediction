@@ -9,6 +9,8 @@ rule create_neighborhoods:
 		ATAC = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, "ATAC"] or '',
 		default = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'default_accessibility_feature'],
 		H3K27ac = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, "H3K27ac"] or '',
+		h3k27ac_counting_mode = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, "h3k27ac_counting_mode"],
+		h3k27ac_flank_bp = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, "h3k27ac_flank_bp"],
 		genes = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'genes'],
 		ubiquitous_genes = config['ref']['ubiquitous_genes'],
 		chrom_sizes = config['ref']['chrom_sizes'],
@@ -42,5 +44,7 @@ rule create_neighborhoods:
 			--genes {output.processed_genes_file} \
 			--ubiquitously_expressed_genes {params.ubiquitous_genes} \
 			--H3K27ac {params.H3K27ac} \
-			{params.qnorm} 
+			--h3k27ac_counting_mode {params.h3k27ac_counting_mode} \
+			--h3k27ac_flank_bp {params.h3k27ac_flank_bp} \
+			{params.qnorm}
 		"""

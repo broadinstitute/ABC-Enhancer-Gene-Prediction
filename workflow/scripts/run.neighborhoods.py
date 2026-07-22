@@ -96,6 +96,22 @@ def parseargs(required_args=True):
     parser.add_argument(
         "--qnorm", default=None, help="Quantile normalization reference file"
     )
+    parser.add_argument(
+        "--h3k27ac_counting_mode",
+        default="element",
+        choices=["element", "element_flank", "flank_only"],
+        help="How to count H3K27ac reads over candidate enhancer regions: "
+        "'element' counts within the element bounds (default), 'element_flank' "
+        "counts within the element extended by --h3k27ac_flank_bp on each side, "
+        "'flank_only' counts only within the two flanking windows, excluding the element. "
+        "Accessibility (DHS/ATAC) counting is unaffected by this flag.",
+    )
+    parser.add_argument(
+        "--h3k27ac_flank_bp",
+        default=0,
+        type=int,
+        help="Flank size in bp used by --h3k27ac_counting_mode when not 'element'",
+    )
 
     # Other
     parser.add_argument(
@@ -187,6 +203,8 @@ def processCellType(args):
         candidate_peaks=args.candidate_enhancer_regions,
         skip_rpkm_quantile=args.skip_rpkm_quantile,
         qnorm=args.qnorm,
+        h3k27ac_counting_mode=args.h3k27ac_counting_mode,
+        h3k27ac_flank_bp=args.h3k27ac_flank_bp,
         tss_slop_for_class_assignment=args.tss_slop_for_class_assignment,
         use_fast_count=(not args.use_secondary_counting_method),
         default_accessibility_feature=params["default_accessibility_feature"],

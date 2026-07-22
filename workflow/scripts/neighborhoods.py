@@ -273,10 +273,17 @@ def load_enhancers(
     qnorm=None,
     class_override_file=None,
     chrom_sizes_map=None,
+    h3k27ac_counting_mode="element",
+    h3k27ac_flank_bp=0,
 ):
     enhancers = read_bed(candidate_peaks)
     enhancers["chr"] = enhancers["chr"].astype("str")
 
+    feature_counting_overrides = (
+        {"H3K27ac": (h3k27ac_counting_mode, h3k27ac_flank_bp)}
+        if h3k27ac_counting_mode != "element"
+        else {}
+    )
     enhancers = count_features_for_bed(
         enhancers,
         candidate_peaks,
@@ -287,6 +294,8 @@ def load_enhancers(
         "Enhancers",
         skip_rpkm_quantile,
         use_fast_count,
+        feature_counting_overrides=feature_counting_overrides,
+        chrom_sizes_map=chrom_sizes_map,
     )
 
     # cellType
@@ -399,9 +408,23 @@ def assign_enhancer_classes(enhancers, genes, chrom_sizes_map, tss_slop=500):
 
 
 def run_count_reads(
-    target, output, bed_file, genome_sizes, genome_sizes_bed, use_fast_count
+    target,
+    output,
+    bed_file,
+    genome_sizes,
+    genome_sizes_bed,
+    use_fast_count,
+    count_mode="element",
+    flank_bp=0,
+    chrom_sizes_map=None,
 ):
     filename = os.path.basename(target)
+    if count_mode != "element" and not filename.endswith(".bam"):
+        raise ValueError(
+            "count_mode={} is only supported for BAM inputs, got {}".format(
+                count_mode, target
+            )
+        )
     if filename.endswith(".bam"):
         count_bam(
             target,
@@ -409,6 +432,9 @@ def run_count_reads(
             output,
             genome_sizes=genome_sizes,
             use_fast_count=use_fast_count,
+            count_mode=count_mode,
+            flank_bp=flank_bp,
+            chrom_sizes_map=chrom_sizes_map,
         )
     elif "tagAlign" in filename:
         count_tagalign(target, bed_file, output, genome_sizes, genome_sizes_bed)
@@ -430,17 +456,41 @@ def double_sex_chrom_counts(output):
 
 
 def count_bam(
-    bamfile, bed_file, output, genome_sizes, use_fast_count=True, verbose=True
+    bamfile,
+    bed_file,
+    output,
+    genome_sizes,
+    use_fast_count=True,
+    verbose=True,
+    count_mode="element",
+    flank_bp=0,
+    chrom_sizes_map=None,
 ):
     reads = pysam.AlignmentFile(bamfile)
     read_chrs = set(reads.references)
     bed_regions = pd.read_table(bed_file, header=None)
     bed_regions = bed_regions[bed_regions.columns[:3]]
     bed_regions.columns = "chr start end".split()
-    counts = [
-        (reads.count(row.chr, row.start, row.end) if (row.chr in read_chrs) else 0)
-        for _, row in bed_regions.iterrows()
-    ]
+
+    def count_row(row):
+        if row.chr not in read_chrs:
+            return 0
+        if count_mode == "element":
+            return reads.count(row.chr, row.start, row.end)
+        chrom_sizes_map_ = chrom_sizes_map or {}
+        chrom_len = chrom_sizes_map_.get(row.chr, row.end + flank_bp)
+        flank_start = max(0, row.start - flank_bp)
+        flank_end = min(chrom_len, row.end + flank_bp)
+        if count_mode == "element_flank":
+            return reads.count(row.chr, flank_start, flank_end)
+        elif count_mode == "flank_only":
+            return reads.count(row.chr, flank_start, row.start) + reads.count(
+                row.chr, row.end, flank_end
+            )
+        else:
+            raise ValueError("Unrecognized count_mode: {}".format(count_mode))
+
+    counts = [count_row(row) for _, row in bed_regions.iterrows()]
     bed_regions["count"] = counts
     bed_regions.to_csv(output, header=None, index=None, sep="\t")
 
@@ -502,11 +552,16 @@ def count_features_for_bed(
     filebase,
     skip_rpkm_quantile=False,
     use_fast_count=True,
+    feature_counting_overrides=None,
+    chrom_sizes_map=None,
 ):
+    feature_counting_overrides = feature_counting_overrides or {}
     for feature, feature_bam_list in features.items():
         start_time = time.time()
         if isinstance(feature_bam_list, str):
             feature_bam_list = [feature_bam_list]
+
+        count_mode, flank_bp = feature_counting_overrides.get(feature, ("element", 0))
 
         for feature_bam in feature_bam_list:
             df = count_single_feature_for_bed(
@@ -520,6 +575,9 @@ def count_features_for_bed(
                 filebase,
                 skip_rpkm_quantile,
                 use_fast_count,
+                count_mode=count_mode,
+                flank_bp=flank_bp,
+                chrom_sizes_map=chrom_sizes_map,
             )
 
         df = average_features(
@@ -542,6 +600,9 @@ def count_single_feature_for_bed(
     filebase,
     skip_rpkm_quantile,
     use_fast_count,
+    count_mode="element",
+    flank_bp=0,
+    chrom_sizes_map=None,
 ):
     orig_df = df.copy()
     orig_shape = df.shape[0]
@@ -559,6 +620,9 @@ def count_single_feature_for_bed(
         genome_sizes,
         genome_sizes_bed,
         use_fast_count,
+        count_mode=count_mode,
+        flank_bp=flank_bp,
+        chrom_sizes_map=chrom_sizes_map,
     )
 
     domain_counts = read_bed(feature_outfile)
@@ -582,6 +646,9 @@ def count_single_feature_for_bed(
         df[feature_name + ".RPM.quantile"] = df[feature_name + ".RPM"].rank() / float(
             len(df)
         )
+        # Normalized by the canonical element width even when count_mode
+        # extends/shifts the actual counting window (element_flank/flank_only);
+        # activity_base uses .RPM, not .RPKM, so this doesn't affect ABC scores.
         df[feature_name + ".RPKM"] = (
             1e3 * df[feature_name + ".RPM"] / (df.end - df.start).astype(float)
         )

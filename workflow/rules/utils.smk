@@ -108,6 +108,14 @@ def load_biosamples_config(config):
 		func_args={'filepath_or_buffer': config["biosamplesTable"], 'sep': "\t"}
 	).replace([np.nan], [None]).set_index("biosample", drop=False)
 	biosamples_config["HiC_resolution"] = biosamples_config["HiC_resolution"].replace([None], [0]).astype(int)
+	if "h3k27ac_counting_mode" not in biosamples_config.columns:
+		biosamples_config["h3k27ac_counting_mode"] = "element"
+	else:
+		biosamples_config["h3k27ac_counting_mode"] = biosamples_config["h3k27ac_counting_mode"].replace([None, ""], "element")
+	if "h3k27ac_flank_bp" not in biosamples_config.columns:
+		biosamples_config["h3k27ac_flank_bp"] = 0
+	else:
+		biosamples_config["h3k27ac_flank_bp"] = biosamples_config["h3k27ac_flank_bp"].replace([None, ""], 0).astype(int)
 	_validate_biosamples_config(biosamples_config)
 	_configure_tss_and_gene_files(biosamples_config)
 	return biosamples_config
@@ -168,6 +176,13 @@ def _validate_accessibility_feature(row: pd.Series):
 		raise InvalidConfig("Can only specify one of DHS or ATAC for accessibility")
 	if not (row["DHS"] or row["ATAC"]):
 		raise InvalidConfig("Must provide either DHS or ATAC accessibility file")
+
+def _validate_h3k27ac_counting(row: pd.Series):
+	valid_modes = ("element", "element_flank", "flank_only")
+	if row["h3k27ac_counting_mode"] not in valid_modes:
+		raise InvalidConfig(f"h3k27ac_counting_mode must be one of {valid_modes}")
+	if row["h3k27ac_counting_mode"] != "element" and row["h3k27ac_flank_bp"] <= 0:
+		raise InvalidConfig("h3k27ac_flank_bp must be a positive integer when h3k27ac_counting_mode is not 'element'")
 
 def _validate_hic_info(row: pd.Series):
 	if row["HiC_file"]:
@@ -241,6 +256,7 @@ def _validate_biosamples_config(biosamples_config):
 		_validate_hic_info(row)
 		_validate_accessibility_feature(row)
 		_validate_input_files_exist(row)
+		_validate_h3k27ac_counting(row)
 
 def _configure_tss_and_gene_files(biosamples_config):
 	## get TSS and genefile names for each biosample 
