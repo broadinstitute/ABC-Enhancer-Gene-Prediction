@@ -1,4 +1,4 @@
-CircleCI [![CircleCI](https://dl.circleci.com/status-badge/img/gh/broadinstitute/ABC-Enhancer-Gene-Prediction.svg?style=svg)](https://app.circleci.com/pipelines/github/broadinstitute/ABC-Enhancer-Gene-Prediction)
+CI [![CI](https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction/actions/workflows/ci.yml)
 
 > :memo: **Note:** This repository is the version of ABC presented in [Gschwind _et al._ (_BioRxiv_ 2023)](https://doi.org/10.1101/2023.11.09.563812) and is a revamp of the original ABC codebase. To access any previous version of ABC, please visit https://github.com/EngreitzLab/ABC-Enhancer-Gene-Prediction-20250314-archive.
 > - For the version of ABC presented in Fulco _et al._ (_Nat. Genet._ 2019)[1], use the [NG2019 branch](https://github.com/EngreitzLab/ABC-Enhancer-Gene-Prediction-20250314-archive/tree/NG2019) of the archived repo
