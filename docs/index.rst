@@ -8,7 +8,7 @@ The Activity-by-Contact (ABC) Model for predicting enhancer-gene regulatory inte
 
 The Activity-by-Contact (ABC) model predicts which enhancers regulate which genes in a given cell type, based on a combination of input datasets representing enhancer activity and 3D enhancer-promoter contact frequency [1].
 
-The ABC model was initially designed to represent a mechanistic model in which enhancers activate gene transcription upon enhancer-promoter contact. In a simple conception of such a model, the quantitative effect of an enhancer depends on the frequency with which it contacts a promoter multiplied by the strength of the enhancer (i.e., the ability of the enhancer to activate transcription upon contacting a promoter). Moreover, the contribution of a specific enhancer to a gene’s expression should depend on the surrounding context (ie, the strength and contact frequency of other enhancers for the gene).  To convert this conceptual framework into a practical score (which can be applied genome-wide), we formulated the ABC score:
+The ABC model was initially designed to represent a mechanistic model in which enhancers activate gene transcription upon enhancer-promoter contact. In a simple conception of such a model, the quantitative effect of an enhancer depends on the frequency with which it contacts a promoter multiplied by the strength of the enhancer (i.e., the ability of the enhancer to activate transcription upon contacting a promoter). Moreover, the contribution of a specific enhancer to a gene’s expression should depend on the surrounding context (i.e., the strength and contact frequency of other enhancers for the gene).  To convert this conceptual framework into a practical score (which can be applied genome-wide), we formulated the ABC score:
 
 ABC score for effect of element E on gene G = Activity of E × Contact frequency between E and G / Sum of (Activity × Contact Frequency) over all candidate elements within 5 Mb.
 
@@ -35,7 +35,7 @@ v1.0 (version for ENCODE paper)
 
 v0.2 (version for [1])
 
-- There are some minor methodological differences between v0.2 and the model as described in [1]. These differences are related to Hi-C data processing and were implemented to improve the speed and scalability of the codebase. As such ABC scores computing using v0.2 will not exactly match those published in [1], although they will be very close. The codebase used to generate the results in [1] is available in the NG2019 branch of this repository. The NG2019 branch is no longer maintained.
+- There are some minor methodological differences between v0.2 and the model as described in [1]. These differences are related to Hi-C data processing and were implemented to improve the speed and scalability of the codebase. As such ABC scores computed using v0.2 will not exactly match those published in [1], although they will be very close. The codebase used to generate the results in [1] is available in the NG2019 branch of this repository. The NG2019 branch is no longer maintained.
 
 
 

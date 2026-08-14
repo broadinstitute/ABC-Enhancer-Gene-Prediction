@@ -34,6 +34,42 @@ def run_piped_commands(piped_commands):
     return final_output
 
 
+def run_piped_commands_safe(piped_commands, outfile=None, append=False):
+    """
+    Run piped commands without shell=True to avoid shell injection.
+
+    Args:
+        piped_commands: List of commands, where each command is a list of arguments
+                        e.g., [["zcat", "file.gz"], ["head", "-1"]]
+        outfile: Optional file path to write output to
+        append: If True, append to outfile instead of overwriting
+
+    Returns:
+        Output bytes if no outfile specified, otherwise None
+    """
+    print(f"Running piped cmds: {piped_commands}")
+
+    # Initialize the first subprocess
+    current_process = Popen(piped_commands[0], stdout=PIPE)
+
+    # Iterate through the remaining commands and pipe them together
+    for cmd in piped_commands[1:]:
+        next_process = Popen(cmd, stdin=current_process.stdout, stdout=PIPE)
+        current_process.stdout.close()  # Allow current_process to receive SIGPIPE
+        current_process = next_process
+
+    # Get the final output
+    final_output, _ = current_process.communicate()
+
+    if outfile:
+        mode = "ab" if append else "wb"
+        with open(outfile, mode) as f:
+            f.write(final_output)
+        return None
+
+    return final_output
+
+
 def write_connections_bedpe_format(pred, outfile, score_column):
     # Output a 2d annotation file with EP connections in bedpe format for loading into IGV
     pred = pred.drop_duplicates()

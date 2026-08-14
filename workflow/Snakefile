@@ -6,7 +6,6 @@ from snakemake.utils import min_version
 min_version("7.0")
 
 configfile: "config/config.yaml"
-conda: "mamba"
 MAX_MEM_MB = config["max_memory_allocation_mb"]
 
 include: "rules/utils.smk"
@@ -16,7 +15,8 @@ ABC_DIR_PATH = os.path.abspath(config["ABC_DIR_PATH"])
 config = make_paths_absolute(config, ABC_DIR_PATH)
 
 RESULTS_DIR = config['results_dir']
-BIOSAMPLES_CONFIG = load_biosamples_config(config)
+_is_standalone = workflow.main_snakefile == workflow.snakefile
+BIOSAMPLES_CONFIG = load_biosamples_config(config, validate_inputs_exist=_is_standalone)
 SCRIPTS_DIR = os.path.join(ABC_DIR_PATH, "workflow/scripts")
 ABC_THRESHOLDS = load_abc_thresholds(config)
 include: "rules/macs2.smk"

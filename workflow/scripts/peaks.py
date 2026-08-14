@@ -5,6 +5,73 @@ import pandas as pd
 from neighborhoods import run_count_reads
 from tools import run_piped_commands
 
+# Minimum peaks threshold - below this we warn users
+MIN_PEAKS_WARNING = 1000
+
+
+def validate_macs_peaks(macs_peaks, min_peaks=MIN_PEAKS_WARNING):
+    """
+    Validate MACS2 output has sufficient peaks.
+
+    Returns number of peaks found.
+    Raises ValueError if file is empty.
+    Prints warning if below threshold.
+    """
+    if not os.path.exists(macs_peaks):
+        raise ValueError(f"MACS2 output file not found: {macs_peaks}")
+
+    n_peaks = sum(1 for _ in open(macs_peaks))
+
+    if n_peaks == 0:
+        raise ValueError(
+            f"MACS2 output is empty: {macs_peaks}\n"
+            "Possible causes:\n"
+            "  - Input BAM/tagAlign files have no reads\n"
+            "  - Input files are corrupted or in wrong format\n"
+            "  - MACS2 p-value threshold is too stringent\n"
+            "Check your input accessibility files and MACS2 logs."
+        )
+
+    if n_peaks < min_peaks:
+        print(
+            f"WARNING: Only {n_peaks} peaks found in MACS2 output (expected >{min_peaks}).\n"
+            f"  File: {macs_peaks}\n"
+            "  Candidate regions may be dominated by promoter regions from the includelist.\n"
+            "  Consider checking input data quality or adjusting MACS2 parameters."
+        )
+
+    return n_peaks
+
+
+def write_candidate_regions_qc(outdir, n_macs_peaks, n_candidate_regions):
+    """Write QC stats for candidate regions to a text file."""
+    qc_file = os.path.join(outdir, "candidateRegions.qc.txt")
+
+    with open(qc_file, "w") as f:
+        f.write("=== Candidate Regions QC Summary ===\n\n")
+        f.write(f"MACS2 peaks (input):          {n_macs_peaks:,}\n")
+        f.write(f"Candidate regions (output):   {n_candidate_regions:,}\n")
+
+        # Add warnings if concerning
+        if n_candidate_regions == 0:
+            f.write("\n*** ERROR: No candidate regions produced! ***\n")
+        elif n_macs_peaks < MIN_PEAKS_WARNING:
+            f.write(
+                f"\n*** WARNING: Low number of MACS2 peaks ({n_macs_peaks:,}). ***\n"
+                "Candidate regions may be dominated by promoters from the includelist.\n"
+                "Consider checking input data quality.\n"
+            )
+
+    print(f"QC summary written to: {qc_file}")
+    return qc_file
+
+
+def count_lines(filepath):
+    """Count lines in a file."""
+    if not os.path.exists(filepath):
+        return 0
+    return sum(1 for _ in open(filepath))
+
 
 def make_candidate_regions_from_summits(
     macs_peaks,
@@ -21,6 +88,10 @@ def make_candidate_regions_from_summits(
     outfile = os.path.join(
         outdir, os.path.basename(macs_peaks) + ".candidateRegions.bed"
     )
+
+    # Validate MACS2 output before proceeding
+    n_macs_peaks = validate_macs_peaks(macs_peaks)
+
     includelist_command = get_includelist_command(regions_includelist, genome_sizes_bed)
     blocklist_command = get_blocklist_command(regions_blocklist)
 
@@ -50,6 +121,10 @@ def make_candidate_regions_from_summits(
 
     run_piped_commands(piped_cmds)
 
+    # Write QC stats
+    n_candidate_regions = count_lines(outfile)
+    write_candidate_regions_qc(outdir, n_macs_peaks, n_candidate_regions)
+
 
 def make_candidate_regions_from_peaks(
     macs_peaks,
@@ -67,6 +142,10 @@ def make_candidate_regions_from_peaks(
     outfile = os.path.join(
         outdir, os.path.basename(macs_peaks) + ".candidateRegions.bed"
     )
+
+    # Validate MACS2 output before proceeding
+    n_macs_peaks = validate_macs_peaks(macs_peaks)
+
     includelist_command = get_includelist_command(regions_includelist, genome_sizes_bed)
     blocklist_command = get_blocklist_command(regions_blocklist)
 
@@ -94,6 +173,10 @@ def make_candidate_regions_from_peaks(
     ]
 
     run_piped_commands(piped_cmds)
+
+    # Write QC stats
+    n_candidate_regions = count_lines(outfile)
+    write_candidate_regions_qc(outdir, n_macs_peaks, n_candidate_regions)
 
 
 def get_includelist_command(regions_includelist, genome_sizes_bed):
