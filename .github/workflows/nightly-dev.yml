@@ -1,0 +1,57 @@
+name: Nightly (dev)
+
+on:
+  schedule:
+    - cron: '0 7 * * *' # nightly at 07:00 UTC
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: dev
+
+      - name: Set up mamba
+        uses: conda-incubator/setup-miniconda@v4
+        with:
+          miniforge-version: latest
+          use-mamba: true
+          auto-activate-base: true
+
+      - name: Run linter (black)
+        shell: bash -l {0}
+        run: |
+          mamba install -y black
+          black . --check
+
+      - name: Install abc-env
+        shell: bash -l {0}
+        run: mamba env create -f workflow/envs/abcenv.yml
+
+      - name: Run tests
+        shell: bash -l {0}
+        run: conda run -n abc-env pytest -n 4
+
+      - name: Slack notify on failure
+        if: failure()
+        uses: slackapi/slack-github-action@v3.0.1
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "❌ Nightly ABC CI failed on `dev`\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }
+
+      - name: Slack notify on success
+        if: success()
+        uses: slackapi/slack-github-action@v3.0.1
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "✅ Nightly ABC CI passed on `dev`\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }
