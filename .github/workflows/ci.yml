@@ -37,7 +37,8 @@ jobs:
         if: failure() && (env.CI_BRANCH == 'main' || env.CI_BRANCH == 'dev')
         uses: slackapi/slack-github-action@v3.0.1
         with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
           payload: |
             {
               "text": "❌ ABC CI failed on `${{ env.CI_BRANCH }}`: ${{ github.event.head_commit.message || github.event.pull_request.title }}\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
@@ -47,7 +48,8 @@ jobs:
         if: success() && (env.CI_BRANCH == 'main' || env.CI_BRANCH == 'dev')
         uses: slackapi/slack-github-action@v3.0.1
         with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
           payload: |
             {
               "text": "✅ ABC CI passed on `${{ env.CI_BRANCH }}`: ${{ github.event.head_commit.message || github.event.pull_request.title }}\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
