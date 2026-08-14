@@ -1,18 +1,17 @@
-name: CI
+name: Nightly (dev)
 
 on:
-  push:
-  pull_request:
   schedule:
     - cron: '0 7 * * *' # nightly at 07:00 UTC
+  workflow_dispatch:
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    env:
-      CI_BRANCH: ${{ github.head_ref || github.ref_name }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: dev
 
       - name: Set up mamba
         uses: conda-incubator/setup-miniconda@v4
@@ -36,23 +35,23 @@ jobs:
         run: conda run -n abc-env pytest -n 4
 
       - name: Slack notify on failure
-        if: failure() && (env.CI_BRANCH == 'main' || env.CI_BRANCH == 'dev')
+        if: failure()
         uses: slackapi/slack-github-action@v3.0.1
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
             {
-              "text": "❌ ABC CI failed on `${{ env.CI_BRANCH }}`: ${{ github.event.head_commit.message || github.event.pull_request.title }}\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              "text": "❌ Nightly ABC CI failed on `dev`\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             }
 
       - name: Slack notify on success
-        if: success() && (env.CI_BRANCH == 'main' || env.CI_BRANCH == 'dev')
+        if: success()
         uses: slackapi/slack-github-action@v3.0.1
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
             {
-              "text": "✅ ABC CI passed on `${{ env.CI_BRANCH }}`: ${{ github.event.head_commit.message || github.event.pull_request.title }}\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              "text": "✅ Nightly ABC CI passed on `dev`\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             }
