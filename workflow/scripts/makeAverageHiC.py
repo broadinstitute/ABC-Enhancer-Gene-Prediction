@@ -1,4 +1,8 @@
 import pandas as pd
+
+from packaging.version import Version
+
+PANDAS_VERSION = Version(pd.__version__)
 import numpy as np
 from functools import reduce
 import argparse
@@ -88,7 +92,10 @@ def main():
     # import pdb
     # pdb.set_trace()
 
-    all_hic = pd.concat(hic_list, axis=1, join="outer", copy=False)
+    if PANDAS_VERSION < Version("3.0"):
+        all_hic = pd.concat(hic_list, axis=1, join="outer", copy=False)
+    else:
+        all_hic = pd.concat(hic_list, axis=1, join="outer")
     hic_list = None  # Clear from memory
 
     # import pdb
