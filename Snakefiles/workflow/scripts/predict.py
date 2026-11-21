@@ -117,6 +117,7 @@ def main():
     # Subset predictions
     print("Writing output files...")
     all_putative = pd.concat(all_putative_list)
+    print('N rows all_putative: ' + str(len(all_putative)))
     all_putative['CellType'] = args.cellType
     all_putative['hic_contact_squared'] = all_putative['hic_contact']**2
     slim_cols = ['chr','start','end','name','TargetGene','TargetGeneTSS','CellType',args.score_column]
@@ -124,8 +125,9 @@ def main():
         all_positive = all_putative.iloc[np.logical_and.reduce((all_putative[args.score_column] > args.threshold, ~(all_putative['class'] == "promoter"))),:]
     else:
         all_positive = all_putative.iloc[np.logical_and.reduce((all_putative.TargetGeneIsExpressed, all_putative[args.score_column] > args.threshold, ~(all_putative['class'] == "promoter"))),:]
-
     
+    print('N rows all_putative (after expression filtering): ' + str(len(all_putative)))
+
     if args.include_self_promoter:
         self_promoter = all_putative.loc[all_putative['isSelfPromoter'],:]
         all_positive = pd.concat([all_positive, self_promoter]).drop_duplicates()

@@ -91,7 +91,7 @@ def load_hic_for_powerlaw(args):
                 this_data['dist_for_fit'] = (rawdist // args.resolution) * args.resolution
                 this_data = this_data.loc[np.logical_and(this_data['dist_for_fit'] >= args.minWindow, this_data['dist_for_fit'] <= args.maxWindow)]
                 all_data_list.append(this_data)
-            elif args.hic_type == "avg":
+            elif args.hic_type == "avg" or args.hic_type == "avg_hg19":
                 hic_file, hic_norm_file, hic_is_vc = get_hic_file(chrom, args.hicDir, hic_type='avg')
                 print("Working on {}".format(hic_file))
                 this_data = load_hic(hic_file = hic_file,

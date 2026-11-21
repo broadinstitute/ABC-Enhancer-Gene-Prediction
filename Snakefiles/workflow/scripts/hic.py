@@ -26,6 +26,13 @@ def get_hic_file(chromosome, hic_dir, allow_vc=True, hic_type="juicebox"):
     elif hic_type == "avg":
         hic_file = os.path.join(hic_dir, chromosome, chromosome + ".bed.gz")
         return hic_file, None, None
+    elif hic_type == 'avg_hg19':
+        hic_file = os.path.join(hic_dir, chromosome, chromosome + ".KRobserved.gz")
+        hic_norm = os.path.join(hic_dir, chromosome, chromosome + ".KRnorm.gz")
+        is_vc = False
+        print("Using: " + hic_file)
+        return hic_file, hic_norm, is_vc
+        
 
 def hic_exists(file):
     if not os.path.exists(file):
@@ -55,7 +62,7 @@ def load_hic(hic_file, hic_norm_file, hic_is_vc, hic_type, hic_resolution, tss_h
         #HiC = juicebox_to_bedpe(HiC, chromosome, args)
     elif hic_type == 'bedpe':
         HiC = pd.read_csv(hic_file, sep="\t", names = ['chr1','x1','x2','chr2','y1','y2','name','hic_contact'])
-    elif hic_type == 'avg':
+    elif hic_type == 'avg' or hic_type == 'avg_hg19':
         HiC = pd.read_csv(hic_file, sep="\t", names = ['x1', 'x2', 'hic_contact'])
         HiC['bin1'] = np.floor(HiC['x1'] / hic_resolution).astype(int)
         HiC['bin2'] = np.floor(HiC['x2'] / hic_resolution).astype(int)

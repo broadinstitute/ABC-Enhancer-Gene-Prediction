@@ -16,9 +16,11 @@ def make_predictions(chromosome, enhancers, genes, args):
         hic_file, hic_norm_file, hic_is_vc = get_hic_file(chromosome, args.HiCdir, hic_type = args.hic_type)
         pred = add_hic_to_enh_gene_table(enhancers, genes, pred, hic_file, hic_norm_file, hic_is_vc, chromosome, args)
         pred = compute_score(pred, [pred['activity_base'], pred['hic_contact_pl_scaled_adj']], "ABC")
-    
-    pred = compute_score(pred, [pred['activity_base'], pred['powerlaw_contact_reference']], "powerlaw")
+        pred = compute_synergy_score(pred, [pred['activity_base'], pred['hic_contact_pl_scaled_adj']], "ABC")
 
+    pred = compute_score(pred, [pred['activity_base'], pred['powerlaw_contact_reference']], "powerlaw")
+    #pred = compute_synergy_score(pred, [pred['activity_base'], pred['powerlaw_contact_reference']], "powerlaw")
+    print("N row after making predictions: " + str(len(pred)))
     return pred
 
 def make_pred_table(chromosome, enh, genes, args):
@@ -180,8 +182,134 @@ def compute_score(enhancers, product_terms, prefix):
 
     enhancers[prefix + '.Score.Numerator'] = scores
     enhancers[prefix + '.Score'] = enhancers[prefix + '.Score.Numerator'] / enhancers.groupby(['TargetGene','TargetGeneTSS'])[prefix + '.Score.Numerator'].transform('sum')
-
+    
+    pd.set_option('display.max_columns', None)
+    #print(enhancers.head(10))
     return(enhancers)
+
+
+def compute_synergy_score(enhancers, product_terms, prefix):
+    window = 5e6
+    if prefix=='ABC':
+        contact_col = 'hic_contact_pl_scaled_adj'
+    else:
+        contact_col = 'powerlaw_contact_reference'
+
+    # calculate wt gex (same as denominator of ABC score)
+    enhancers[prefix + '.wt.gex'] = enhancers.groupby(['TargetGene','TargetGeneTSS'])[prefix + '.Score.Numerator'].transform('sum')
+    enhancers['enh_midpoint'] = (enhancers['start'] + enhancers['end'])/2
+
+    # make E-E matrix
+    t = time.time()
+    print('Computing enhancer-enhancer matrix...')
+    EE_matrix = compute_EE_matrix(enhancers)
+    print('Computed enhancer-enhancer matrix. Elapsed time: {}'.format(time.time() - t))
+
+    # unique gene/TSS pairs
+    genes = enhancers[['TargetGene', 'TargetGeneTSS']].drop_duplicates().reset_index(drop=True)
+    print('N genes: ' + str(len(genes)))
+    #print(enhancers.head())
+    all_pred_list = []
+
+    # loop through each gene
+    for i in range(len(genes)):
+        this_gene = genes.loc[i, 'TargetGene']
+        #print('this_gene: ' + this_gene)
+        this_TSS = genes.loc[i, 'TargetGeneTSS']
+        #print('this_TSS: ' + str(this_TSS))
+
+    # testing
+    #for i in range(1):
+        #this_gene = 'SAMD11'
+        #this_TSS = 925740
+
+        # subset predictions to this gene
+        this_pred = enhancers.loc[(enhancers['TargetGene']==this_gene) & (enhancers['TargetGeneTSS']==this_TSS)].reset_index(drop=True)
+        #print('N row this_pred: ' + str(len(this_pred)))
+        # subset enhancer matrix to enhancers where Target and Element are within 5 Mb of TSS
+        this_EE = EE_matrix.loc[(np.abs(EE_matrix['enh_midpoint_target']-this_TSS)<window) & (np.abs(EE_matrix['enh_midpoint_element']-this_TSS)<window)] 
+        #print('N row this_EE: ' + str(len(this_EE)))
+        # add element-gene contact to EE_matrix
+        this_pred['start_element'] = this_pred['start']
+        this_pred['end_element'] = this_pred['end']
+        # set noselfprom contact to 0 if element is a self promoter
+        this_pred[prefix + '.contact.noselfprom'] = [0 if x==True else y for x,y in zip(this_pred['isSelfPromoter'],this_pred[contact_col])]
+
+        EE_contact = pd.merge(this_EE, this_pred[['start_element', 'end_element', contact_col, prefix+'.contact.noselfprom']], how="left", on=['start_element', 'end_element'])
+        #print('N row EE_contact: ' + str(len(EE_contact)))
+        # loop thorugh each enhancer in this_pred 
+        this_pred[prefix + '.ko.gex'] = 0
+        this_pred[prefix + '.ko.gex.noselfprom'] = 0
+        this_pred[prefix + '.wt.gex.noselfprom'] = 0
+
+        for j in range(len(this_pred)):
+            this_start = this_pred.loc[j, 'start']
+            this_end = this_pred.loc[j, 'end']
+            EE_subset_file = '/oak/stanford/groups/engreitz/Users/sheth/ABC-Enhancer-Gene-Prediction-synergy/ABC-Enhancer-Gene-Prediction/2023_0201_Predictions_test/EE_subset_' + this_gene + '_' + str(this_TSS) + '_' + str(this_start) + '_' + str(this_end) + '.tsv'
+            EE_subset = EE_contact.loc[(EE_contact['start_target']==this_start) & (EE_contact['end_target']==this_end)]
+            this_pred.loc[j, prefix + '.ko.gex'] = np.sum(np.multiply(EE_subset['ko_activity'], EE_subset[contact_col]))
+            this_pred.loc[j, prefix + '.ko.gex.noselfprom'] = np.sum(np.multiply(EE_subset['ko_activity'], EE_subset[prefix + '.contact.noselfprom']))
+            this_pred.loc[j, prefix + '.wt.gex.noselfprom'] = np.sum(np.multiply(EE_subset['activity_base_element'], EE_subset[prefix + '.contact.noselfprom']))
+
+            #EE_subset.to_csv(EE_subset_file, sep="\t", index=False, header=True, float_format="%.6f", na_rep="NaN")
+
+        this_pred = this_pred.drop(columns=['start_element', 'end_element'])
+        all_pred_list.append(this_pred)
+    all_pred = pd.concat(all_pred_list)
+    print('N row right before synergy calc: ' + str(len(all_pred)))
+    # calculate synergy score
+    all_pred[prefix + '.synergy.Score'] = (all_pred[prefix + '.wt.gex'] - all_pred[prefix + '.ko.gex'])/all_pred[prefix + '.wt.gex']
+    all_pred[prefix + '.synergy.episelfprom.Score'] = (all_pred[prefix + '.wt.gex.noselfprom'] - all_pred[prefix + '.ko.gex.noselfprom'])/all_pred[prefix + '.wt.gex.noselfprom']
+
+    print('N row after synergy calc: ' + str(len(all_pred)))
+    all_pred[prefix + '.synergy-normal.diff'] = all_pred[prefix + '.synergy.Score'] - all_pred[prefix + '.Score']
+
+    return(all_pred)
+
+# compute enhancer-enhancer contact and KO activity for all enhancers within 5Mb of target enhancer
+def compute_EE_matrix(enhancers):
+    window = 5e6
+    gamma = 1.0044322152129266
+    x0 = 5000
+    scale = 5.522049023040865
+    b = 0.733487873281097
+    Ci_efficiency = 0.8
+
+    pl_contact = lambda dist: np.exp(scale + -1*gamma * np.log(max(x0, dist))) / np.exp(scale + -1*gamma * np.log(x0))
+
+    # get list of unique enhancers
+    print('N predictions: ' + str(len(enhancers)))
+    enhancers = enhancers[['start', 'end', 'activity_base', 'enh_midpoint']].drop_duplicates().reset_index(drop=True)
+    print('N enhancers: ' + str(len(enhancers)))
+
+    all_enh_list = []
+    # loop through enhancers 
+    for i in range(len(enhancers)):
+        this_enh = enhancers.iloc[i]
+        # pull all enhancers within [window] of target enhancer
+        this_enh_matrix = enhancers.loc[(abs(this_enh['enh_midpoint']-enhancers['enh_midpoint'])<=window)]
+        this_enh_matrix = this_enh_matrix[['start', 'end', 'activity_base']]
+        # name columns for location & activity of each enhancer in pair
+        this_enh_matrix = this_enh_matrix.assign(start_target=this_enh['start'])
+        this_enh_matrix['start_element'] = this_enh_matrix['start']
+        this_enh_matrix.loc[:, 'end_target'] = this_enh['end']
+        this_enh_matrix['end_element'] = this_enh_matrix['end']
+        this_enh_matrix['enh_midpoint_target'] = (this_enh_matrix['start_target'] + this_enh_matrix['end_target'])/2
+        this_enh_matrix['enh_midpoint_element'] = (this_enh_matrix['start_element'] + this_enh_matrix['end_element'])/2
+        this_enh_matrix['activity_base_target'] = this_enh['activity_base']
+        this_enh_matrix['activity_base_element'] = this_enh_matrix['activity_base']
+        # calculate distance and contact between enhancers
+        this_enh_matrix['enh-enh_distance'] = np.abs(this_enh_matrix['enh_midpoint_target']-this_enh_matrix['enh_midpoint_element'])
+        this_enh_matrix['enh-enh_contact'] = [pl_contact(dist) for dist in this_enh_matrix['enh-enh_distance']] 
+        # calculate KO activity at each element given target is perturbed (min = 0)
+        this_enh_matrix['ko_activity'] = this_enh_matrix['activity_base_element'] - b * Ci_efficiency * np.multiply(this_enh_matrix['enh-enh_contact'], this_enh_matrix['activity_base_target'])
+        this_enh_matrix['ko_activity'] = this_enh_matrix['ko_activity'].clip(0, None)
+
+        all_enh_list.append(this_enh_matrix)
+    
+    all_enh = pd.concat(all_enh_list)
+    return(all_enh)
+
 
 def annotate_predictions(pred, tss_slop=500):
     #TO DO: Add is self genic
